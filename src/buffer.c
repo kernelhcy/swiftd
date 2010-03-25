@@ -695,13 +695,13 @@ int buffer_caseless_compare(const char *a, size_t a_len, const char *b, size_t b
 	/* 一开始，将字符串数组转化成size_t类型的数组，通过比较size_t类型来比较是否相同 */
 	/* libc的字符串比较函数也使用了相同的技巧，可有效的加快比较速度 */
 	/* 检查a1和b1的位置是否对齐(size_t的类型长度的倍数?) ? */
-	if ( ((size_t)al & mask) == 0 &&
-	     ((size_t)bl & mask) == 0 ) 
+	if ( ((size_t)al & mask) == 0 && ((size_t)bl & mask) == 0 ) 
 	{
 		/* 确定比较的长度 */
 		max_ndx = ((a_len < b_len) ? a_len : b_len) & ~mask;
 
-		for (; ndx < max_ndx; ndx += sizeof(*al)) {
+		for (; ndx < max_ndx; ndx += sizeof(*al)) 
+		{
 			if (*al != *bl) break;
 			al++; bl++;
 
@@ -716,15 +716,16 @@ int buffer_caseless_compare(const char *a, size_t a_len, const char *b, size_t b
 
 	max_ndx = ((a_len < b_len) ? a_len : b_len);
 
-	for (; ndx < max_ndx; ndx++) {
+	for (; ndx < max_ndx; ndx++) 
+	{
 		char a1 = *a++, b1 = *b++;
-
 		/*
 			'A'的二进制表示为0100 0001，'a'的二进制表示为0110 0001，
 			大写字母比小写字母的ASCII值小了32。
 			通过或上一个32，可以使所有的字母全部转换成大写字母。
 		*/
-		if (a1 != b1) {
+		if (a1 != b1) 
+		{
 			if ((a1 >= 'A' && a1 <= 'Z') && (b1 >= 'a' && b1 <= 'z'))
 				a1 |= 32;
 			else if ((a1 >= 'a' && a1 <= 'z') && (b1 >= 'A' && b1 <= 'Z'))
