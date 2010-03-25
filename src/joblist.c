@@ -26,7 +26,7 @@ int joblist_append(server * srv, connection * con)
 	}
 
 	srv->joblist->ptr[srv->joblist->used++] = con;
-
+	con->in_joblist = 1;
 	return 0;
 }
 
