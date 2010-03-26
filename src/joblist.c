@@ -5,84 +5,159 @@
 #include "joblist.h"
 #include "log.h"
 
+static int con_list_append(server *srv, con_list_node *list, connection *con)
+{
+	if (NULL == srv || NULL == con || NULL == list)
+	{
+		return 0;
+	}
+	if (con->in_joblist)//防止多次追加
+		return 0;
+	
+	con_list_node *node = NULL;
+	
+	if (srv -> unused_nodes != NULL)
+	{
+		//有空闲的节点。
+		node = srv -> unused_nodes;
+		srv -> unused_node = srv -> unused_nodes -> next;
+		node -> next = NULL;
+	}
+	else
+	{
+		//新建一个节点。
+		node = (con_list_node *)malloc(sizeof(*node));
+	}
+	node -> con = con;
+	//加到链表的头部
+	node -> next = list;
+	list = node;
+	
+	con->in_joblist = 1;
+	
+	return 0;
+}
+
+static int con_list_pop(server *srv, con_list_node *list)
+{
+	if (NULL == srv || NULL == list)
+	{
+		return 0;
+	}
+	
+	con_list_node *head = list;
+	if (NULL == head)
+	{
+		return NULL;
+	}
+	
+	list = head -> next;
+	head -> next = srv -> unused_nodes;
+	srv -> unused_nodes = head;
+	
+	head -> con -> in_joblist = 0;
+	
+	return head -> con; 
+}
+
+static int con_list_del(server *srv, con_list_node *list, connection *con)
+{
+	if (NULL == srv || NULL == con || NULL == list)
+	{
+		return 0;
+	}
+	
+	if (!con -> in_joblist)
+	{
+		return 0;
+	}
+	
+	con_list_node *pre, *node;
+	node = list;
+	
+	while (NULL != node && node -> con != con)
+	{
+		pre = node;
+		node = node -> next;
+	}
+	
+	if (NULL == node)
+	{
+		//error
+		return -1;
+	}
+	
+	//删除
+	pre -> next = pre -> next -> next;
+	con -> in_joblist = 0;
+	
+	//将节点加到空闲链表中。
+	node -> next = srv -> unused_nodes;
+	srv -> unused_nodes = node
+	
+	return 0;
+}
+
+static void con_list_free(con_list_node *list)
+{
+	//释放空闲节点。
+	con_list_node *node = list;
+	con_list_node *tmp;
+	while(node != NULL)
+	{
+		tmp = node;
+		node = node -> next;
+		free(tmp);
+	}
+}
+
 /**
  * 追加con到srv的joblist中。
  */
 int joblist_append(server * srv, connection * con)
 {
-	if (con->in_joblist)//防止多次追加
-		return 0;
+	return con_list_append(srv, srv -> joblist, con);
+}
 
-	if (srv->joblist->size == 0)
-	{
-		srv->joblist->size = 16;
-		srv->joblist->ptr = malloc(sizeof(*srv->joblist->ptr) * srv->joblist->size);
-	} 
-	else if (srv->joblist->used == srv->joblist->size)
-	{
-		srv->joblist->size += 16;
-		srv->joblist->ptr = realloc(srv->joblist->ptr,
-					sizeof(*srv->joblist->ptr) * srv->joblist->size);
-	}
+/*
+ * 返回joblist中第一个连接。
+ * 如果joblist为空，则返回NULL。
+ */
+connection * joblist_pop(server *srv)
+{
+	return con_list_pop(srv, srv -> joblist);
+}
 
-	srv->joblist->ptr[srv->joblist->used++] = con;
-	con->in_joblist = 1;
-	return 0;
+//从列表中删除con
+//这个函数效率较低，基本不使用。
+int joblist_del(server *srv, connection *con)
+{
+	return con_list_del(srv, srv -> joblist, con);
 }
 
 /**
  * 释放joblist
  */
-void joblist_free(server * srv, connections * joblist)
+void joblist_free(server * srv, con_list_node * joblist)
 {
-	UNUSED(srv);
-
-	free(joblist->ptr);
-	free(joblist);
+	UNUSED(joblist);
+	con_list_free(srv -> unused_nodes);
 }
 
-
-connection *fdwaitqueue_unshift(server * srv, connections * fdwaitqueue)
-{
-	connection *con;
-	UNUSED(srv);
-
-
-	if (fdwaitqueue->used == 0)
-		return NULL;
-
-	con = fdwaitqueue->ptr[0];
-
-	memmove(fdwaitqueue->ptr, &(fdwaitqueue->ptr[1]),
-			--fdwaitqueue->used * sizeof(*(fdwaitqueue->ptr)));
-
-	return con;
-}
 
 int fdwaitqueue_append(server * srv, connection * con)
 {
-	if (srv->fdwaitqueue->size == 0)
-	{
-		srv->fdwaitqueue->size = 16;
-		srv->fdwaitqueue->ptr =
-			malloc(sizeof(*(srv->fdwaitqueue->ptr)) * srv->fdwaitqueue->size);
-	} 
-	else if (srv->fdwaitqueue->used == srv->fdwaitqueue->size)
-	{
-		srv->fdwaitqueue->size += 16;
-		srv->fdwaitqueue->ptr =
-			realloc(srv->fdwaitqueue->ptr,
-					sizeof(*(srv->fdwaitqueue->ptr)) * srv->fdwaitqueue->size);
-	}
+	return con_list_append(srv, srv -> fdwaitqueue, con);
+}
 
-	srv->fdwaitqueue->ptr[srv->fdwaitqueue->used++] = con;
-
-	return 0;
+connection *fdwaitqueue_pop(server *srv)
+{
+	return con_list_pop(srv -> fdwaitqueue);
 }
 
 void fdwaitqueue_free(server * srv, connections * fdwaitqueue)
 {
-	UNUSED(srv);
-	free(fdwaitqueue->ptr);
-	free(fdwaitqueue);
+	UNUSED(fdwaitqueue);
+	con_list_free(srv -> unused_nodes);
 }
+

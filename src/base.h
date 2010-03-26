@@ -5,9 +5,6 @@
 #include <sys/time.h>
 #include <sys/stat.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
 
 #include <limits.h>
 #ifdef HAVE_STDINT_H
@@ -28,14 +25,7 @@
 #include "etag.h"
 
 
-#if defined HAVE_LIBSSL && defined HAVE_OPENSSL_SSL_H
-# define USE_OPENSSL
-# include <openssl/ssl.h>
-#endif
 
-#ifdef HAVE_FAM_H
-# include <fam.h>
-#endif
 
 #ifndef O_BINARY
 # define O_BINARY 0
@@ -57,26 +47,8 @@
 # define SSIZE_MAX ((size_t)~0 >> 1)
 #endif
 
-#ifdef __APPLE__
-#include <crt_externs.h>
-#define environ (* _NSGetEnviron())
-#else
+
 extern char **environ;
-#endif
-
-/*
- * for solaris 2.5 and NetBSD 1.3.x 
- */
-#ifndef HAVE_SOCKLEN_T
-typedef int socklen_t;
-#endif
-
-/*
- * solaris and NetBSD 1.3.x again 
- */
-#if (!defined(HAVE_STDINT_H)) && (!defined(HAVE_INTTYPES_H)) && (!defined(uint32_t))
-# define uint32_t u_int32_t
-#endif
 
 
 #ifndef SHUT_WR
@@ -621,6 +593,14 @@ typedef struct
 	size_t used;
 } server_socket_array;
 
+//一个链表。保存连接。
+typedef struct
+{
+	connection *con;
+	struct con_list_node *next;
+}con_list_node;
+
+
 typedef struct server 
 {
 	server_socket_array srv_sockets; //保存socket
@@ -708,8 +688,10 @@ typedef struct server
 	short int config_unsupported;
 
 	connections *conns; 			//连接数组
-	connections *joblist; 			//作业列表
-	connections *fdwaitqueue; 		//描述符等待队列
+	
+	con_list_node *joblist; 		//作业列表
+	con_list_node *fdwaitqueue; 	//描述符等待队列
+	con_list_node *unused_nodes;	//空闲的链表节点。
 
 	stat_cache *stat_cache;
 

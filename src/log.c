@@ -12,10 +12,6 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#ifdef HAVE_CONFIG_H
-#include "config.h"
-#endif
-
 #ifdef HAVE_SYSLOG_H
 #include <syslog.h>
 #endif
@@ -27,20 +23,9 @@
 #include <valgrind/valgrind.h>
 #endif
 
-#ifndef O_LARGEFILE
-# define O_LARGEFILE 0
-#endif
 
 /*
- * Close fd and _try_ to get a /dev/null for it instead. 
- * 
- * close() alone may trigger some bugs when a process opens another file and 
- * gets fd = STDOUT_FILENO or STDERR_FILENO and later tries to just print on
- * stdout/stderr 
- *
- * Returns 0 on success and -1 on failure (fd gets closed in all cases) 
- *
- * 关闭文件描述符fd，同时打开/dev/null并把其设置为fd。
+ * 关闭文件描述符fd，并将fd打开到/dev/null。
  * close()函数可能会触发一些bug，如果一个进程打开了其他的文件并且使得文件描述符等于STDOUT_FILENO 
  * 或者STDERR_FILENO，那么，当这个进程向stdout/stderr写入的时候会出错。
  * 成功返回0,失败返回-1.
@@ -66,15 +51,12 @@ int openDevNull(int fd)
 }
 
 /**
- * open the errorlog 打开错误日志。
+ * 打开错误日志。此函数在master线程中调用。
  *
- * 三种可能的日志。
- * we have 3 possibilities:
+ * 三种可能的日志:
  * - stderr (default)
  * - syslog
  * - logfile
- *
- * if the open failed, report to the user and die
  *
  */
 
@@ -98,19 +80,16 @@ int log_error_open(server * srv)
 	{
 		const char *logfile = srv->srvconf.errorlog_file->ptr;
 
-		if (-1 ==
-			(srv->errorlog_fd =
+		if (-1 == (srv->errorlog_fd =
 			 open(logfile, O_APPEND | O_WRONLY | O_CREAT | O_LARGEFILE, 0644)))
 		{
 			log_error_write(srv, __FILE__, __LINE__, "SSSS",
 							"opening errorlog '", logfile, "' failed: ",
 							strerror(errno));
-
 			return -1;
 		}
 #ifdef FD_CLOEXEC
 		/*
-		 * close fd on exec (cgi) 
 		 * 在运行可执行文件（cgi，也就是子进程）时，关闭日志文件。
 		 */
 		fcntl(srv->errorlog_fd, F_SETFD, FD_CLOEXEC);
@@ -120,20 +99,9 @@ int log_error_open(server * srv)
 
 	log_error_write(srv, __FILE__, __LINE__, "s", "server started");
 
-#ifdef HAVE_VALGRIND_VALGRIND_H
-	/*
-	 * don't close stderr for debugging purposes if run in valgrind 
-	 * 在调试模式下不关闭标准错误输出。
-	 */
-	if (RUNNING_ON_VALGRIND)
-		close_stderr = 0;
-#endif
-
 	if (srv->errorlog_mode == ERRORLOG_STDERR && srv->srvconf.dont_daemonize)
 	{
 		/*
-		 * We can only log to stderr in dont-daemonize mode; if we do daemonize 
-		 * and no errorlog file is specified, we log into /dev/null 
 		 * 在非守护进程模式下，我们只向标准错误输出写日志。如果在守护进程模式下并且没有设定日志文件，
 		 * 则将日志写到/dev/null中。
 		 */
@@ -150,38 +118,30 @@ int log_error_open(server * srv)
 }
 
 /**
- * open the errorlog 打开一个新的日志文件。
+ * 打开一个新的日志文件。
  *
- * if the open failed, report to the user and die
- * if no filename is given, use syslog instead
  * 如果打开失败，报告给用户并自杀。如果没有设定日志文件名，则使用系统日志。
  */
 
 int log_error_cycle(server * srv)
 {
 	/*
-	 * only cycle if we are not in syslog-mode 
+	 * 只有在不使用系统日志的时候才打开新日志。
 	 */
 
 	if (srv->errorlog_mode == ERRORLOG_FILE)
 	{
 		const char *logfile = srv->srvconf.errorlog_file->ptr;
-		/*
-		 * already check of opening time 
-		 */
 
 		int new_fd;
-
-		if (-1 ==
-			(new_fd =
+		if (-1 == (new_fd =
 			 open(logfile, O_APPEND | O_WRONLY | O_CREAT | O_LARGEFILE, 0644)))
 		{
 			/*
-			 * write to old log 
+			 * 这里是向旧日志文件写数据。 
 			 */
 			log_error_write(srv, __FILE__, __LINE__, "SSSSS",
-							"cycling errorlog '", logfile,
-							"' failed: ", strerror(errno),
+							"cycling errorlog '", logfile,"' failed: ", strerror(errno),
 							", falling back to syslog()");
 
 			close(srv->errorlog_fd);
@@ -189,10 +149,11 @@ int log_error_cycle(server * srv)
 #ifdef HAVE_SYSLOG_H
 			srv->errorlog_mode = ERRORLOG_SYSLOG;
 #endif
-		} else
+		} 
+		else
 		{
 			/*
-			 * ok, new log is open, close the old one 
+			 * 新日志创建，关闭旧日志的描述符。
 			 */
 			close(srv->errorlog_fd);
 			srv->errorlog_fd = new_fd;
@@ -202,6 +163,7 @@ int log_error_cycle(server * srv)
 	return 0;
 }
 
+//关闭日志。
 int log_error_close(server * srv)
 {
 	switch (srv->errorlog_mode)
@@ -225,32 +187,6 @@ int log_error_close(server * srv)
  * 日志的格式：
  * 		2009-11-25 22:31:25: (filename.line) information
  *
- * 关于可变参数：
- * 头文件为strarg.h。由于可变参数的实现和具体的编译器有关，因此这个文件通常保存在编译器自带的include目录中。
- * 在本机为/usr/lib/gcc/i486-linux-gnu/4.2/include/stdarg.h。
- * 可变参数的使用：
- * 通常，可变参数的个数的确定有其他参数的内容决定。如printf函数就由其格式化输出的字符串决定。在本函数中，有fmt
- * 中的特殊字符的个数决定。
- * 假设函数f中，lastarg是它的最后一个命名形式的参数。那么，在函数f内部要声明一个va_list的变量ap，它将依次指向
- * 每个实际的参数：
- * 			va_list ap;
- * 在访问任何一个未命名的参数前，必须用va_start宏初始化ap一次：
- * 			va_start(va_list ap, lastarg);
- * 此后，每次执行va_arg都将产生一个与下一个为命名的参数具有相同类型和数值的值，他同时还修改ap，以使得下一次执行
- * va_arg时返回下一个参数：
- * 			类型 va_arg(va_list ap, 类型);
- * 在所有的参数处理完毕后，且在退出函数f之前，必须调用宏va_end一次，如下：
- * 			void va_end(va_list ap);
- *
- * 关于处理时间函数:
- * 	localtime函数:
- * 			struct tm *localtime(cosnt time_t *tp)
- * 	将tp所指的日历时间转换为当地时间。
- *
- * 	strftime函数：
- * 			size_t strftime(char *s, size_t smax, const char *fmt, const struct tm *tp)
- * 	根据fmt中的格式把结构体*tp中的日期与时间信息转换成指定的格式，并存储在s中。返回实际写到s中的字符个数，不包括'\0'.
- *
  * 	参数fmt的说明如下：
  *  's':字符串   'b':buffer   'd':int   'o':off_t   'x':int的十六进制
  *  上面的几个参数，在输出相应的值后都追加一个空格' '。
@@ -267,8 +203,7 @@ int log_error_write(server * srv, const char *filename, unsigned int line,
 	case ERRORLOG_FILE:
 	case ERRORLOG_STDERR:
 		/*
-		 * cache the generated timestamp 
-		 * 日志文件和标准错误输出要设定日志的事件。
+		 * 日志文件和标准错误输出要设定日志的时间。
 		 */
 		if (srv->cur_ts != srv->last_generated_debug_ts)
 		{
@@ -285,7 +220,7 @@ int log_error_write(server * srv, const char *filename, unsigned int line,
 		break;
 	case ERRORLOG_SYSLOG:
 		/*
-		 * syslog is generating its own timestamps 
+		 * syslog自己产生时间
 		 */
 		buffer_copy_string_len(srv->errorlog_buf, CONST_STR_LEN("("));
 		break;
@@ -369,13 +304,17 @@ int log_error_write(server * srv, const char *filename, unsigned int line,
 	{
 	case ERRORLOG_FILE:
 		buffer_append_string_len(srv->errorlog_buf, CONST_STR_LEN("\n"));
+		//加锁
 		write(srv->errorlog_fd, srv->errorlog_buf->ptr,
 			  srv->errorlog_buf->used - 1);
+		//解锁
 		break;
 	case ERRORLOG_STDERR:
 		buffer_append_string_len(srv->errorlog_buf, CONST_STR_LEN("\n"));
+		//加锁
 		write(STDERR_FILENO, srv->errorlog_buf->ptr,
 			  srv->errorlog_buf->used - 1);
+		//解锁
 		break;
 	case ERRORLOG_SYSLOG:
 		syslog(LOG_ERR, "%s", srv->errorlog_buf->ptr);

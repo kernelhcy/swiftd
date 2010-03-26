@@ -5,7 +5,7 @@
 
 /**
  * 处理server中的joblist和fdwaitqueue。
- * joblist和fdwaitqueue都connection指针类型的数组。
+ * joblist和fdwaitqueue都connection指针类型的链表。
  *
  * 这四个函数仅仅是对这两个数组的操作。
  */
@@ -15,9 +15,14 @@
  */
 int joblist_append(server * srv, connection * con);
 /**
- * 释放joblist所占用的空间。srv未使用
+ * 释放joblist中空闲节点所占用的空间。srv未使用
  */
 void joblist_free(server * srv, connections * joblist);
+/**
+ * 获取一个在作业队列中等待的连接。
+ * 如果joblist为空，则返回NULL。
+ */
+connection* joblist_pop(server *srv);
 
 /**
  * 将con追加到srv中的fdwaitqueue中
@@ -25,14 +30,13 @@ void joblist_free(server * srv, connections * joblist);
 int fdwaitqueue_append(server * srv, connection * con);
 
 /**
- * 释放fdwaitqueue的空间，srv未使用。
+ * 释放空闲链表。释放所有空闲节点。和joblist_free函数相同。
  */
 void fdwaitqueue_free(server * srv, connections * fdwaitqueue);
-
 /**
- * 返回fdwaitqueue的第一个元素，即fdwaitqueue[0]。
- * srv未使用
+ * 获取一个等待fd的连接。没有则返回NULL。
  */
-connection *fdwaitqueue_unshift(server * srv, connections * fdwaitqueue);
+connection *fdwaitqueue_pop(server *srv);
 
 #endif
+
