@@ -172,7 +172,8 @@ typedef struct
 	buffer *pathinfo;
 } request;
 
-typedef struct {
+typedef struct 
+{
 	off_t content_length;
 	int keep_alive;				/* used by the subrequests in proxy, cgi and
 								 * fcgi to say the subrequest was keep-alive or 
@@ -180,12 +181,14 @@ typedef struct {
 
 	array *headers;
 
-	enum {
+	enum 
+	{
 		HTTP_TRANSFER_ENCODING_IDENTITY, HTTP_TRANSFER_ENCODING_CHUNKED
 	} transfer_encoding;
 } response;
 
-typedef struct {
+typedef struct 
+{
 	buffer *scheme;
 	buffer *authority;
 	buffer *path;
@@ -193,7 +196,8 @@ typedef struct {
 	buffer *query;
 } request_uri;
 
-typedef struct {
+typedef struct 
+{
 	buffer *path;
 	buffer *basedir;			/* path = "(basedir)(.*)" */
 
