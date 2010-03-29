@@ -93,7 +93,7 @@ static int con_list_del(server *srv, con_list_node *list, connection *con)
 	
 	//将节点加到空闲链表中。
 	node -> next = srv -> unused_nodes;
-	srv -> unused_nodes = node
+	srv -> unused_nodes = node;
 	
 	return 0;
 }
