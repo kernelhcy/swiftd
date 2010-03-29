@@ -1,7 +1,7 @@
 #ifndef _LOG_H_
 #define _LOG_H_
 
-#include "server.h"
+#include "main.h"
 
 /*
  * Close fd and _try_ to get a /dev/null for it instead. Returns 0 on success

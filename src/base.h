@@ -7,12 +7,6 @@
 
 
 #include <limits.h>
-#ifdef HAVE_STDINT_H
-# include <stdint.h>
-#endif
-#ifdef HAVE_INTTYPES_H
-# include <inttypes.h>
-#endif
 
 #include "buffer.h"
 #include "array.h"
@@ -21,11 +15,7 @@
 #include "settings.h"
 #include "fdevent.h"
 #include "sys-socket.h"
-#include "splaytree.h"
 #include "etag.h"
-
-
-
 
 #ifndef O_BINARY
 # define O_BINARY 0
@@ -228,24 +218,9 @@ typedef struct
 	buffer *content_type; 	//文件类型
 } stat_cache_entry;
 
-/**
- * 一棵缓存文件信息的伸展树
- */
+
 typedef struct 
 {
-	splay_tree *files;			/* the nodes of the tree are stat_cache_entry's */
-
-	buffer *dir_name;			/* for building the dirname from the filename */
-#ifdef HAVE_FAM_H
-	splay_tree *dirs;			/* the nodes of the tree are fam_dir_entry */
-
-	FAMConnection *fam;
-	int fam_fcce_ndx;
-#endif
-	buffer *hash_key;			/* temp-store for the hash-key */
-} stat_cache;
-
-typedef struct {
 	array *mimetypes;
 
 	/*
@@ -314,9 +289,6 @@ typedef struct {
 	 */
 	off_t *global_bytes_per_second_cnt_ptr;	/* */
 
-#ifdef USE_OPENSSL
-	SSL_CTX *ssl_ctx;
-#endif
 } specific_config;
 
 /*
@@ -467,10 +439,6 @@ typedef struct
 	void *srv_socket;			/* reference to the server-socket (typecast to
 								 * server_socket) */
 
-#ifdef USE_OPENSSL
-	SSL *ssl;
-	buffer *ssl_error_want_reuse_buffer;
-#endif
 	/*
 	 * etag handling 
 	 */
@@ -489,9 +457,11 @@ typedef struct
 
 
 #ifdef HAVE_IPV6
-typedef struct {
+typedef struct 
+{
 	int family;
-	union {
+	union 
+	{
 		struct in6_addr ipv6;
 		struct in_addr ipv4;
 	} addr;
@@ -501,18 +471,21 @@ typedef struct {
 #endif
 
 
-typedef struct {
+typedef struct 
+{
 	buffer *uri;
 	time_t mtime;
 	int http_status;
 } realpath_cache_type;
 
-typedef struct {
+typedef struct 
+{
 	time_t mtime;				/* the key */
 	buffer *str;				/* a buffer for the string represenation */
 } mtime_cache_type;
 
-typedef struct {
+typedef struct 
+{
 	void *ptr;
 	size_t used;
 	size_t size;
@@ -551,15 +524,6 @@ typedef struct
 	unsigned short log_request_header_on_error;
 	unsigned short log_state_handling;
 
-	enum 
-	{ 
-		STAT_CACHE_ENGINE_UNSET,
-		STAT_CACHE_ENGINE_NONE,
-		STAT_CACHE_ENGINE_SIMPLE,
-#ifdef HAVE_FAM_H
-		STAT_CACHE_ENGINE_FAM
-#endif
-	} stat_cache_engine;
 	unsigned short enable_cores;
 } server_config;
 
@@ -573,19 +537,9 @@ typedef struct
 	int fd;
 	int fde_ndx;
 
-	buffer *ssl_pemfile;
-	buffer *ssl_ca_file;
-	buffer *ssl_cipher_list;
-	unsigned short ssl_use_sslv2;
 	unsigned short use_ipv6;
-	unsigned short is_ssl;
-
 	buffer *srv_token;
 
-#ifdef USE_OPENSSL
-	SSL_CTX *ssl_ctx;
-#endif
-	unsigned short is_proxy_ssl;
 } server_socket;
 
 //socket连接数组。
@@ -605,12 +559,16 @@ typedef struct
 }con_list_node;
 
 
-typedef struct server 
+/**
+ * worker struct
+ * 每个worker线程都有一个这个结构体的实例。
+ * 用于保存线程所需要的数据。
+ */
+typedef struct worker
 {
-	server_socket_array srv_sockets; //保存socket
-	/*
-	 * 包括服务器建立的监听socket和accept函数返回的socket。
-	 */
+
+	pthread_t tid; 	//线程id
+	int 	ndx; 	//本数据结构在server结构体的workers数组中的下标
 
 	/*
 	 * the errorlog 
@@ -619,27 +577,20 @@ typedef struct server
 	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;
 	buffer *errorlog_buf;
 
-	fdevents *ev, *ev_ins;
+	fdevents *ev; 	//fdevent系统
 
 	buffer_plugin plugins;
 	void *plugin_slots;
 
+	server_socket_array srv_sockets; //保存socket
+
 	/*
-	 * counters 
+	 * 对于当前连接的一些计数器
 	 */
-	int con_opened;
-	int con_read;
-	int con_written;
-	int con_closed;
-
-	int ssl_is_init;
-
-	int max_fds;				/* max possible fds 可以使用的最大文件描述符*/
-	int cur_fds;				/* currently used fds 当前所使用的文件描述符*/
-	int want_fds;				/* waiting fds 等待使用的文件描述符*/
-	int sockets_disabled; 		/* socket连接失效 */
-
-	size_t max_conns; 			//允许的最大连接数
+	int con_opened; 	//打开的连接
+	int con_read; 		//正在读的连接
+	int con_written; 	//正在写的连接
+	int con_closed; 	//关闭的连接
 
 	/*
 	 * buffers 
@@ -651,19 +602,7 @@ typedef struct server
 
 	buffer *tmp_chunk_len;
 
-	buffer *empty_string;		/* is necessary for cond_match */
-
 	buffer *cond_check_buf;
-
-	/*
-	 * caches 
-	 */
-#ifdef HAVE_IPV6
-	inet_ntop_cache_type inet_ntop_cache[INET_NTOP_CACHE_MAX];
-#endif
-	mtime_cache_type mtime_cache[FILE_CACHE_MAX];
-
-	array *split_vals;
 
 	/*
 	 * Timestamps 
@@ -676,56 +615,40 @@ typedef struct server
 	buffer *ts_debug_str;
 	buffer *ts_date_str;
 
-	/*
-	 * config-file 
-	 */
-	array *config;
-	array *config_touched;
-
-	array *config_context;
-	specific_config **config_storage;
-
-	//服务器的配置
-	server_config srvconf;
-
-	short int config_deprecated;
-	short int config_unsupported;
-
 	connections *conns; 			//连接数组
 	
 	con_list_node *joblist; 		//作业列表
 	con_list_node *fdwaitqueue; 	//描述符等待队列
 	con_list_node *unused_nodes;	//空闲的链表节点。
 
-	stat_cache *stat_cache;
-
-	/**
-	 * The status array can carry all the status information you want
-	 * the key to the array is <module-prefix>.<name>
-	 * and the values are counters
-	 *
-	 * example:
-	 *   fastcgi.backends        = 10
-	 *   fastcgi.active-backends = 6
-	 *   fastcgi.backend.<key>.load = 24
-	 *   fastcgi.backend.<key>....
-	 *
-	 *   fastcgi.backend.<key>.disconnects = ...
-	 */
-	array *status;
 
 	fdevent_handler_t event_handler;
 
 	int (*network_backend_write) (struct server * srv, connection * con, int fd, chunkqueue * cq);
 	int (*network_backend_read) (struct server * srv, connection * con, int fd, chunkqueue * cq);
-#ifdef USE_OPENSSL
-	int (*network_ssl_backend_write) (struct server * srv, connection * con, SSL * ssl, chunkqueue * cq);
-	int (*network_ssl_backend_read) (struct server * srv, connection * con, SSL * ssl, chunkqueue * cq);
-#endif
 
+} worker;
+
+typedef struct server
+{
 	uid_t uid;
 	gid_t gid;
-} server;
+
+	server_congif srvconf;
+
+	worker *workers;
+
+	int max_fds;				/* max possible fds 可以使用的最大文件描述符*/
+	int cur_fds;				/* currently used fds 当前所使用的文件描述符*/
+	int want_fds;				/* waiting fds 等待使用的文件描述符*/
+	int sockets_disabled; 		/* socket连接失效 */
+
+	size_t max_conns; 			//允许的最大连接数
+
+	int is_daemon; 				//是否守护进程
+
+}server;
+
 
 
 #endif

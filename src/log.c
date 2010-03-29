@@ -23,6 +23,11 @@
 #include <valgrind/valgrind.h>
 #endif
 
+//mutex
+//lock the log file
+#include <pthread.h>
+static pthread_mutex_t = PTHREAD_MUTEX_INITIALIZER;
+
 
 /*
  * 关闭文件描述符fd，并将fd打开到/dev/null。
@@ -68,7 +73,7 @@ int log_error_open(server * srv)
 	/*
 	 * perhaps someone wants to use syslog() 
 	 */
-	openlog("lighttpd", LOG_CONS | LOG_PID, LOG_DAEMON);
+	openlog("swiftd", LOG_CONS | LOG_PID, LOG_DAEMON);
 #endif
 	srv->errorlog_mode = ERRORLOG_STDERR; 	//默认的日志输出的标准错误输出。
 
@@ -88,12 +93,6 @@ int log_error_open(server * srv)
 							strerror(errno));
 			return -1;
 		}
-#ifdef FD_CLOEXEC
-		/*
-		 * 在运行可执行文件（cgi，也就是子进程）时，关闭日志文件。
-		 */
-		fcntl(srv->errorlog_fd, F_SETFD, FD_CLOEXEC);
-#endif
 		srv->errorlog_mode = ERRORLOG_FILE;
 	}
 
@@ -300,26 +299,26 @@ int log_error_write(server * srv, const char *filename, unsigned int line,
 	}
 	va_end(ap);
 
+	pthread_mutex_lock(&log_mutex);
+
 	switch (srv->errorlog_mode)
 	{
 	case ERRORLOG_FILE:
 		buffer_append_string_len(srv->errorlog_buf, CONST_STR_LEN("\n"));
-		//加锁
 		write(srv->errorlog_fd, srv->errorlog_buf->ptr,
 			  srv->errorlog_buf->used - 1);
-		//解锁
 		break;
 	case ERRORLOG_STDERR:
 		buffer_append_string_len(srv->errorlog_buf, CONST_STR_LEN("\n"));
-		//加锁
 		write(STDERR_FILENO, srv->errorlog_buf->ptr,
 			  srv->errorlog_buf->used - 1);
-		//解锁
 		break;
 	case ERRORLOG_SYSLOG:
 		syslog(LOG_ERR, "%s", srv->errorlog_buf->ptr);
 		break;
 	}
+
+	pthread_mutex_unlock(&log_mutex);
 
 	return 0;
 }
