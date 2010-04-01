@@ -78,4 +78,5 @@ void tp_run_job(thread_pool *tp, thread_job *job);
 int tp_get_status(thread_pool *tp);
 
 
+void debug_info(const char *fmt, ...);
 #endif

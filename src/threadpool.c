@@ -5,7 +5,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-static void debug_info(const char *fmt, ...);
 
 static void * thread_main(void *arg)
 {
@@ -22,7 +21,9 @@ static void * thread_main(void *arg)
 	while(1)
 	{
 		pthread_mutex_lock(&info -> lock);
+		debug_info("Thread %d is waitting for a job.", info -> id);
 		pthread_cond_wait(&info -> cond, &info -> lock);
+		debug_info("Thread %d get a job.", info -> id);
 		pthread_mutex_unlock(&info -> lock);
 
 		debug_info("Thread %d. Run a job.", info -> id);
@@ -32,8 +33,9 @@ static void * thread_main(void *arg)
 
 		pthread_mutex_lock(&info -> lock);
 		info -> is_busy = 0;
-		sem_post(&info -> tp -> idle_thread);
 		pthread_mutex_unlock(&info -> lock);
+
+		sem_post(&info -> tp -> idle_thread);
 		debug_info("Thread %d is idle.", info -> id);
 	}
 
@@ -119,6 +121,7 @@ void tp_free(thread_pool *tp)
 
 	debug_info("Free thread pool.");
 	pthread_mutex_destroy(&tp -> lock);
+	sem_destroy(&tp -> idle_thread);
 	free(tp -> threads);
 	free(tp);
 	return;
@@ -199,18 +202,23 @@ void tp_run_job(thread_pool *tp, thread_job *job)
 	int id;
 	while( (id = tp_get_thread(tp)) < 0);
 	tp -> threads[id].job = job;
-	debug_info("Tell thread %d to work.", tp -> threads[id].id);
+	debug_info("Tell thread %d to work. index %d", tp -> threads[id].id, id);
 	pthread_cond_signal(&tp -> threads[id].cond);
+	debug_info("Ok. Tell the thread done.");
 	
 	return;
 }
 
-static void debug_info(const char *fmt, ...)
+
+//static pthread_mutex_t debug_lock = PTHREAD_MUTEX_INITIALIZER;
+void debug_info(const char *fmt, ...)
 {
+	//pthread_mutex_lock(&debug_lock);
 	va_list ap;
 	va_start(ap, fmt);
 	vfprintf(stderr, fmt, ap);
 	fprintf(stderr, "\n");
 	va_end(ap);
+	//pthread_mutex_unlock(&debug_lock);
 	return;
 }
