@@ -549,7 +549,7 @@ typedef struct
 
 	size_t size;
 	size_t used;
-} server_socket_array;
+}socket_array;
 
 //一个链表。保存连接。
 typedef struct
@@ -577,12 +577,14 @@ typedef struct worker
 	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;
 	buffer *errorlog_buf;
 
+	server_congif wkrconf;
+
 	fdevents *ev; 	//fdevent系统
 
 	buffer_plugin plugins;
 	void *plugin_slots;
 
-	server_socket_array srv_sockets; //保存socket
+	socket_array sockets; //保存socket
 
 	/*
 	 * 对于当前连接的一些计数器
@@ -636,7 +638,8 @@ typedef struct server
 
 	server_congif srvconf;
 
-	worker *workers;
+	worker **workers;
+	int 	worker_cnt;
 
 	int max_fds;				/* max possible fds 可以使用的最大文件描述符*/
 	int cur_fds;				/* currently used fds 当前所使用的文件描述符*/

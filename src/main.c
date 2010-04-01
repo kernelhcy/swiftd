@@ -150,15 +150,39 @@ void show_featrues()
 	exit(0);
 }
 
+static server* server_init()
+{
+	server * srv = calloc(1, sizeof(*srv));
+
+	return srv;
+}
+
+static void server_free(server* srv)
+{
+	if (srv == NULL)
+	{
+		return;
+	}
+
+	int i;
+	for (i = 0; i < srv -> worker_cnt; ++i)
+	{
+		worker_free(srv -> workers[i]);
+	}
+
+	free(srv);
+}
+
+
 int main(int argc, char *argv[])
 {
-	server srv = NULL;
+	server *srv = NULL;
 	int i_am_root = 0; 		//程序是否在root用户下运行。
 	int test_config = 0; 	//标记是否是需要测试配置文件。
 	int spe_conf = 0; 		//标记是否指定配置文件。
 	buffer *spe_conf_path; 	//指定的配置文件位置。
 
-	if ( NULL == (srv = server_init())
+	if ( NULL == (srv = server_init()) )
 	{
 		fprintf(stderr, "initial the server struct error. NULL pointer return.\n");
 		server_free(srv);
@@ -204,5 +228,53 @@ int main(int argc, char *argv[])
 		return;
 	}
 
+	//处理信号。
+#if defined(HAVE_SIGACTION) && defined(SA_SIGINFO)
+	struct sigaction sig_action;
+	sig_action.handler = sigaciont_handler;
+	sig_action.sa_mask = 0;
+	sig_action.sa_flags = 0;
+	sig_action.sa_restorer = NULL;
+
+	sigaction(SIGHUP, &sig_action, NULL);
+	sigaction(SIGCHLD, &sig_action, NULL);
+	sigaction(SIGTERM, &sig_action, NULL);
+	sigaction(SIGINT, &sig_action, NULL);
+	sigaction(SIGALRM, &sig_action, NULL);
+
+#elif defined(HAVE_SIGNAL) || defined(HAVE_SIGACTION)
+	signal(SIGHUP, signal_handler);
+	signal(SIGCHLD, signal_handler);
+	signal(SIGTERM, signal_handler);
+	signal(SIGINT, signal_handler);
+	signal(SIGALRM, signal_handler);
+
+#endif
+
+	//read configure file
+	
+	//初始化网络
+
+	//初始化fdevent系统。
+	
+	//初始化文件监测系统。
+
+
+	//根据配置文件设置worker数量。
+	srv -> workers = (worker**)calloc(2, sizeof(worker*))
+	srv -> worker_cnt = 2;		
+	int i;
+	for (i = 0; i < srv -> worker_cnt; ++i)
+	{
+		srv -> workers[i] = worker_init();
+		if (NULL == srv -> workers[i])
+		{
+			fprintf(stderr, "Can not initial worker.\n")
+			server_free(srv);
+			exit(1);
+		}
+	}
+
+	
 	return 0;
 }
