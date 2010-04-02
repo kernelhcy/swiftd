@@ -39,7 +39,18 @@ typedef struct
 
 	thread_job *job; 				//线程要处理的作业。
 	thread_pool *tp; 				//指向线程池。
+
+	int stop; 						//标记线程结束。
 }thread_info;
+
+/*
+ * 一个整数链表。
+ */
+typedef struct s_int_node
+{
+	int id;
+	struct s_int_node *next;
+}int_node;
 
 /*
  * 线程池结构体。
@@ -57,6 +68,8 @@ struct s_thread_pool
 
 	thread_info *threads; 			//线程数组。
 	sem_t idle_thread;				//用于达到线程最大值且还有作业时，等待线程空闲。
+
+	int_node *unused; 				//threads中空闲的节点。用来回收。
 };
 
 
@@ -68,8 +81,9 @@ void tp_free(thread_pool *tp);
 
 /*
  * 从线程池中分配一个线程处理作业。
+ * 成功返回0,否则小于0
  */
-void tp_run_job(thread_pool *tp, thread_job *job);
+int tp_run_job(thread_pool *tp, thread_job *job);
 
 /*
  * 获得线程池当前的状态。
