@@ -21,6 +21,7 @@ typedef struct
 {
 	process_func func;
 	void *ctx;
+	int is_done; //标记作业是否已经完成。
 }thread_job;
 
 
@@ -32,15 +33,15 @@ typedef struct s_thread_pool thread_pool;
 typedef struct 
 {
 	pthread_t id; 					//线程id
+	int ndx; 						//在数组threads中的位置。
 	pthread_mutex_t lock; 			//用于锁住整个结构体。也用于配合条件变量使用。
 	pthread_cond_t  cond; 			//条件变量。用于等待作业分配。
-
-	int is_busy; 					//标记线程是否在处理作业。
 
 	thread_job *job; 				//线程要处理的作业。
 	thread_pool *tp; 				//指向线程池。
 
 	int stop; 						//标记线程结束。
+	int is_busy;
 }thread_info;
 
 /*
@@ -63,13 +64,13 @@ struct s_thread_pool
 
 	int max_num; 					//最大线程数，允许的最大线程数。
 	int min_num; 					//最小线程数，也就是在没有作业要处理时，池中的线程数。
-
 	int cur_num; 					//池中当前线程数。
 
 	thread_info *threads; 			//线程数组。
-	sem_t idle_thread;				//用于达到线程最大值且还有作业时，等待线程空闲。
+	sem_t thread_cnt_sem;			//用于达到线程最大值且还有作业时，等待线程空闲。
 
 	int_node *unused; 				//threads中空闲的节点。用来回收。
+	int_node *idle_threads;  		//记录空闲的线程的下标
 };
 
 

@@ -20,8 +20,7 @@ static void * thread_main(void *arg)
 		return NULL;
 	}
 
-	
-	debug_info("Create a thread. %d", info -> id);
+	//debug_info("Create a thread. %d", info -> id);
 	//变为守护线程
 	//pthread_detach(pthread_self());
 
@@ -31,12 +30,16 @@ static void * thread_main(void *arg)
 		{
 			break;;
 		}
-		//debug_info("Thread %d is waitting for a job.", info -> id);
+	//	debug_info("Thread %d is waitting for a job.", info -> id);
 
 		pthread_mutex_lock(&info -> lock);
 		while(!info -> is_busy && ! info -> stop)
 		{
 			pthread_cond_wait(&info -> cond, &info -> lock);
+			if (info -> job == NULL || info -> job -> is_done)
+			{
+				continue;
+			}
 		}
 		pthread_mutex_unlock(&info -> lock);
 
@@ -44,21 +47,37 @@ static void * thread_main(void *arg)
 		{
 			break;
 		}
+	//	debug_info("Thread %d get a job.", info -> id);
 
 		//运行作业
 		if (info -> job)
 		{
 			info -> job -> func(info -> job -> ctx);
+			info -> job -> is_done = 1;
 		}
 			
-		//debug_info("Thread %d. Finish a job.", info -> id);
+	//	debug_info("Thread %d. Finish a job.", info -> id);
 
 		pthread_mutex_lock(&info -> lock);
 		info -> is_busy = 0;
-		sem_post(&info -> tp -> idle_thread);
+
+		pthread_mutex_lock(&info -> tp -> lock);
+		sem_post(&info -> tp -> thread_cnt_sem);
+		int_node *n = (int_node*)malloc(sizeof(*n));
+		if (NULL == n)
+		{
+			//分配内存出错，直接停止线程。
+			info -> stop = 1;
+		}
+		n -> id = info -> ndx;
+		n -> next = info -> tp -> idle_threads;
+		info -> tp -> idle_threads = n;
+		n = NULL;
+		pthread_mutex_unlock(&info -> tp -> lock);
+		
 		pthread_mutex_unlock(&info -> lock);
 
-		debug_info("Thread %d is idle.", info -> id);
+	//	debug_info("Thread %d is idle.", info -> id);
 	}
 
 	return NULL;
@@ -112,7 +131,7 @@ static void * manage_thread(void *arg)
 				pthread_mutex_lock(&tp -> threads[i].lock);
 				if (!tp -> threads[i].stop && !tp -> threads[i].is_busy)
 				{
-					debug_info("Stop thread id %d", i);
+				//	debug_info("Stop thread id %d", i);
 					tp -> threads[i].stop = 1;
 					pthread_cond_signal(&tp -> threads[i].cond);
 					--need_stop_cnt;
@@ -130,6 +149,7 @@ static void * manage_thread(void *arg)
 						n -> next = tp -> unused;
 						tp -> unused = n;
 					}
+					--tp -> cur_num;
 					pthread_mutex_unlock(&tp -> lock);
 				}
 			}
@@ -156,11 +176,13 @@ thread_pool* tp_init(int minnum, int maxnum)
 
 	tp -> max_num = maxnum;
 	tp -> min_num = minnum;
+	tp -> cur_num = 0;
 	tp -> unused = NULL;
+	tp -> idle_threads = NULL;
 	
 	pthread_mutex_init(&tp -> lock, NULL);
 
-	sem_init(&tp -> idle_thread, 0, maxnum); //信号量不跨进程。
+	sem_init(&tp -> thread_cnt_sem, 0, maxnum); //信号量不跨进程。
 
 	//创建管理线程。
 	if (0 != pthread_create(&tp -> manage_thread_id , NULL, manage_thread, tp))
@@ -176,6 +198,7 @@ thread_pool* tp_init(int minnum, int maxnum)
 
 	//初始线程。
 	int i = 0; 
+	int_node *tmp = NULL;
 	for (; i < minnum; ++i)
 	{
 		//先初始化数据，再启动线程。
@@ -184,6 +207,8 @@ thread_pool* tp_init(int minnum, int maxnum)
 		tp -> threads[i].is_busy = 0;
 		tp -> threads[i].stop = 0;
 		tp -> threads[i].tp = tp;
+		tp -> threads[i].ndx = i;
+		tp -> threads[i].job = NULL;
 
 		if (0 != pthread_create(&tp -> threads[i].id, NULL, thread_main, &tp -> threads[i]))
 		{
@@ -191,6 +216,18 @@ thread_pool* tp_init(int minnum, int maxnum)
 			tp -> threads[i].id = 0;
 			continue;
 		}
+
+		//在空闲链表中记录线程。
+		tmp = (int_node*)malloc(sizeof(*tmp));
+		if (NULL == tmp)
+		{
+			return NULL;
+		}
+
+		tmp -> id = i;
+		tmp -> next = tp -> idle_threads;
+		tp -> idle_threads = tmp;
+		tmp = NULL;
 	}
 
 	tp -> cur_num = minnum;
@@ -235,7 +272,7 @@ void tp_free(thread_pool *tp)
 
 	//debug_info("Free thread pool.");
 	pthread_mutex_destroy(&tp -> lock);
-	sem_destroy(&tp -> idle_thread);
+	sem_destroy(&tp -> thread_cnt_sem);
 	free(tp -> threads);
 
 	int_node *n = tp -> unused, *tmp;
@@ -246,6 +283,14 @@ void tp_free(thread_pool *tp)
 		free(tmp);
 	}
 	
+	n = tp -> idle_threads;
+	while(NULL != n)
+	{
+		tmp = n;
+		n = n -> next;
+		free(tmp);
+	}
+
 	free(tp);
 	return;
 }
@@ -258,29 +303,55 @@ int tp_run_job(thread_pool *tp, thread_job *job)
 {
 	if(NULL == tp || NULL == job)
 	{
-		return;
+		return -1;
 	}
 	
-	//寻找一个空闲的线程。
-	sem_wait(&tp -> idle_thread);
+	job -> is_done = 0;
 
-	int i;
-	for (i = 0; i < tp -> cur_num; ++i)
+	/*
+	 * 寻找一个空闲的线程。
+	 * 如果线程池达到最大容量且没有线程空闲，
+	 * 那么程序会阻塞在此直到有线程空闲或接收到信号等。
+	 */
+	sem_wait(&tp -> thread_cnt_sem);
+	int sem_int_val;
+	sem_getvalue(&tp -> thread_cnt_sem, &sem_int_val);
+
+	int id = -1;
+	pthread_mutex_lock(&tp -> lock);
+
+	//空闲链表中的线程可能已经停止，
+	//删除已经停止的线程对应的节点，寻找空闲未停止的线程。
+	int_node *tmp;
+	tmp = tp -> idle_threads;
+	while(NULL != tmp && tp -> threads[tmp -> id].stop)
 	{
-		pthread_mutex_lock(&tp -> threads[i].lock);
-		if (! tp -> threads[i].stop && !tp -> threads[i].is_busy)
-		{
-			tp -> threads[i].is_busy = 1;
-			tp -> threads[i].job = job;
+		tmp = tmp -> next;
+		free(tp -> idle_threads);
+		tp -> idle_threads = tmp;
+	}
 
-			debug_info("Got a thread. index : %d id %d", i, tp -> threads[i].id);
+	if(tp -> idle_threads != NULL)
+	{
+		//有空闲的线程。
+		id = tp -> idle_threads -> id;
+		int_node *tmp = tp -> idle_threads;
+		tp -> idle_threads = tp -> idle_threads -> next;
+		free(tmp);
+		tp -> threads[id].is_busy = 1;
+		debug_info("有空闲:%d", id);
+		
+	}
+	pthread_mutex_unlock(&tp -> lock);
 
-			pthread_cond_signal(&tp -> threads[i].cond);
-
-			pthread_mutex_unlock(&tp -> threads[i].lock);
-			return i;
-		}
-		pthread_mutex_unlock(&tp -> threads[i].lock);
+	if (id != -1)
+	{
+		//设置任务并通知线程。
+		tp -> threads[id].job = job;
+		tp -> threads[id].tp = tp;
+		pthread_mutex_lock(&tp -> threads[id].lock);
+		pthread_cond_signal(&tp -> threads[id].cond);
+		pthread_mutex_unlock(&tp -> threads[id].lock);
 	}
 
 	/*
@@ -291,12 +362,13 @@ int tp_run_job(thread_pool *tp, thread_job *job)
 	//达到最大线程数。
 	if (tp -> cur_num >= tp -> max_num)
 	{
-		debug_info("Maxnum attached.");
+		debug_info("Maxnum attached. cur_num %d, max_num %d, sem_int_val %d",
+				tp -> cur_num, tp -> max_num, sem_int_val);
 		pthread_mutex_unlock(&tp -> lock);
 		return -1;
 	}
 
-	//是否有空闲。
+	//查找未使用的节点。
 	int ndx;
 	if (tp -> unused != NULL)
 	{
@@ -317,6 +389,7 @@ int tp_run_job(thread_pool *tp, thread_job *job)
 	tp -> threads[ndx].stop = 0;
 	tp -> threads[ndx].tp = tp;
 	tp -> threads[ndx].job = job;
+	tp -> threads[ndx].ndx = ndx;
 	pthread_mutex_init(&tp -> threads[ndx].lock, NULL);
 	pthread_cond_init(&tp -> threads[ndx].cond, NULL);
 
