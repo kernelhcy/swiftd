@@ -30,12 +30,13 @@ static void * thread_main(void *arg)
 		{
 			break;;
 		}
-	//	debug_info("Thread %d is waitting for a job.", info -> id);
+		//debug_info("Thread %d is waitting for a job.", info -> ndx);
 
 		pthread_mutex_lock(&info -> lock);
 		while(!info -> is_busy && ! info -> stop)
 		{
 			pthread_cond_wait(&info -> cond, &info -> lock);
+			//debug_info("Thread %d got a signal. is_done %d", info -> ndx, info -> job -> is_done);
 			if (info -> job == NULL || info -> job -> is_done)
 			{
 				continue;
@@ -47,16 +48,16 @@ static void * thread_main(void *arg)
 		{
 			break;
 		}
-	//	debug_info("Thread %d get a job.", info -> id);
+		//debug_info("Thread %d get a job.", info -> ndx);
 
 		//运行作业
-		if (info -> job)
+		if (info -> job )
 		{
 			info -> job -> func(info -> job -> ctx);
 			info -> job -> is_done = 1;
 		}
 			
-	//	debug_info("Thread %d. Finish a job.", info -> id);
+		//debug_info("Thread %d. Finish a job.", info -> ndx);
 
 		pthread_mutex_lock(&info -> lock);
 		info -> is_busy = 0;
@@ -115,7 +116,7 @@ static void * manage_thread(void *arg)
 			pthread_mutex_unlock(&tp -> threads[i].lock);
 		}
 
-		debug_info("Idle thread num : %d", idle_cnt);
+		debug_info("Idle thread num : %d cur num %d", idle_cnt, tp -> cur_num);
 		/*
 		 * 如果空闲的线程占到所有线程的50%以上，那么将空闲
 		 * 线程的数量控制在50%以内。
@@ -123,6 +124,10 @@ static void * manage_thread(void *arg)
 		if ((float)idle_cnt / (float)tp -> cur_num > 0.5)
 		{
 			int need_stop_cnt = idle_cnt * 2 - tp -> cur_num - 1;
+			if (tp -> cur_num - need_stop_cnt < tp -> min_num)
+			{
+				need_stop_cnt = tp -> cur_num - tp -> min_num;
+			}
 			debug_info("Need stop %d threads", need_stop_cnt);
 			int del;
 			for(i = 0; i < tp -> cur_num && need_stop_cnt > 0; ++i)
@@ -338,8 +343,8 @@ int tp_run_job(thread_pool *tp, thread_job *job)
 		int_node *tmp = tp -> idle_threads;
 		tp -> idle_threads = tp -> idle_threads -> next;
 		free(tmp);
-		tp -> threads[id].is_busy = 1;
 		debug_info("有空闲:%d", id);
+		tp -> threads[id].is_busy = 1;
 		
 	}
 	pthread_mutex_unlock(&tp -> lock);
@@ -347,11 +352,12 @@ int tp_run_job(thread_pool *tp, thread_job *job)
 	if (id != -1)
 	{
 		//设置任务并通知线程。
+		pthread_mutex_lock(&tp -> threads[id].lock);
 		tp -> threads[id].job = job;
 		tp -> threads[id].tp = tp;
-		pthread_mutex_lock(&tp -> threads[id].lock);
 		pthread_cond_signal(&tp -> threads[id].cond);
 		pthread_mutex_unlock(&tp -> threads[id].lock);
+		return 0;
 	}
 
 	/*
