@@ -12,4 +12,4 @@ ${OBJPATH}/threadpool.o : threadpool.c
 	${CC} -ggdb  -c threadpool.c -o ${OBJPATH}/threadpool.o -lpthread
 
 clean:
-	rm ${OBJPATH}/*.o
+	rm ${OBJPATH}/*.o test
