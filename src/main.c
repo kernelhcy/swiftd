@@ -251,29 +251,123 @@ int main(int argc, char *argv[])
 
 #endif
 
+	openDevNull(STDIN_FILENO);
+	openDevNull(STDOUT_FILENO);
+
 	//read configure file
+	if( 0!= config_setdefaults(srv))
+	{
+		fprintf(stderr, "set defaults configure error.\n");
+		server_free(srv);
+		return -1;
+	}
+
+	//设置pid文件。
+	if (srv -> srvconf.pid_file -> used)
+	{
+		if (1- == open(srv -> srvconf.pid_file -> ptr, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC
+					, S_IRUSE | S_IWUSE | S_RGRP | S_ROTH))
+		{
+			struct stat st;
+			if (errno != EEXIST)
+			{
+				log_error(srv, __FILE__, __LINE__, "sbs", "open pid-file failed:", srv -> srvconf.pid_file
+						, strerror(errno));
+				return -1;
+			}
+
+			if (0 != state(srv -> srvconf.pid_file -> ptr, &st))
+			{
+				log_error_write(srv, __FILE__, __LINE__, "sb", "stating pid-file error:", srv -> srvconf.pid_file);
+			}
+
+			if (!S_ISREG(st.st_mode))
+			{
+				log_error_write(srv, __FILE__, __LINE__, "sb", "pid-file exists and isn't a regular file."
+						, srv -> srvconf.pid_file);
+				return -1;
+			}
+		}
+	}
 	
-	//初始化网络
+	//select对于描述符的最大数量有限制。
+	if(srv -> event_handler == FDEVENT_HANDLER_SELECT)
+	{
+		srv -> maxfds = FD_SETSIZE - 100;
+	}
+	else
+	{
+		srv -> maxfds = 4096;
+	}
+
+	i_am_root = (getuid == 0);
+	if (!i_am_root && issetugid())
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "Do not apply a SUID to this binary!");
+		server_free(srv);
+		return;
+	}
+
+	struct rlimit rlim;
+
+	if (i_am_root)
+	{
+		struct user *usr;
+		struct passwd *pwd;
+
+		/*
+		//文件打开数的限制
+		if (0 != getrlimit(RLIMIT_NOFILE, &rlim))
+		{
+			log_error_write(srv, __FILE__, __LINE__, "ss"
+					, "could not get the max fds:", strerror(errno));
+			server_free(srv);
+			return -1;
+		}
+
+		rlim.rlim_cur = srv
+		*/
+
+		//初始化网络
+		if (0 != network_init(srv))
+		{
+			fprintf(stderr, "Initial network error!\n");
+			server_free(srv);
+		}
+
+		if (srv -> srvconf.changeroot -> used)
+		{
+			tzset();
+			if (-1 == chroot(srv -> srvconf.changeroot -> ptr))
+			{
+				log_error_write(srv, __FILE__, __LINE__, "ss", "chroot failed: ", strerror(errno));
+				return -1;
+			}
+			if (-1 == chdir("/"))
+			{
+				log_error_write(srv, __FILE__, __LINE__, "ss", "chdir failed: ", strerror(errno));
+				return -1;
+			}
+		}
+	}
+	else
+	{
+		//初始化网络
+		if (0 != network_init(srv))
+		{
+			fprintf(stderr, "Initial network error!\n");
+			server_free(srv);
+		}
+	
+	}
+
+
+
 
 	//初始化fdevent系统。
 	
 	//初始化文件监测系统。
 
-
-	//根据配置文件设置worker数量。
-	srv -> workers = (worker**)calloc(2, sizeof(worker*))
-	srv -> worker_cnt = 2;		
-	int i;
-	for (i = 0; i < srv -> worker_cnt; ++i)
-	{
-		srv -> workers[i] = worker_init();
-		if (NULL == srv -> workers[i])
-		{
-			fprintf(stderr, "Can not initial worker.\n")
-			server_free(srv);
-			exit(1);
-		}
-	}
 
 	
 	return 0;

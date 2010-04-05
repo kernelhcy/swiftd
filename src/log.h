@@ -11,10 +11,10 @@
 int openDevNull(int fd);
 
 
-int log_error_open(worker *wkr);
-int log_error_close(worker *wkr);
-int log_error_write(worker *wkr, const char *filename,
+int log_error_open(server *srv);
+int log_error_close(server *srv);
+int log_error_write(server *srv, const char *filename,
 					unsigned int line, const char *fmt, ...);
-int log_error_cycle(worker *wkr);
+int log_error_cycle(server *srv);
 
 #endif

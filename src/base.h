@@ -10,6 +10,7 @@
 #include <sys/un.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <pthread.h>
 
 
 #include <limits.h>
@@ -203,26 +204,39 @@ typedef struct
 } physical;
 
 
-/**
- * 用于缓存文件的信息。
+/*
+ * 服务器的配置信息
  */
 typedef struct 
 {
-	buffer *name; 		//文件名
-	buffer *etag; 		//文件的etag
-	struct stat st; 	//文件的状态结构体
-	time_t stat_ts; 	//结构体的时间
-#ifdef HAVE_LSTAT
-	char is_symlink; 	//是否是连接文件
-#endif
-#ifdef HAVE_FAM_H
-	int dir_version;  	//
-	int dir_ndx; 		//
-#endif
+	unsigned short port; 	//端口号
+	buffer *bindhost; 		//绑定的地址
+	
+	buffer *errorlog_file; 	//错误日志文件
+	unsigned short errorlog_use_syslog; //是否使用系统日志
 
-	buffer *content_type; 	//文件类型
-} stat_cache_entry;
+	unsigned short dont_daemonize; 		//是否作为守护进程运行
+	buffer *changeroot; 				//运行时，根目录的位置			
+	buffer *username; 					//用户名
+	buffer *groupname; 					//组名
 
+	buffer *pid_file; 					//进程ID文件名，保证只有一个服务器实例
+
+	buffer *event_handler; 				//多路IO系统的名称。
+	fdevent_handler_t handler_t;
+
+	buffer *modules_dir; 				//模块的目录，保存插件模块的动态链接库
+	buffer *network_backend; 			//
+	array *modules; 					//模块名
+	array *upload_tempdirs; 			//上传的临时目录
+
+	unsigned short max_worker; 			//worker进程的最大数量
+	unsigned short max_request_size; 	//request的最大大小
+
+	unsigned short log_request_header_on_error;
+	unsigned short log_state_handling;
+
+} server_config;
 
 typedef struct 
 {
@@ -294,7 +308,7 @@ typedef struct
 	 */
 	off_t *global_bytes_per_second_cnt_ptr;	/* */
 
-} specific_config;
+} con_config;
 
 /*
  * the order of the items should be the same as they are processed read before
@@ -323,16 +337,6 @@ typedef enum
 	COND_RESULT_FALSE,
 	COND_RESULT_TRUE
 } cond_result_t;
-
-typedef struct 
-{
-	cond_result_t result;
-	int patterncount;
-	int matches[3 * 10];
-	buffer *comp_value;			/* just a pointer */
-
-	comp_key_t comp_type;
-} cond_cache_t;
 
 /**
  * 定义网络连接
@@ -444,7 +448,6 @@ typedef struct
 	void *srv_socket;			/* reference to the server-socket (typecast to
 								 * server_socket) */
 
-	int conditional_is_valid[COMP_LAST_ELEMENT];
 } connection;
 
 //连接数组
@@ -455,34 +458,6 @@ typedef struct
 	size_t used;
 } connections;
 
-
-#ifdef HAVE_IPV6
-typedef struct 
-{
-	int family;
-	union 
-	{
-		struct in6_addr ipv6;
-		struct in_addr ipv4;
-	} addr;
-	char b2[INET6_ADDRSTRLEN + 1];
-	time_t ts;
-} inet_ntop_cache_type;
-#endif
-
-
-typedef struct 
-{
-	buffer *uri;
-	time_t mtime;
-	int http_status;
-} realpath_cache_type;
-
-typedef struct 
-{
-	time_t mtime;				/* the key */
-	buffer *str;				/* a buffer for the string represenation */
-} mtime_cache_type;
 
 typedef struct 
 {
@@ -525,15 +500,24 @@ typedef struct
 
 
 /**
- * worker struct
- * 每个worker线程都有一个这个结构体的实例。
- * 用于保存线程所需要的数据。
+ * server数据。
+ * 保存服务器运行期间所需的数据。
  */
-typedef struct worker
+typedef struct server
 {
+	uid_t uid;
+	gid_t gid;
 
-	pthread_t tid; 	//线程id
-	int 	ndx; 	//本数据结构在server结构体的workers数组中的下标
+	server_config srvconf;
+
+	int max_fds;				/* max possible fds 可以使用的最大文件描述符*/
+	int cur_fds;				/* currently used fds 当前所使用的文件描述符*/
+	int want_fds;				/* waiting fds 等待使用的文件描述符*/
+	int sockets_disabled; 		/* socket连接失效 */
+
+	size_t max_conns; 			//允许的最大连接数
+
+	int is_daemon; 				//是否守护进程
 
 	/*
 	 * the errorlog 
@@ -591,29 +575,8 @@ typedef struct worker
 
 	fdevent_handler_t event_handler;
 
-	int (*network_backend_write) (struct worker * wkr, connection * con, int fd, chunkqueue * cq);
-	int (*network_backend_read) (struct worker * wkr, connection * con, int fd, chunkqueue * cq);
-
-} worker;
-
-typedef struct server
-{
-	uid_t uid;
-	gid_t gid;
-
-	server_config srvconf;
-
-	worker **workers;
-	int 	worker_cnt;
-
-	int max_fds;				/* max possible fds 可以使用的最大文件描述符*/
-	int cur_fds;				/* currently used fds 当前所使用的文件描述符*/
-	int want_fds;				/* waiting fds 等待使用的文件描述符*/
-	int sockets_disabled; 		/* socket连接失效 */
-
-	size_t max_conns; 			//允许的最大连接数
-
-	int is_daemon; 				//是否守护进程
+	int (*network_backend_write) (struct server * srv, connection * con, int fd, chunkqueue * cq);
+	int (*network_backend_read) (struct server * srv, connection * con, int fd, chunkqueue * cq);
 
 }server;
 

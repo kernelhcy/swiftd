@@ -56,23 +56,79 @@ int fdevent_epoll_event_add(fdevent *ev, int fd, int events)
 }
 
 int fdevent_epoll_event_del(fdevent *ev, int fd)
-{}
+{
+	if (NULL == ev || fd < 0)
+	{
+		return -1;
+	}
+
+	if (!ev -> fdarray[fd] -> is_listened)
+	{
+		return 0;
+	}
+	
+	struct epoll_event ee;
+	memset(&ee, 0, sizeof(ee));
+	ee.data.fd = fd;
+	ee.data.ptr = NULL;
+
+	if (0  != epoll_ctl(ev -> epoll_fd, EPOLL_CTL_DEL, fd, &ee))
+	{
+		fprintf(stderr, "(%s %d) epoll ctl failed:%s \n", __FILE__, __LINE__, strerror(errno));
+		return -1;
+	}
+
+	return 0;
+	
+}
 
 int fdevent_epoll_event_get_revent(fdevent *ev, size_t ndx)
-{}
+{
+	if(NULL == ev || ndx < 0)
+	{
+		return 0;
+	}
+
+	int events = 0, e;
+	e = ev -> epoll_events[ndx].events;
+
+	if(e & EPOLLIN) 
+		events |= FDEVENT_IN;
+	if(e & EPOLLOUT) 
+		events |= FDEVENT_OUT;
+	if(e & EPOLLERR) 
+		events |= FDEVENT_ERR;
+	if(e & EPOLLHUP) 
+		events |= FDEVENT_HUP;
+	if(e & EPOLLPRI) 
+		events |= FDEVENT_PRI;
+
+	return events;
+}
 
 int fdevent_epoll_event_get_fd(fdevent *ev, size_t ndx)
-{}
+{
+	if (NULL == ev || ndx < 0)
+	{
+		return -1;
+	}
+
+	return ev -> epoll_events[ndx].data.fd;
+}
 
 size_t fdevent_epoll_event_get_next_ndx(fdevent *ev, size_t ndx)
 {
-	return ndx + 1;
+	return ndx == 0 ? ndx : ndx + 1;
 }
 
 
 int fdevent_epoll_poll(fdevent *ev, int timeout)
 {
-	
+	if (NULL == ev)
+	{
+		return -1;
+	}
+	return epoll_wait(ev -> epoll_fd, ev -> epoll_events, ev -> maxfds, timeout);
 }
 
 int fdevent_epoll_init(fdevent *ev)

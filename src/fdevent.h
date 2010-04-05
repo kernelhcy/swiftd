@@ -60,6 +60,8 @@ typedef struct fdevent
 	fdnode **fdarray;
 	size_t maxfds;
 
+	pthread_mutex_t lock; //锁
+
 #ifdef USE_EPOLL
 	int epoll_fd;
 	struct epoll_event *epoll_events;
@@ -120,7 +122,7 @@ int fdevent_unregister(fdevent *ev, int fd);
 
 
 //多路IO的初始化函数。
-//int fdevent_select_init(fdevent *ev);
+int fdevent_select_init(fdevent *ev);
 int fdevent_epoll_init(fdevent *ev);
 
 #endif
