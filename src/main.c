@@ -360,12 +360,13 @@ int main(int argc, char *argv[])
 		}
 	
 	}
-
-
-
-
-	//初始化fdevent系统。
 	
+	//初始化fdevent系统。
+	if (NULL == (srv -> ev = fdevent_init(srv -> max_fds + 1, srv -> event_handler)))
+	{
+		log_error_write(srv, __FILE__, __LINE__,"s", "fdevent init failed." );
+		return -1;
+	}
 	//初始化文件监测系统。
 
 
