@@ -1,5 +1,11 @@
 #include "fdevent.h"
+#include <string.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <unistd.h>
 
+#ifdef USE_EPOLL
 void fdevent_epoll_free(fdevent *ev)
 {
 	if (NULL == ev)
@@ -70,7 +76,6 @@ int fdevent_epoll_poll(fdevent *ev, int timeout)
 }
 
 int fdevent_epoll_init(fdevent *ev)
-#ifdef USE_EPOLL
 {
 	if (NULL == ev)
 	{
@@ -101,7 +106,7 @@ int fdevent_epoll_init(fdevent *ev)
 	
 	if (-1 == fcntl(ev -> epoll_fd, F_SETFD, FD_CLOEXEC))
 	{
-		fprintf(stderr, "(%s %d) set epoll fd to FD_CLOEXEC error. (%s)", __FILE__, __LINE__. strerror(errno));
+		fprintf(stderr, "(%s %d) set epoll fd to FD_CLOEXEC error. (%s)", __FILE__, __LINE__, strerror(errno));
 		close(ev -> epoll_fd);
 		return -1;
 	}
@@ -110,7 +115,8 @@ int fdevent_epoll_init(fdevent *ev)
 
 	return 0;
 }
-#elif
+#else
+int fdevent_epoll_init(fdevent *ev)
 {
 	if (NULL == ev)
 	{}

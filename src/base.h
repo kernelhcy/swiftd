@@ -2,8 +2,14 @@
 #define _BASE_H_
 
 #include <sys/types.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/stat.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <sys/un.h>
+#include <arpa/inet.h>
+#include <netdb.h>
 
 
 #include <limits.h>
@@ -14,8 +20,7 @@
 #include "keyvalue.h"
 #include "settings.h"
 #include "fdevent.h"
-#include "sys-socket.h"
-#include "etag.h"
+#include "configure.h"
 
 #ifndef O_BINARY
 # define O_BINARY 0
@@ -439,11 +444,6 @@ typedef struct
 	void *srv_socket;			/* reference to the server-socket (typecast to
 								 * server_socket) */
 
-	/*
-	 * etag handling 
-	 */
-	etag_flags_t etag_flags;
-
 	int conditional_is_valid[COMP_LAST_ELEMENT];
 } connection;
 
@@ -491,41 +491,6 @@ typedef struct
 	size_t size;
 } buffer_plugin;
 
-/*
- * 服务器的配置信息
- */
-typedef struct 
-{
-	unsigned short port; 	//端口号
-	buffer *bindhost; 		//绑定的地址
-	
-	buffer *errorlog_file; 	//错误日志文件
-	unsigned short errorlog_use_syslog; //是否使用系统日志
-
-	unsigned short dont_daemonize; 		//是否作为守护进程运行
-	buffer *changeroot; 				//运行时，根目录的位置			
-	buffer *username; 					//用户名
-	buffer *groupname; 					//组名
-
-	buffer *pid_file; 					//进程ID文件名，保证只有一个服务器实例
-
-	buffer *event_handler; 				//
-
-	buffer *modules_dir; 				//模块的目录，保存插件模块的动态链接库
-	buffer *network_backend; 			//
-	array *modules; 					//模块名
-	array *upload_tempdirs; 			//上传的临时目录
-
-	unsigned short max_worker; 			//worker进程的最大数量
-	unsigned short max_fds; 			//文件描述符的最大数量
-	unsigned short max_conns; 			//每个worker进程允许的最大连接数
-	unsigned short max_request_size; 	//request的最大大小
-
-	unsigned short log_request_header_on_error;
-	unsigned short log_state_handling;
-
-	unsigned short enable_cores;
-} server_config;
 
 /**
  * 服务器使用的socket连接。
@@ -577,9 +542,9 @@ typedef struct worker
 	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;
 	buffer *errorlog_buf;
 
-	server_congif wkrconf;
+	server_config wkrconf;
 
-	fdevents *ev; 	//fdevent系统
+	fdevent *ev; 	//fdevent系统
 
 	buffer_plugin plugins;
 	void *plugin_slots;
@@ -626,8 +591,8 @@ typedef struct worker
 
 	fdevent_handler_t event_handler;
 
-	int (*network_backend_write) (struct server * srv, connection * con, int fd, chunkqueue * cq);
-	int (*network_backend_read) (struct server * srv, connection * con, int fd, chunkqueue * cq);
+	int (*network_backend_write) (struct worker * wkr, connection * con, int fd, chunkqueue * cq);
+	int (*network_backend_read) (struct worker * wkr, connection * con, int fd, chunkqueue * cq);
 
 } worker;
 
@@ -636,7 +601,7 @@ typedef struct server
 	uid_t uid;
 	gid_t gid;
 
-	server_congif srvconf;
+	server_config srvconf;
 
 	worker **workers;
 	int 	worker_cnt;

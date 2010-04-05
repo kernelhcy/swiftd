@@ -1,14 +1,17 @@
 #ifndef __FDEVENT_H
 #define __FDEVENT_H
 #include "settings.h"
+#include <pthread.h>
+#include <stdio.h>
+#include "config.h"
 
 
-#if defined(HAVE_EPOLL_CTL) && defined(HAVE_SYS_EPOLL_H)
-#define USE_SYS_EPOLL
+#if defined(HAVE_SYS_EPOLL_H)
+#define USE_EPOLL
 #include <sys/epoll.h>
 #endif
 
-#if defined(HAVE_SYS_SELECT)
+#if defined(HAVE_SYS_SELECT_H)
 #define USE_SELECT
 #include <sys/select.h>
 #endif
@@ -36,7 +39,7 @@ typedef handler_t (*fdevent_handler)(void *wkr, void *ctx, int revents);
 
 typedef enum 
 {
-	FDEVENT_HANDLER_UNSET = -1
+	FDEVENT_HANDLER_UNSET = -1,
 	FDEVENT_HANDLER_SELECT,
 	FDEVENT_HANDLER_EPOLL
 }fdevent_handler_t;
@@ -53,11 +56,11 @@ typedef struct
 
 typedef struct fdevent
 {
-	fdevent_handler_t typd;
+	fdevent_handler_t type;
 	fdnode **fdarray;
 	size_t maxfds;
 
-#ifdef USE_SYS_EPOLL
+#ifdef USE_EPOLL
 	int epoll_fd;
 	struct epoll_event *epoll_events;
 #endif
@@ -83,15 +86,15 @@ typedef struct fdevent
 	int (*event_del)(struct fdevent *ev, int fd);
 	int (*event_get_revent)(struct fdevent *ev, size_t ndx);
 	int (*event_get_fd)(struct fdevent *ev, size_t ndx);
-	size_t (*event_get_next_ndx)(struct fdevent *ev, size_t ndx)
+	size_t (*event_get_next_ndx)(struct fdevent *ev, size_t ndx);
 	int (*poll)(struct fdevent *ev, int timeout);
-	int (*fcntl_set)(struct fdevent *ev, int fd);
+	int (*fcntl)(struct fdevent *ev, int fd);
 	
 }fdevent;
 
 
 //初始化函数。
-fdevent* fdevent_init(int maxfds, fdevent_handler_t type);
+fdevent* fdevent_init(size_t maxfds, fdevent_handler_t type);
 
 
 //对外接口函数。
@@ -117,7 +120,7 @@ int fdevent_unregister(fdevent *ev, int fd);
 
 
 //多路IO的初始化函数。
-int fdevent_select_init(fdevent *ev);
+//int fdevent_select_init(fdevent *ev);
 int fdevent_epoll_init(fdevent *ev);
 
 #endif

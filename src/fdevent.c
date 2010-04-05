@@ -1,6 +1,7 @@
 #include "fdevent.h"
 #include <unistd.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <string.h>
 #include <error.h>
 #include <fcntl.h>
@@ -8,7 +9,7 @@
 #include "buffer.h"
 #include "log.h"
 
-fdevent* fdevent_init(size_t manxfds, fdevent_handler_t type)
+fdevent* fdevent_init(size_t maxfds, fdevent_handler_t type)
 {
 	fdevent* ev = NULL;
 	ev = (fdevent *)calloc(1, sizeof(*ev));
@@ -16,10 +17,10 @@ fdevent* fdevent_init(size_t manxfds, fdevent_handler_t type)
 	ev -> fdarray = (fdnode **)calloc(maxfds, sizeof(fdnode *));
 	ev -> maxfds = maxfds;
 
-	switch(tpye)
+	switch(type)
 	{
 		case FDEVENT_HANDLER_SELECT:
-			if (0 != fdevent_select_init(ev))
+			//if (0 != fdevent_select_init(ev))
 			{
 				fprintf(stderr, "(%s %d) initial select error.\n", __FILE__, __LINE__);
 				return NULL;
@@ -48,7 +49,7 @@ void fdevent_free(fdevent *ev)
 		return;
 
 	size_t i;
-	ev -> free();
+	ev -> free(ev);
 
 	for (i = 0 ; i < ev -> maxfds; ++i)
 	{
@@ -67,12 +68,12 @@ int fdevent_reset(fdevent *ev)
 {
 	if(ev)
 	{
-		ev -> reset();
+		ev -> reset(ev);
 	}
 	return 0;
 }
 
-fdnode* fdnode_init()
+static fdnode* fdnode_init()
 {
 	fdnode *n = (fdnode *)calloc(1, sizeof(*n));
 
@@ -87,7 +88,7 @@ fdnode* fdnode_init()
 	return n;
 }
 
-void fnode_free(fnode *n)
+static void fdnode_free(fdnode *n)
 {
 	free(n);
 }
@@ -157,7 +158,7 @@ int fdevent_event_del(fdevent *ev, int fd)
 	return 0;
 }
 
-int fdevent_poll(fdevent *ev. int timeout)
+int fdevent_poll(fdevent *ev, int timeout)
 {
 	if (NULL == ev)
 	{
