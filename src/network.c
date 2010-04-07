@@ -117,27 +117,69 @@ int network_init(server *srv)
 		return -1;
 	}
 
-	if (srv -> srv_sockets.size == 0)
+	if (srv -> sockets.size == 0)
 	{
-		srv -> srv_sockets.size = 8;
-		srv -> srv_sockets.used = 0;
-		srv -> srv_sockets.ptr = (server_socket *)malloc(srv -> srv_sockets.size * sizeof(server_socket));
+		srv -> sockets.size = 16;
+		srv -> sockets.used = 0;
+		srv -> sockets.ptr = (server_socket *)malloc(srv -> sockets.size * sizeof(server_socket));
 	}
 	else
 	{
-		srv -> srv_sockets.size += 8;
-		srv -> srv_sockets.ptr = (server_socket *)realloc(srv -> srv_sockets.ptr
-				, srv -> srv_sockets.size * sizeof(server_socket))
+		srv -> sockets.size += 16;
+		srv -> sockets.ptr = (server_socket *)realloc(srv -> sockets.ptr
+				, srv -> sockets.size * sizeof(server_socket))
 	}
-
-	srv -> srv_sockets.ptr[srv -> srv_sockets.used] = srv_sock;
-	++srv -> srv_sockets.used;
+	
+	srv -> sockets.fde_ndx = srv -> sockets.used;
+	srv -> sockets.ptr[srv -> sockets.used] = srv_sock;
+	++srv -> sockets.used;
 
 	buffer_free(bindhost);
 
 	return 0;
 }
 
+static handler_t srver_socket_fdevent_handler(void *srv, void *ctx, int revents)
+{
+	if (NULL == srv || NULL == ctx || 0 = revents)
+	{
+		return HANDLER_ERROR;
+	}
+	
+	//处理监听fd事件。建立连接。
+	
+	return HANDLER_FINISHED;
+}
+
+
+int network_register_fdevent(server *srv)
+{
+	if (NULL == srv)
+	{
+		return -1;
+	}
+	
+	/*
+	 * 在这个时候，srv中的sockets中只有一个socket，也就是
+	 * 监听socket。因此只需把第一个注册到fdevent系统中。
+	 */
+	server_socket *srv_sock = srv -> sockets.ptr[0];
+	
+	//注册监听fd
+	if(0 != fdevent_regsiter(srv -> ev, srver_socket_fdevent_handler, (void *)srv_sock))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "Register Listenning fd in fdevent failed.");
+		return -1;
+	}
+	//监听读事件。
+	if(0 != fdevent_event_add(srv -> ev, srv_sock -> fd, FDEVENT_IN))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "Add Listenning fd in fdevent failed. FDEVENT_IN");
+		return -1;
+	}
+	
+	return 0;
+}
 
 
 

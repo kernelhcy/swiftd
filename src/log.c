@@ -69,12 +69,11 @@ int log_error_open(server *srv)
 {
 	int close_stderr = 1;
 
-#ifdef HAVE_SYSLOG_H
 	/*
 	 * perhaps someone wants to use syslog() 
 	 */
 	openlog("swiftd", LOG_CONS | LOG_PID, LOG_DAEMON);
-#endif
+	
 	srv->errorlog_mode = ERRORLOG_STDERR; 	//默认的日志输出的标准错误输出。
 
 	if (srv->srvconf.errorlog_use_syslog) 	//使用系统的日志函数syslog()

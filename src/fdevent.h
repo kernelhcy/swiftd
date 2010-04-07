@@ -26,7 +26,7 @@
  * revents ： 发生的IO事件。
  *
  */
-typedef handler_t (*fdevent_handler)(void *wkr, void *ctx, int revents);
+typedef handler_t (*fdevent_handler)(void *srv, void *ctx, int revents);
 
 //定义事件。
 //每个事件用一个bit表示。

@@ -1,18 +1,13 @@
 /**
- *
- *
- *
- *
- *
+ * 程序入口
  */
 
 #include <pthread.h>
 #include "base.h"
 #include <getopt.h>
 #include <string.h>
+#include "connection.h"
 
-
-#if defined(HAVE_SIGACTION) && defined(SA_SIGINFO)
 static volatile siginfo_t last_sigterm_info;
 static volatile siginfo_t last_sighup_info;
 /**
@@ -43,33 +38,7 @@ static void sigaction_handler(int sig, siginfo_t * si, void *context)
 		break;
 	}
 }
-#elif defined(HAVE_SIGNAL) || defined(HAVE_SIGACTION)
-/**
- * 信号处理函数。用于signal函数。
- */
-static void signal_handler(int sig)
-{
-	switch (sig)
-	{
-	case SIGTERM:
 
-		break;
-	case SIGINT:
-
-		break;
-	case SIGALRM:
-
-		break;
-	case SIGHUP:
-
-		break;
-	case SIGCHLD:
-		break;
-	}
-}
-#endif
-
-#ifdef HAVE_FORK
 /*
  * 将程序设置成后台进程。
  */
@@ -78,15 +47,9 @@ static void daemonize(void)
 	/*
 	 * 忽略和终端读写有关的信号
 	 */
-#ifdef SIGTTOU
 	signal(SIGTTOU, SIG_IGN);
-#endif
-#ifdef SIGTTIN
 	signal(SIGTTIN, SIG_IGN);
-#endif
-#ifdef SIGTSTP
 	signal(SIGTSTP, SIG_IGN);
-#endif
 	/* 产生子进程，父进程退出 */
 	if (0 != fork())
 		exit(0);
@@ -106,7 +69,6 @@ static void daemonize(void)
 	if (0 != chdir("/"))
 		exit(0);
 }
-#endif
 
 /**
  * 初始化服务器运行环境。
@@ -115,7 +77,72 @@ static server *server_init(void)
 {
 
 	server *srv = calloc(1, sizeof(*srv));
+
+	srv -> max_fds = 4096;
+	srv ->  cur_fds = -1;
+	srv ->  want_fds = -1;
+	srv ->  sockets_disabled = 0;
+
+	srv -> max_conns = 4096;
+	srv -> is_daemon = 0;
+
+	srv ->  errorlog_fd = -1;
+	srv -> errorlog_mode = ERRORLOG_FILE;
+	srv -> errorlog_buf = buffer_init();
+
+	srv -> event_handler = FDEVENT_HANDLER_UNSET;
+	srv -> ev = NULL; 
+
+	// plugins;
+	srv -> plugin_slots = NULL;
+
+	srv -> sockets = (socket_array*)malloc(sizeof(socket_array));
+	if (srv -> sockets == NULL)
+	{
+		return NULL;
+	}
+	srv -> sockets -> used = 0;
+	srv -> sockets -> size = 16;
+	srv -> sockets -> ptr = (server_socket**)calloc(srv -> sockets -> size
+													, sizeof(server_socket*));
+	if (srv -> sockets -> ptr == NULL)
+	{
+		return NULL;
+	}
+
+	srv -> con_opened = 0; 
+	srv -> con_read = 0; 
+	srv -> con_written = 0; 
+	srv -> con_closed = 0; 
+
+	srv -> parse_full_path = buffer_init();
+	srv -> response_header = buffer_init();
+	srv -> response_range = buffer_init();
+	srv -> tmp_buf = buffer_init();
+	srv -> tmp_chunk_len = buffer_init();
+	srv -> cond_check_buf = buffer_init();
+
+
+	srv -> conns = (connections *)malloc(sizeof(connections));
+	if (srv -> conns == NULL)
+	{
+		return NULL;
+	}
+	srv -> conns -> used = 0;
+	srv -> conns -> size = 16;
+	srv -> conns -> ptr = (connection**)calloc(srv -> conns -> size
+													, sizeof(connection*));
+	if (srv -> conns -> ptr == NULL)
+	{
+		return NULL;
+	}
 	
+	srv -> joblist = NULL; 		
+	srv -> fdwaitqueue = NULL; 	
+	srv -> unused_nodes = NULL;	
+
+	srv -> network_backend_write = NULL;
+	srv -> network_backend_read = NULL;
 
 	return srv;
 }
@@ -124,7 +151,27 @@ static server *server_init(void)
 static void server_free(server * srv)
 {
 	size_t i;
-
+	for (i = 0; i < srv -> conns -> used; ++i)
+	{
+		connection_free(srv -> conns -> ptr[i]);
+	}
+	free(srv -> conns -> ptr);
+	free(srv -> conns);
+	
+	for (i = 0; i < srv -> sockets -> used; ++i)
+	{
+		free(srv -> sockets -> ptr);
+	}
+	free(srv -> sockets -> ptr);
+	free(srv -> sockets);
+	
+	buffer_free(srv -> errorlog_buf);
+	buffer_free(srv -> parse_full_path);
+	buffer_free(srv -> response_header);
+	buffer_free(srv -> response_range);
+	buffer_free(srv -> tmp_buf);
+	buffer_free(srv -> tmp_chunk_len);
+	buffer_free(srv -> cond_check_buf );
 	
 	free(srv);
 }
@@ -173,7 +220,10 @@ static void server_free(server* srv)
 	free(srv);
 }
 
-
+/************************
+ * 程序入口
+ ************************
+ */
 int main(int argc, char *argv[])
 {
 	server *srv = NULL;
@@ -253,7 +303,7 @@ int main(int argc, char *argv[])
 
 	openDevNull(STDIN_FILENO);
 	openDevNull(STDOUT_FILENO);
-
+	
 	//read configure file
 	if( 0!= config_setdefaults(srv))
 	{
@@ -261,7 +311,14 @@ int main(int argc, char *argv[])
 		server_free(srv);
 		return -1;
 	}
-
+	
+	//记录服务器启动的时间和当前时间。
+	srv -> cur_ts = time(NULL);
+	srv -> startup_ts = srv -> cur_ts;
+	
+	//带开日志。
+	log_error_open(srv);
+	
 	//设置pid文件。
 	if (srv -> srvconf.pid_file -> used)
 	{
@@ -293,13 +350,15 @@ int main(int argc, char *argv[])
 	//select对于描述符的最大数量有限制。
 	if(srv -> event_handler == FDEVENT_HANDLER_SELECT)
 	{
-		srv -> maxfds = FD_SETSIZE - 100;
+		srv -> max_fds = FD_SETSIZE - 100;
 	}
 	else
 	{
-		srv -> maxfds = 4096;
+		srv -> max_fds = 4096;
 	}
-
+	
+	srv -> max_conns = srv -> max_fds;
+	
 	i_am_root = (getuid == 0);
 	if (!i_am_root && issetugid())
 	{
