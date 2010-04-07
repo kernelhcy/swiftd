@@ -14,7 +14,8 @@
 
 
 /*
- *
+ * 初始化网络。
+ * 建立socket，开始监听连接请求。
  */
 int network_init(server *srv)
 {
@@ -139,6 +140,21 @@ int network_init(server *srv)
 	return 0;
 }
 
+
+void network_close(server *srv)
+{
+	if (NULL == srv)
+	{
+		return;
+	}
+	return;
+}
+
+/*
+ * 这个函数处理监听fd的IO事件。
+ * 监听fd有读IO事件发生，意味着有新的连接请求到来，
+ * 在函数中，建立连接。并启动对这个连接的状态机。
+ */
 static handler_t srver_socket_fdevent_handler(void *srv, void *ctx, int revents)
 {
 	if (NULL == srv || NULL == ctx || 0 = revents)
