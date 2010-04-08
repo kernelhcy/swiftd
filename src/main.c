@@ -86,15 +86,17 @@ static server *server_init(void)
 	srv -> max_conns = 4096;
 	srv -> is_daemon = 0;
 
-	srv ->  errorlog_fd = -1;
+	srv -> errorlog_fd = -1;
 	srv -> errorlog_mode = ERRORLOG_FILE;
 	srv -> errorlog_buf = buffer_init();
+	pthread_mutex_init(&srv -> log_lock);
 
 	srv -> event_handler = FDEVENT_HANDLER_UNSET;
 	srv -> ev = NULL; 
 
 	// plugins;
 	srv -> plugin_slots = NULL;
+	pthread_mutex_init(&srv -> plugin_lock);
 
 	srv -> sockets = (socket_array*)malloc(sizeof(socket_array));
 	if (srv -> sockets == NULL)
@@ -109,19 +111,13 @@ static server *server_init(void)
 	{
 		return NULL;
 	}
-
+	pthread_mutex_init(&srv -> sockets_lock);
+	
 	srv -> con_opened = 0; 
 	srv -> con_read = 0; 
 	srv -> con_written = 0; 
-	srv -> con_closed = 0; 
-
-	srv -> parse_full_path = buffer_init();
-	srv -> response_header = buffer_init();
-	srv -> response_range = buffer_init();
-	srv -> tmp_buf = buffer_init();
-	srv -> tmp_chunk_len = buffer_init();
-	srv -> cond_check_buf = buffer_init();
-
+	srv -> con_closed = 0;
+	pthread_mutex_init(&srv -> con_lock);
 
 	srv -> conns = (connections *)malloc(sizeof(connections));
 	if (srv -> conns == NULL)
@@ -136,10 +132,14 @@ static server *server_init(void)
 	{
 		return NULL;
 	}
+	pthread_mutex_init(&srv -> conns_lock);
 	
 	srv -> joblist = NULL; 		
+	pthread_mutex_init(&srv -> joblist_lock);
 	srv -> fdwaitqueue = NULL; 	
+	pthread_mutex_init(&srv -> fdwaitqueue_lock);
 	srv -> unused_nodes = NULL;	
+	pthread_mutex_init(&srv -> unused_nodes_lock);
 
 	srv -> network_backend_write = NULL;
 	srv -> network_backend_read = NULL;
@@ -166,12 +166,15 @@ static void server_free(server * srv)
 	free(srv -> sockets);
 	
 	buffer_free(srv -> errorlog_buf);
-	buffer_free(srv -> parse_full_path);
-	buffer_free(srv -> response_header);
-	buffer_free(srv -> response_range);
-	buffer_free(srv -> tmp_buf);
-	buffer_free(srv -> tmp_chunk_len);
-	buffer_free(srv -> cond_check_buf );
+	
+	pthread_mutex_destroy(&srv -> plugin_lock);
+	pthread_mutex_destroy(&srv -> sockets_lock);
+	pthread_mutex_destroy(&srv -> conns_lock);
+	pthread_mutex_destroy(&srv -> con_lock);
+	pthread_mutex_destroy(&srv -> joblist_lock);
+	pthread_mutex_destroy(&srv -> fdwaitqueue_lock);
+	pthread_mutex_destroy(&srv -> unused_nodes_lock);
+	pthread_mutex_destroy(&srv -> log_lock);
 	
 	free(srv);
 }

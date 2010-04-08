@@ -26,8 +26,6 @@
 //mutex
 //lock the log file
 #include <pthread.h>
-static pthread_mutex_t = PTHREAD_MUTEX_INITIALIZER;
-
 
 /*
  * 关闭文件描述符fd，并将fd打开到/dev/null。
@@ -194,6 +192,7 @@ int log_error_close(server * srv)
 int log_error_write(server * srv, const char *filename, unsigned int line,
 				const char *fmt, ...)
 {
+	pthread_mutex_lock(&srv -> log_lock);
 	va_list ap;
 
 	switch (srv->errorlog_mode)
@@ -298,8 +297,6 @@ int log_error_write(server * srv, const char *filename, unsigned int line,
 	}
 	va_end(ap);
 
-	pthread_mutex_lock(&log_mutex);
-
 	switch (srv->errorlog_mode)
 	{
 	case ERRORLOG_FILE:
@@ -317,7 +314,7 @@ int log_error_write(server * srv, const char *filename, unsigned int line,
 		break;
 	}
 
-	pthread_mutex_unlock(&log_mutex);
+	pthread_mutex_unlock(&srv -> log_lock);
 
 	return 0;
 }

@@ -147,6 +147,14 @@ void network_close(server *srv)
 	{
 		return;
 	}
+	
+	size_t i;
+	for (i = 0; i < srv -> sockets.used; ++i)
+	{
+		close(srv -> sockets.ptr[i]);
+	}
+	free(srv -> sockets.ptr);
+	
 	return;
 }
 
@@ -163,6 +171,19 @@ static handler_t server_socket_fdevent_handler(void *srv, void *ctx, int revents
 	}
 	
 	//处理监听fd事件。建立连接。
+	connection *con;
+	server_socket *srv_sock = (server_socket*)ctx;
+	/*
+	 * 监听fd每发生一次IO事件，表示有连接请求。 
+	 * 服务器连续读取10次请求，以提高效率。
+	 */
+	int i;
+	for (i = 0; i < 10 && NULL != (con = connection_accept(srv, srv_sock)); ++i)
+	{
+		connection_set_state(srv, con, CON_STATE_REQUEST_START);
+		
+		connection_state_machine(srv, con);
+	}
 	
 	return HANDLER_FINISHED;
 }

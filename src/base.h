@@ -23,6 +23,8 @@
 #include "fdevent.h"
 #include "configure.h"
 
+#include <pthread.h>
+
 #ifndef O_BINARY
 # define O_BINARY 0
 #endif
@@ -47,6 +49,8 @@
 #ifndef SHUT_WR
 # define SHUT_WR 1
 #endif
+
+#define UNUSED(x) ((void*)x)
 
 #include "settings.h"
 
@@ -275,7 +279,17 @@ typedef struct
 	void **plugin_ctx;			/* plugin connection specific config */
 
 	buffer *server_name;
-
+	
+	/*
+	 * buffers 
+	 */
+	buffer *parse_full_path;
+	buffer *response_header;
+	buffer *response_range;
+	buffer *tmp_buf;
+	buffer *tmp_chunk_len;
+	buffer *cond_check_buf;
+	
 	/*
 	 * error-handler 
 	 */
@@ -360,32 +374,26 @@ typedef struct server
 	int errorlog_fd;
 	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;
 	buffer *errorlog_buf;
+	pthread_mutex_t log_lock;
 
 	fdevent_handler_t event_handler;
 	fdevent *ev; 	//fdevent系统
 
+	pthread_mutex_t plugin_lock;
 	buffer_plugin plugins;
 	void *plugin_slots;
 
+	pthread_mutex_t sockets_lock;
 	socket_array *sockets; //保存socket
 
 	/*
 	 * 对于当前连接的一些计数器
 	 */
+	pthread_mutex_t con_lock;
 	int con_opened; 	//打开的连接
 	int con_read; 		//正在读的连接
 	int con_written; 	//正在写的连接
 	int con_closed; 	//关闭的连接
-
-	/*
-	 * buffers 
-	 */
-	buffer *parse_full_path;
-	buffer *response_header;
-	buffer *response_range;
-	buffer *tmp_buf;
-	buffer *tmp_chunk_len;
-	buffer *cond_check_buf;
 
 	/*
 	 * Timestamps 
@@ -394,10 +402,16 @@ typedef struct server
 	time_t startup_ts; 				//服务器启动的时间戳
 
 	connections *conns; 			//连接数组
+	pthread_mutex_t conns_lock;
 	
 	con_list_node *joblist; 		//作业列表
+	pthread_mutex_t joblist_lock;
+	
 	con_list_node *fdwaitqueue; 	//描述符等待队列
+	pthread_mutex_t fdwaitqueue_lock;
+	
 	con_list_node *unused_nodes;	//空闲的链表节点。
+	pthread_mutex_t unused_nodes_lock;
 
 	int (*network_backend_write) (struct server * srv, connection * con, int fd, chunkqueue * cq);
 	int (*network_backend_read) (struct server * srv, connection * con, int fd, chunkqueue * cq);

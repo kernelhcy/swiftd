@@ -19,4 +19,9 @@ int connection_state_mechine(server *srv, connection *con);
 //设置连接的状态。
 void connection_set_state(server *srv, connection *con, connection_state_t state);
 
+/*
+ * 接受连接请求，建立连接。
+ */
+connection* connection_accpet(server *srv, server_socket *srv_sock);
+
 #endif
