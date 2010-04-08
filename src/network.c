@@ -155,7 +155,7 @@ void network_close(server *srv)
  * 监听fd有读IO事件发生，意味着有新的连接请求到来，
  * 在函数中，建立连接。并启动对这个连接的状态机。
  */
-static handler_t srver_socket_fdevent_handler(void *srv, void *ctx, int revents)
+static handler_t server_socket_fdevent_handler(void *srv, void *ctx, int revents)
 {
 	if (NULL == srv || NULL == ctx || 0 = revents)
 	{

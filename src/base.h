@@ -240,7 +240,6 @@ typedef struct
 	size_t request_count;		/* 这个连接所处理的请求的数量*/
 
 	int fd;						/* 连接的描述符*/
-	int fde_ndx;				/* index for the fdevent-handler  */
 	//在连接数组connections中的下标位置。
 	int ndx;					
 
@@ -274,8 +273,6 @@ typedef struct
 	int in_joblist;
 
 	void **plugin_ctx;			/* plugin connection specific config */
-
-	specific_config conf;		/* global connection specific config */
 
 	buffer *server_name;
 
