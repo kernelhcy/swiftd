@@ -197,7 +197,7 @@ int log_error_write(server * srv, const char *filename, unsigned int line,
 		 */
 		if (srv->cur_ts != srv->last_generated_debug_ts)
 		{
-			buffer_prepare_copy(srv->ts_debug_str, 255);
+			buffer_prepare_copy(srv->ts_debug_str, 1024);
 			strftime(srv->ts_debug_str->ptr, srv->ts_debug_str->size - 1,
 					 "%Y-%m-%d %H:%M:%S", localtime(&(srv->cur_ts)));
 			srv->ts_debug_str->used = strlen(srv->ts_debug_str->ptr) + 1;

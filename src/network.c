@@ -159,6 +159,7 @@ void network_close(server *srv)
  */
 static handler_t server_socket_fdevent_handler(void *srv, void *ctx, int revents)
 {
+	log_error_write(srv, __FILE__, __LINE__, "s", "A new connection request.");
 	if (NULL == srv || NULL == ctx || 0 == revents)
 	{
 		return HANDLER_ERROR;
@@ -175,7 +176,7 @@ static handler_t server_socket_fdevent_handler(void *srv, void *ctx, int revents
 	for (i = 0; i < 10 && NULL != (con = connection_accept(srv, srv_sock)); ++i)
 	{
 		connection_set_state(srv, con, CON_STATE_REQUEST_START);
-		
+		log_error_write(srv, __FILE__, __LINE__,"s", "start the state machine of the new connection.");
 		connection_state_machine(srv, con);
 	}
 	
@@ -202,12 +203,15 @@ int network_register_fdevent(server *srv)
 		log_error_write(srv, __FILE__, __LINE__, "s", "Register Listenning fd in fdevent failed.");
 		return -1;
 	}
+	log_error_write(srv, __FILE__, __LINE__,"sd", "Register the listenning fd in fdevent.", srv_sock -> fd);
+	
 	//监听读事件。
 	if(0 != fdevent_event_add(srv -> ev, srv_sock -> fd, FDEVENT_IN))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "s", "Add Listenning fd in fdevent failed. FDEVENT_IN");
 		return -1;
 	}
+	log_error_write(srv, __FILE__, __LINE__,"s", "Add listenning fd in fdevent.");
 	
 	return 0;
 }

@@ -24,9 +24,31 @@ static volatile siginfo_t last_sighup_info;
  * @PARM si  	 : 包含信号产生原因的有关信息。
  * @PARM context : 标识信号传递时的进程上下文。可以被强制转换成ucntext_t类型。
  */
-static void* sigaction_handler(int sig, siginfo_t * si, void *context)
+static void sigaction_handler(int sig, siginfo_t * si, void *context)
 {
 	UNUSED(context);
+
+	switch (sig)
+	{
+	case SIGTERM: 	//终止 由kill命令发送的系统默认终止信号
+
+		break;
+	case SIGINT: 	//终端中断符 Ctrl-C或DELETE
+
+
+		break;
+	case SIGALRM: 	//超时信号
+
+		break;
+	case SIGHUP: 	//连接断开信号
+		
+	case SIGCHLD: 	//子进程终止或停止。
+		break;
+	}
+}
+
+static void signal_handler(int sig)
+{
 
 	switch (sig)
 	{
@@ -153,6 +175,10 @@ static server *server_init(void)
 	srv -> network_backend_read = NULL;
 	
 	srv -> ts_debug_str = buffer_init();
+	
+	srv -> tp = NULL;
+	srv -> jc_nodes = NULL;
+	pthread_mutex_init(&srv -> jc_lock, NULL);
 
 	return srv;
 }
@@ -186,6 +212,16 @@ static void server_free(server * srv)
 	pthread_mutex_destroy(&srv -> fdwaitqueue_lock);
 	pthread_mutex_destroy(&srv -> unused_nodes_lock);
 	pthread_mutex_destroy(&srv -> log_lock);
+	
+	job_ctx *jc = srv -> jc_nodes, *tmp;
+	while(NULL != jc)
+	{
+		tmp = jc;
+		jc = jc -> next;
+		free(tmp);
+	}
+	pthread_mutex_destroy(&srv -> jc_lock);
+	tp_free(srv -> tp);
 	
 	free(srv);
 }
@@ -279,8 +315,8 @@ int main(int argc, char *argv[])
 
 	//处理信号。
 	struct sigaction sig_action;
-	sig_action.sa_handler = sigaction_handler;
-	//sig_action.sa_mask = 0;
+	sig_action.sa_handler = signal_handler;
+	sigemptyset(&sig_action.sa_mask);
 	sig_action.sa_flags = 0;
 	sig_action.sa_restorer = NULL;
 
@@ -422,9 +458,89 @@ int main(int argc, char *argv[])
 		log_error_write(srv, __FILE__, __LINE__,"s", "fdevent init failed." );
 		return -1;
 	}
+	
+	if (-1 == network_register_fdevent(srv))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "network_register_fdevent failed.");
+		return -1;
+	}
+	
 	//初始化文件监测系统。
-
-
+	
+	//初始化线程池
+	if (NULL == (srv -> tp = tp_init(1, 20)))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "Init the thread pool failed.");
+		return -1;
+	}
+	
+	//检测IO事件。
+	int n, fd, revents;
+	size_t ndx = 0;
+	fdevent_handler handler;
+	void *ctx;
+	job_ctx *jc;
+	
+	do
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "begin poll...");
+		n = fdevent_poll(srv -> ev, 5000);
+		
+		if (srv -> cur_ts != time(NULL))
+		{
+			//a new second
+			srv -> cur_ts = time(NULL);
+		}
+		
+		if (0 == n)
+		{	
+			//timeout
+			//log_error_write(srv, __FILE__, __LINE__, "s", "fdevent_poll timeout.");
+		}
+		else if (-1 == n)
+		{
+			//error 
+			log_error_write(srv, __FILE__, __LINE__, "ss", "fdevent_poll error."
+						, strerror(errno));
+		}
+		else
+		{
+			log_error_write(srv, __FILE__, __LINE__,"sd", "some fd got IO event. num:", n);
+			sleep(1);
+		}
+		
+		ndx = 0;
+		while(--n >= 0)
+		{
+			ndx = fdevent_event_get_next_ndx(srv -> ev, ndx);
+			fd  = fdevent_event_get_fd(srv -> ev, ndx);
+			revents = fdevent_event_get_revent(srv -> ev, ndx);
+			handler = fdevent_event_get_handler(srv -> ev, fd);
+			ctx = fdevent_event_get_context(srv -> ev, fd);			
+			
+			log_error_write(srv, __FILE__, __LINE__, "sd", "run a job. fd:", fd);
+			jc = job_ctx_get_new(srv);
+			if (NULL == jc)
+			{
+				log_error_write(srv, __FILE__, __LINE__, "s", "Get new job ctx failed.");
+			}
+			else
+			{
+				jc -> srv = srv;
+				jc -> ctx = ctx;
+				jc -> revents = revents;
+				jc -> handler = handler;
+				jc -> r_val = HANDLER_UNSET;
+				jc -> next = NULL;
+				
+				if (-1 == tp_run_job(srv -> tp, job_entry, jc))
+				{
+					log_error_write(srv, __FILE__, __LINE__, "s", "Try to run a job failed.");
+				}
+			}
+			
+		}
+	}while(1);
 	
 	return 0;
 }

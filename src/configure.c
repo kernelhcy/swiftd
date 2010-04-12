@@ -8,7 +8,7 @@ int config_setdefaults(server *srv)
 		return -1;
 	}
 
-	srv -> srvconf.port = 81;
+	srv -> srvconf.port = 8080;
 	srv -> srvconf.bindhost = NULL;
 	srv -> srvconf.errorlog_file = buffer_init_string("/var/log/swiftd.log");
 	srv -> srvconf.errorlog_use_syslog = 0;

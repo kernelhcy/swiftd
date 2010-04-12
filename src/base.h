@@ -21,6 +21,7 @@
 #include "keyvalue.h"
 #include "settings.h"
 #include "fdevent.h"
+#include "threadpool.h"
 
 #include <pthread.h>
 
@@ -345,6 +346,19 @@ typedef struct s_con_list_node
 	struct s_con_list_node *next;
 }con_list_node;
 
+/*
+ * 定义一个job的环境。
+ */
+typedef struct s_job_ctx
+{
+	fdevent_handler handler; 	//IO事件处理函数指针。
+	void *srv; 					//参数一
+	void *ctx; 					//参数二
+	int revents; 				//参数三
+	handler_t r_val; 			//返回值
+	
+	struct s_job_ctx *next;
+}job_ctx;
 
 /**
  * server数据。
@@ -392,6 +406,11 @@ typedef struct server
 	int con_written; 	//正在写的连接
 	int con_closed; 	//关闭的连接
 
+	//线程池
+	thread_pool *tp;
+	job_ctx *jc_nodes; 	//存储未使用的job环境。
+	pthread_mutex_t jc_lock;
+
 	/*
 	 * Timestamps 
 	 */
@@ -418,6 +437,13 @@ typedef struct server
 
 }server;
 
+//获得一个job环境
+//仅由主线程调用。
+job_ctx* job_ctx_get_new(server *srv);
+void job_ctx_free(server *srv, job_ctx *jc);
 
+//运行一个job
+//这个函数被传给线程池。
+void *job_entry(void *ctx);
 
 #endif

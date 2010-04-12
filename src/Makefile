@@ -1,8 +1,8 @@
 OBJS=buffer.o log.o  chunk.o connection.o array.o  configure.o fdevent.o threadpool.o\
-	 fde_epoll.o joblist.o main.o network.o
+	 fde_epoll.o joblist.o main.o network.o base.o
 FLAGS=-g
 swiftd: ${OBJS}
-	gcc ${OBJS} -o swiftd -lpthread
+	gcc ${OBJS} ${FLAGS} -o swiftd -lpthread
 
 buffer.o: buffer.c
 	gcc -c ${FLAGS} buffer.c -o buffer.o
@@ -28,7 +28,8 @@ main.o:main.c
 	gcc -c ${FLAGS} main.c -o main.o
 network.o:network.c
 	gcc -c ${FLAGS} network.c -o  network.o
-
+base.o:base.c
+	gcc -c ${FLAGS} base.c -o  base.o
 clean:
 	rm *.o
 #	gcc -c ${FLAGS}   -o 

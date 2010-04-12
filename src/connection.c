@@ -214,6 +214,7 @@ static int connection_handle_read(server *srv, connection *con)
 			log_error_write(srv, __FILE__, __LINE__, "s", "ioctl error. FIONREAD.");
 			return -1;
 		}
+		log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
 
 		if(need_to_read <= 0)
 		{
@@ -318,9 +319,8 @@ static int connection_handle_read(server *srv, connection *con)
 				++ b -> used;
 			}
 		}
+		log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 	}
-
-	log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 
 	return 0;
 }
@@ -353,11 +353,13 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 	
 	if (revents & FDEVENT_IN)
 	{
+		log_error_write(srv, __FILE__, __LINE__, "sd", "readable fd:", con -> fd);
 		con -> is_readable = 1;
 	}
 	
 	if (revents & FDEVENT_OUT)
 	{
+		log_error_write(srv, __FILE__, __LINE__, "sd", "writeable fd:", con -> fd);
 		con -> is_writable = 1;
 	}
 	
@@ -366,6 +368,7 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		/*
 		 * 同时可读可写意味着出错。。。
 		 */
+		log_error_write(srv, __FILE__, __LINE__, "sd", "error fd: ", con -> fd);
 		if (revents & FDEVENT_ERR)
 		{
 			connection_set_state(srv, con, CON_STATE_ERROR);
@@ -450,6 +453,8 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 	++srv -> con_opened;
 	
 	fdevent_register(srv -> ev, fd, connection_fdevent_handler, (void *)con);
+	log_error_write(srv, __FILE__, __LINE__,"sd"
+				, "Register a connection socket fd in fdevent. fd:",fd);
 	
 	//设置连接socket fd为非阻塞。
 	if (-1 == fdevent_fcntl(srv -> ev, con -> fd))
@@ -457,6 +462,8 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 		log_error_write(srv, __FILE__, __LINE__, "sd", "fcntl failed. fd:", con -> fd);
 		return NULL;
 	}
+	log_error_write(srv, __FILE__, __LINE__,"sd"
+						, "Add a connection socket fd in fdevent. fd:", fd);
 	
 	return con;
 }
@@ -489,6 +496,7 @@ int connection_state_machine(server *srv, connection *con)
 			case CON_STATE_RESPONSE_END:
 				break;
 			case CON_STATE_READ:
+				connection_handle_read(srv, con);
 				break;
 			case CON_STATE_READ_POST:
 				break;
