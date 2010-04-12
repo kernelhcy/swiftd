@@ -7,6 +7,14 @@
 #include <getopt.h>
 #include <string.h>
 #include "connection.h"
+#include <signal.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <error.h>
+#include <errno.h>
 
 static volatile siginfo_t last_sigterm_info;
 static volatile siginfo_t last_sighup_info;
@@ -16,7 +24,7 @@ static volatile siginfo_t last_sighup_info;
  * @PARM si  	 : 包含信号产生原因的有关信息。
  * @PARM context : 标识信号传递时的进程上下文。可以被强制转换成ucntext_t类型。
  */
-static void sigaction_handler(int sig, siginfo_t * si, void *context)
+static void* sigaction_handler(int sig, siginfo_t * si, void *context)
 {
 	UNUSED(context);
 
@@ -89,14 +97,14 @@ static server *server_init(void)
 	srv -> errorlog_fd = -1;
 	srv -> errorlog_mode = ERRORLOG_FILE;
 	srv -> errorlog_buf = buffer_init();
-	pthread_mutex_init(&srv -> log_lock);
+	pthread_mutex_init(&srv -> log_lock, NULL);
 
 	srv -> event_handler = FDEVENT_HANDLER_UNSET;
 	srv -> ev = NULL; 
 
 	// plugins;
 	srv -> plugin_slots = NULL;
-	pthread_mutex_init(&srv -> plugin_lock);
+	pthread_mutex_init(&srv -> plugin_lock, NULL);
 
 	srv -> sockets = (socket_array*)malloc(sizeof(socket_array));
 	if (srv -> sockets == NULL)
@@ -111,13 +119,13 @@ static server *server_init(void)
 	{
 		return NULL;
 	}
-	pthread_mutex_init(&srv -> sockets_lock);
+	pthread_mutex_init(&srv -> sockets_lock, NULL);
 	
 	srv -> con_opened = 0; 
 	srv -> con_read = 0; 
 	srv -> con_written = 0; 
 	srv -> con_closed = 0;
-	pthread_mutex_init(&srv -> con_lock);
+	pthread_mutex_init(&srv -> con_lock, NULL);
 
 	srv -> conns = (connections *)malloc(sizeof(connections));
 	if (srv -> conns == NULL)
@@ -132,17 +140,19 @@ static server *server_init(void)
 	{
 		return NULL;
 	}
-	pthread_mutex_init(&srv -> conns_lock);
+	pthread_mutex_init(&srv -> conns_lock, NULL);
 	
 	srv -> joblist = NULL; 		
-	pthread_mutex_init(&srv -> joblist_lock);
+	pthread_mutex_init(&srv -> joblist_lock, NULL);
 	srv -> fdwaitqueue = NULL; 	
-	pthread_mutex_init(&srv -> fdwaitqueue_lock);
+	pthread_mutex_init(&srv -> fdwaitqueue_lock, NULL);
 	srv -> unused_nodes = NULL;	
-	pthread_mutex_init(&srv -> unused_nodes_lock);
+	pthread_mutex_init(&srv -> unused_nodes_lock, NULL);
 
 	srv -> network_backend_write = NULL;
 	srv -> network_backend_read = NULL;
+	
+	srv -> ts_debug_str = buffer_init();
 
 	return srv;
 }
@@ -166,6 +176,7 @@ static void server_free(server * srv)
 	free(srv -> sockets);
 	
 	buffer_free(srv -> errorlog_buf);
+	buffer_free(srv -> ts_debug_str);
 	
 	pthread_mutex_destroy(&srv -> plugin_lock);
 	pthread_mutex_destroy(&srv -> sockets_lock);
@@ -190,39 +201,20 @@ static void show_version(void)
 }
 
 
-void show_help()
+static void show_help()
+{
+	//exit(0);
+}
+
+static void show_features()
 {
 	exit(0);
 }
 
-void show_featrues()
+static int issetugid()
 {
-	exit(0);
+	return 0;
 }
-
-static server* server_init()
-{
-	server * srv = calloc(1, sizeof(*srv));
-
-	return srv;
-}
-
-static void server_free(server* srv)
-{
-	if (srv == NULL)
-	{
-		return;
-	}
-
-	int i;
-	for (i = 0; i < srv -> worker_cnt; ++i)
-	{
-		worker_free(srv -> workers[i]);
-	}
-
-	free(srv);
-}
-
 /************************
  * 程序入口
  ************************
@@ -234,17 +226,21 @@ int main(int argc, char *argv[])
 	int test_config = 0; 	//标记是否是需要测试配置文件。
 	int spe_conf = 0; 		//标记是否指定配置文件。
 	buffer *spe_conf_path; 	//指定的配置文件位置。
-
+	int is_daemon;
+	
+	fprintf(stderr, "初始化server结构体.\n");
 	if ( NULL == (srv = server_init()) )
 	{
 		fprintf(stderr, "initial the server struct error. NULL pointer return.\n");
 		server_free(srv);
 		exit(-1);
 	}
-
+	fprintf(stderr, "初始化server结构体完毕.\n");
+	
 	int o = -1; 
-	while (-1 == (o = getopt(argc, argv, "hf:vVDt")))
+	while (-1 != (o = getopt(argc, argv, "hf:vVDt")))
 	{
+		fprintf(stderr, "处理参数。%c \n", (char)o);
 		switch(o)
 		{
 			case 'h':
@@ -273,7 +269,7 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-
+	fprintf(stderr, "处理参数完毕。\n");
 	if (test_config)
 	{
 		printf("test config\n");
@@ -282,10 +278,9 @@ int main(int argc, char *argv[])
 	}
 
 	//处理信号。
-#if defined(HAVE_SIGACTION) && defined(SA_SIGINFO)
 	struct sigaction sig_action;
-	sig_action.handler = sigaciont_handler;
-	sig_action.sa_mask = 0;
+	sig_action.sa_handler = sigaction_handler;
+	//sig_action.sa_mask = 0;
 	sig_action.sa_flags = 0;
 	sig_action.sa_restorer = NULL;
 
@@ -294,18 +289,11 @@ int main(int argc, char *argv[])
 	sigaction(SIGTERM, &sig_action, NULL);
 	sigaction(SIGINT, &sig_action, NULL);
 	sigaction(SIGALRM, &sig_action, NULL);
-
-#elif defined(HAVE_SIGNAL) || defined(HAVE_SIGACTION)
-	signal(SIGHUP, signal_handler);
-	signal(SIGCHLD, signal_handler);
-	signal(SIGTERM, signal_handler);
-	signal(SIGINT, signal_handler);
-	signal(SIGALRM, signal_handler);
-
-#endif
-
+	fprintf(stderr, "设置信号处理函数.\n");
+	
 	openDevNull(STDIN_FILENO);
 	openDevNull(STDOUT_FILENO);
+	fprintf(stderr, "关闭标准输入输出.\n");
 	
 	//read configure file
 	if( 0!= config_setdefaults(srv))
@@ -314,6 +302,7 @@ int main(int argc, char *argv[])
 		server_free(srv);
 		return -1;
 	}
+	fprintf(stderr, "设置默认配置.\n");
 	
 	//记录服务器启动的时间和当前时间。
 	srv -> cur_ts = time(NULL);
@@ -321,22 +310,24 @@ int main(int argc, char *argv[])
 	
 	//带开日志。
 	log_error_open(srv);
+	fprintf(stderr, "启动日志.\n");
+	log_error_write(srv, __FILE__, __LINE__, "s", "日志打开成功！");
 	
 	//设置pid文件。
 	if (srv -> srvconf.pid_file -> used)
 	{
-		if (1- == open(srv -> srvconf.pid_file -> ptr, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC
-					, S_IRUSE | S_IWUSE | S_RGRP | S_ROTH))
+		if (-1 == open(srv -> srvconf.pid_file -> ptr, O_WRONLY | O_CREAT | O_EXCL | O_TRUNC
+					, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))
 		{
 			struct stat st;
 			if (errno != EEXIST)
 			{
-				log_error(srv, __FILE__, __LINE__, "sbs", "open pid-file failed:", srv -> srvconf.pid_file
+				log_error_write(srv, __FILE__, __LINE__, "sbs", "open pid-file failed:", srv -> srvconf.pid_file
 						, strerror(errno));
 				return -1;
 			}
 
-			if (0 != state(srv -> srvconf.pid_file -> ptr, &st))
+			if (0 != stat(srv -> srvconf.pid_file -> ptr, &st))
 			{
 				log_error_write(srv, __FILE__, __LINE__, "sb", "stating pid-file error:", srv -> srvconf.pid_file);
 			}
@@ -370,7 +361,7 @@ int main(int argc, char *argv[])
 		return;
 	}
 
-	struct rlimit rlim;
+	//struct rlimit rlim;
 
 	if (i_am_root)
 	{
@@ -391,6 +382,7 @@ int main(int argc, char *argv[])
 		*/
 
 		//初始化网络
+		fprintf(stderr, "初始化网络...\n");
 		if (0 != network_init(srv))
 		{
 			fprintf(stderr, "Initial network error!\n");
@@ -424,6 +416,7 @@ int main(int argc, char *argv[])
 	}
 	
 	//初始化fdevent系统。
+	log_error_write(srv, __FILE__, __LINE__, "s", "启动fdevent系统...");
 	if (NULL == (srv -> ev = fdevent_init(srv -> max_fds + 1, srv -> event_handler)))
 	{
 		log_error_write(srv, __FILE__, __LINE__,"s", "fdevent init failed." );

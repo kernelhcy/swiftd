@@ -1,4 +1,4 @@
-#ifndef _BASE_H_
+	#ifndef _BASE_H_
 #define _BASE_H_
 
 #include <sys/types.h>
@@ -21,7 +21,6 @@
 #include "keyvalue.h"
 #include "settings.h"
 #include "fdevent.h"
-#include "configure.h"
 
 #include <pthread.h>
 
@@ -49,8 +48,6 @@
 #ifndef SHUT_WR
 # define SHUT_WR 1
 #endif
-
-#define UNUSED(x) ((void*)x)
 
 #include "settings.h"
 
@@ -190,7 +187,7 @@ typedef struct
 	array *upload_tempdirs; 			//上传的临时目录
 
 	unsigned short max_worker; 			//worker进程的最大数量
-	unsigned short max_request_size; 	//request的最大大小
+	unsigned int max_request_size; 	//request的最大大小
 
 	unsigned short log_request_header_on_error;
 	unsigned short log_state_handling;
@@ -297,7 +294,7 @@ typedef struct
 	int error_handler_saved_status;
 	int in_error_handler;
 
-	void *srv_socket;			/* server socket */
+	void *srv_sock;			/* server socket */
 } connection;
 
 //连接数组
@@ -342,10 +339,10 @@ typedef struct
 
 //一个链表。保存连接。
 //使用在作业队列中。
-typedef struct
+typedef struct s_con_list_node
 {
 	connection *con;
-	struct con_list_node *next;
+	struct s_con_list_node *next;
 }con_list_node;
 
 
@@ -400,6 +397,9 @@ typedef struct server
 	 */
 	time_t cur_ts; 					//当前时间戳
 	time_t startup_ts; 				//服务器启动的时间戳
+	time_t last_generated_debug_ts; //用于日志系统记录时间
+	
+	buffer *ts_debug_str;			//日志系统存储空间。
 
 	connections *conns; 			//连接数组
 	pthread_mutex_t conns_lock;

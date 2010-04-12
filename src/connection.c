@@ -3,6 +3,9 @@
 #include "buffer.h"
 #include "array.h"
 #include <errno.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <sys/ioctl.h>
 
 static void connection_init(server *srv, connection *con)
 {
@@ -56,7 +59,7 @@ static void connection_init(server *srv, connection *con)
 	con -> error_handler = buffer_init();
 	con -> error_handler_saved_status = 0;
 	con -> in_error_handler = 0;
-	con -> srv_socket = NULL;	
+	con -> srv_sock = NULL;	
 	
 	return;
 }
@@ -95,7 +98,7 @@ connection * connection_get_new(server *srv)
 			return NULL;
 		}
 		connection_init(srv, srv -> conns -> ptr[ndx]);
-		srv -> conns -> ndx = ndx;
+		srv -> conns -> ptr[ndx] -> ndx = ndx;
 		++ srv -> conns -> used;
 		return srv -> conns -> ptr[ndx];
 	}
@@ -107,7 +110,7 @@ connection * connection_get_new(server *srv)
 	
 	//查找数组中的空闲connection
 	size_t i;
-	for (i = 0; i < srv -> conns -> size)
+	for (i = 0; i < srv -> conns -> size; ++i)
 	{
 		if ( NULL == srv -> conns -> ptr[i] 
 				|| srv -> conns -> ptr[i] -> state == CON_STATE_CONNECT
@@ -119,7 +122,7 @@ connection * connection_get_new(server *srv)
 				return NULL;
 			}
 			connection_init(srv, srv -> conns -> ptr[i]);
-			srv -> conns -> ndx = i;
+			srv -> conns -> ptr[ndx] -> ndx = i;
 			return srv -> conns -> ptr[i];
 		}
 	}
@@ -129,8 +132,8 @@ connection * connection_get_new(server *srv)
 	{
 		//延长数组conns -> ptr
 		srv -> conns -> size += 16;
-		srv -> conns -> ptr = (connection *)realloc(srv -> conns -> ptr,
-								srv -> conns -> size * sizeof(connection *));
+		srv -> conns -> ptr = (connection **)realloc(srv -> conns -> ptr
+										, (srv -> conns -> size) * sizeof(connection *));
 		if (NULL == srv -> conns -> ptr)
 		{
 			log_error_write(srv, __FILE__, __LINE__, "s" ,"Realloc memory for srv -> conns -> ptr failed.");
@@ -142,7 +145,7 @@ connection * connection_get_new(server *srv)
 		//创建connection并初始化
 		srv -> conns -> ptr[ndx] = (connection *)malloc(sizeof(connection));
 		connection_init(srv, srv -> conns -> ptr[ndx]);
-		srv -> conns -> ndx = ndx;
+		srv -> conns -> ptr[ndx] -> ndx = ndx;
 		return srv -> conns -> ptr[ndx];
 	}
 	
@@ -199,6 +202,126 @@ void connection_free(connection *con)
  */
 static int connection_handle_read(server *srv, connection *con)
 {
+	 int need_to_read;
+
+	if (con -> is_readable)
+	{
+		con -> is_readable = 0;
+
+		//获取需要读取的数据长度.
+		if (-1 == ioctl(con -> fd, FIONREAD, &need_to_read))
+		{
+			log_error_write(srv, __FILE__, __LINE__, "s", "ioctl error. FIONREAD.");
+			return -1;
+		}
+
+		if(need_to_read <= 0)
+		{
+			return 0;
+		}
+
+		buffer *b = chunkqueue_get_append_buffer(con -> read_queue);
+		buffer_prepare_copy(b, need_to_read);
+
+		int len;
+		if (-1 == (len = read(con -> fd, b -> ptr, need_to_read)))
+		{
+			if (errno == EAGAIN)
+			{
+				//非阻塞IO，但是没有数据可读
+				return 0;
+			}
+
+			if (errno == EINTR)
+			{
+				//被信号中断。
+				con -> is_readable = 1;
+				return 0;
+			}
+
+			connection_set_state(srv, con, CON_STATE_ERROR);
+			return -1;
+		}
+		else if (len == 0)
+		{
+			//对方关闭了链接。
+			connection_set_state(srv, con, CON_STATE_CLOSE);
+			return -1;
+		}
+
+		//数据没有读完。
+		if (len < need_to_read)
+		{
+			con -> is_readable = 1;
+		}
+	}
+
+	//查看是否HTTP头读取完毕。
+	chunk *c, *lastchunk;
+	buffer *b;
+	int i, havechars, misschars;
+	int found = 0; //标记是否找到了http结束标志“\r\n\r\n”
+	for (c = con -> read_queue -> first; c != con -> read_queue -> last;)
+	{
+		if (found)
+		{
+			break;
+		}
+		b = c -> mem;
+		for (i = 0; i < b -> used; ++i)
+		{
+			if (b -> ptr[i] == '\r')
+			{
+				if (b -> used - i >= 4)
+				{
+					//这个chunk有足够的长度可能存储着"\r\n\r\n"
+					if (0 == strncmp(b -> ptr + i, "\r\n\r\n", 4))
+					{
+						found = 1;
+						lastchunk = c;
+						break;
+					}
+				}
+				else
+				{	
+					//这个chunk的长度不足以存储"\r\n\r\n", 向前搜索一个块。
+					if (c -> next != NULL)
+					{
+						havechars = b -> used - i - 1;
+						misschars = 4 - havechars;
+						if (0 == strncmp(b -> ptr + i, "\r\n\r\n", havechars)
+								&& 0 == strncmp(c -> next -> mem -> ptr, "\r\n\r\n" + havechars, misschars))
+						{
+							found = 1;
+							lastchunk = c;
+							break;
+						}
+					}
+				}
+			}
+		}
+		c = c -> next;
+	}
+	
+	//将http头拷贝到con -> request.request中。
+	if (found)
+	{
+		buffer_reset(con -> request.request);
+		b = con -> request.request;
+		for (c = con -> read_queue -> first; c != lastchunk; c = c -> next)
+		{
+			buffer_append_string_buffer(b, c -> mem);
+			if (c == lastchunk)
+			{
+				buffer_prepare_append(b, 1);
+				b -> ptr[b -> used] = '\0';
+				++ b -> used;
+			}
+		}
+	}
+
+	log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
+
 	return 0;
 }
 
@@ -209,6 +332,7 @@ static int connection_handle_read(server *srv, connection *con)
  */
 static int connection_handle_write(server *srv, connection *con)
 {
+	
 	return 0;
 }
 
@@ -279,10 +403,10 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		//发送数据。
 		if (-1 == connection_handle_write(srv, con))
 		{
-			log_error_wirte(srv, __FILE__, __LINE__, "s", "Write ERROR.");
+			log_error_write(srv, __FILE__, __LINE__, "s", "Write ERROR.");
 			connection_set_state(srv, con, CON_STATE_ERROR);
 		}
-		else if (con -> state == CON_STAET_WRITE)
+		else if (con -> state == CON_STATE_WRITE)
 		{
 			//记录是否超时。
 			con -> write_request_ts = srv -> cur_ts;
@@ -293,7 +417,7 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 }
 
 //建立连接。
-connection* connection_accpet(server *srv, server_socket *srv_sock)
+connection* connection_accept(server *srv, server_socket *srv_sock)
 {
 	if (NULL == srv || NULL == srv_sock)
 	{
@@ -302,9 +426,9 @@ connection* connection_accpet(server *srv, server_socket *srv_sock)
 	
 	
 	int fd;
-	scok_addr acpt_sock;
-	int addr_len = sizeof(scok_addr)
-	if (-1 == (fd = accpet(srv_sock -> fd, (struct sockaddr *)&acpt_sock, &addr_len)))
+	sock_addr acpt_sock;
+	int addr_len = sizeof(sock_addr);
+	if (-1 == (fd = accept(srv_sock -> fd, (struct sockaddr *)&acpt_sock, &addr_len)))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "ss"
 					, "accpet failed. error: ", strerror(errno));
@@ -340,7 +464,7 @@ connection* connection_accpet(server *srv, server_socket *srv_sock)
 /*
  * 这个函数是处理连接的核心函数！
  */
-int connection_state_mechine(server *srv, connection *con)
+int connection_state_machine(server *srv, connection *con)
 {
 	int done;
 	connection_state_t old_state;
@@ -377,7 +501,7 @@ int connection_state_mechine(server *srv, connection *con)
 			case CON_STATE_CLOSE:
 				break;
 			default:
-				log_write_error(srv, __FILE__, __LINE__, "s", "Unknown state!");
+				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown state!");
 				connection_set_state(srv, con, CON_STATE_ERROR);
 				break;
 		}
@@ -412,8 +536,8 @@ int connection_state_mechine(server *srv, connection *con)
 		case CON_STATE_CLOSE:
 			break;
 		default:
-			log_write_error(srv, __FILE__, __LINE__, "s", "Unknown state!");
-			fdevent_del(srv -> ev, con -> fd);
+			log_error_write(srv, __FILE__, __LINE__, "s", "Unknown state!");
+			fdevent_event_del(srv -> ev, con -> fd);
 			break;
 	}
 		

@@ -10,7 +10,8 @@
 
 #include "settings.h"
 //定义buffer
-typedef struct {
+typedef struct 
+{
 	char *ptr; 		//指向存储空间
 
 	size_t used; 	//buffer中数据的长度
@@ -18,7 +19,8 @@ typedef struct {
 } buffer;
 
 //定义buffer数组
-typedef struct {
+typedef struct 
+{
 	buffer **ptr; 	//buffer指针数组
 
 	size_t used; 	//buffer数组中数据的个数
@@ -28,7 +30,8 @@ typedef struct {
 /*
  * 这个比较有意思
  */
-typedef struct {
+typedef struct 
+{
 	char *ptr;
 
 	size_t offset;				/* input-pointer */

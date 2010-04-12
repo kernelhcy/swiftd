@@ -1,5 +1,5 @@
 #include "configure.h"
-#include "setting.h"
+#include "settings.h"
 
 int config_setdefaults(server *srv)
 {
@@ -9,8 +9,8 @@ int config_setdefaults(server *srv)
 	}
 
 	srv -> srvconf.port = 81;
-	srv -> srvconf.bindhost = buffer_init();
-	srv -> srvconf.errorlog_file = buffer_init_string("/var/log/swiftd/swiftd.log");
+	srv -> srvconf.bindhost = NULL;
+	srv -> srvconf.errorlog_file = buffer_init_string("/var/log/swiftd.log");
 	srv -> srvconf.errorlog_use_syslog = 0;
 	srv -> srvconf.dont_daemonize = 0;
 	srv -> srvconf.changeroot = buffer_init_string("/home/hcy/");
@@ -30,20 +30,20 @@ int config_setdefaults(server *srv)
 	{
 		fdevent_handler_t t;
 		const char *name;
-	}event_handlers[]{
+	}event_handlers[] = {
 #ifdef USE_EPOLL
-		{FDEVENT_HANDLER_EPOLL, "epoll"}
+		{FDEVENT_HANDLER_EPOLL, "epoll"},
 #endif
 
 #ifdef USE_SELECT
-		{FDEVENT_HANDLER_SELECT, "select"}
+		{FDEVENT_HANDLER_SELECT, "select"},
 #endif
-		{FDEVENT_HANdlER_UNSET, NULL}
-	}
+		{FDEVENT_HANDLER_UNSET, NULL}
+	};
 
-	srv -> srvconf.event_handler = buffer_init_string(ev_map[0].name);
-	srv -> srvconf.handler_t = ev_map[0].t;
-	srv -> fdevent_handler = ev_map[0].t;
+	srv -> srvconf.event_handler = buffer_init_string(event_handlers[0].name);
+	srv -> srvconf.handler_t = event_handlers[0].t;
+	srv -> event_handler = event_handlers[0].t;
 
 	return 0;
 }

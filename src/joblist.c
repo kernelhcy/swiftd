@@ -20,7 +20,7 @@ static int con_list_append(server *srv, con_list_node *list, connection *con)
 	{
 		//有空闲的节点。
 		node = srv -> unused_nodes;
-		srv -> unused_node = srv -> unused_nodes -> next;
+		srv -> unused_nodes = srv -> unused_nodes -> next;
 		node -> next = NULL;
 	}
 	else
@@ -38,11 +38,11 @@ static int con_list_append(server *srv, con_list_node *list, connection *con)
 	return 0;
 }
 
-static int con_list_pop(server *srv, con_list_node *list)
+static connection * con_list_pop(server *srv, con_list_node *list)
 {
 	if (NULL == srv || NULL == list)
 	{
-		return 0;
+		return NULL;
 	}
 	
 	con_list_node *head = list;
@@ -152,7 +152,7 @@ int fdwaitqueue_append(server * srv, connection * con)
 
 connection *fdwaitqueue_pop(server *srv)
 {
-	return con_list_pop(srv -> fdwaitqueue);
+	return con_list_pop(srv, srv -> fdwaitqueue);
 }
 
 void fdwaitqueue_free(server * srv, connections * fdwaitqueue)

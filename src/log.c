@@ -12,16 +12,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 
-#ifdef HAVE_SYSLOG_H
 #include <syslog.h>
-#endif
 
 #include "log.h"
 #include "array.h"
-
-#ifdef HAVE_VALGRIND_VALGRIND_H
-#include <valgrind/valgrind.h>
-#endif
 
 //mutex
 //lock the log file
@@ -82,8 +76,7 @@ int log_error_open(server *srv)
 	{
 		const char *logfile = srv->srvconf.errorlog_file->ptr;
 
-		if (-1 == (srv->errorlog_fd =
-			 open(logfile, O_APPEND | O_WRONLY | O_CREAT | O_LARGEFILE, 0644)))
+		if (-1 == (srv->errorlog_fd = open(logfile, O_APPEND | O_WRONLY | O_CREAT | O_LARGEFILE, 0644)))
 		{
 			log_error_write(srv, __FILE__, __LINE__, "SSSS",
 							"opening errorlog '", logfile, "' failed: ",

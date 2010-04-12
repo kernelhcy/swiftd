@@ -17,7 +17,7 @@ int joblist_append(server * srv, connection * con);
 /**
  * 释放joblist中空闲节点所占用的空间。srv未使用
  */
-void joblist_free(server * srv, connections * joblist);
+void joblist_free(server * srv, con_list_node * joblist);
 /**
  * 获取一个在作业队列中等待的连接。
  * 如果joblist为空，则返回NULL。
