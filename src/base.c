@@ -5,12 +5,8 @@ void *job_entry(void *ctx)
 {
 	job_ctx *jc = (job_ctx*)ctx;
 	
-	log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "a job begin to work.");
-	
 	jc -> r_val = jc -> handler(jc -> srv, jc -> ctx, jc -> revents);
-	
-	log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "a job done.");
-	
+
 	switch(jc -> r_val)
 	{
 		case HANDLER_GO_ON:

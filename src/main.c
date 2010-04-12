@@ -483,7 +483,6 @@ int main(int argc, char *argv[])
 	
 	do
 	{
-		log_error_write(srv, __FILE__, __LINE__, "s", "begin poll...");
 		n = fdevent_poll(srv -> ev, 5000);
 		
 		if (srv -> cur_ts != time(NULL))
@@ -492,12 +491,7 @@ int main(int argc, char *argv[])
 			srv -> cur_ts = time(NULL);
 		}
 		
-		if (0 == n)
-		{	
-			//timeout
-			//log_error_write(srv, __FILE__, __LINE__, "s", "fdevent_poll timeout.");
-		}
-		else if (-1 == n)
+		if (-1 == n)
 		{
 			//error 
 			log_error_write(srv, __FILE__, __LINE__, "ss", "fdevent_poll error."
@@ -518,7 +512,6 @@ int main(int argc, char *argv[])
 			handler = fdevent_event_get_handler(srv -> ev, fd);
 			ctx = fdevent_event_get_context(srv -> ev, fd);			
 			
-			log_error_write(srv, __FILE__, __LINE__, "sd", "run a job. fd:", fd);
 			jc = job_ctx_get_new(srv);
 			if (NULL == jc)
 			{
