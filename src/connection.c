@@ -7,6 +7,9 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 
+/*
+ * 初始化一个连接。
+ */
 static void connection_init(server *srv, connection *con)
 {
 	if (NULL == con)
@@ -61,9 +64,76 @@ static void connection_init(server *srv, connection *con)
 	con -> in_error_handler = 0;
 	con -> srv_sock = NULL;	
 	
+	con -> request.request = buffer_init();
+	
 	return;
 }
 
+/*
+ * 重置一个连接结构体。
+ */
+static void connection_reset(connection *con)
+{
+	if (NULL == con)
+	{
+		return;
+	}
+	
+	con -> request_count = 0;		
+	con -> fd = -1;			
+	con -> ndx = -1;					
+
+	con -> is_readable = 0;
+	con -> is_writable = 0;
+	con -> keep_alive = 0;				
+
+	chunkqueue_remove_finished_chunks(con -> write_queue);			
+	chunkqueue_remove_finished_chunks(con -> read_queue);				
+	chunkqueue_remove_finished_chunks(con -> request_content_queue);
+	con -> http_status = 0; 				
+
+	buffer_reset(con -> parse_request); 	
+	buffer_reset(con -> uri.scheme);
+	buffer_reset(con -> uri.authority);
+	buffer_reset(con -> uri.path);
+	buffer_reset(con -> uri.path_raw);
+	buffer_reset(con -> uri.query);
+	
+	buffer_reset(con -> physical.path);
+	buffer_reset(con -> physical.doc_root);
+	buffer_reset(con -> physical.rel_path);
+	buffer_reset(con -> physical.etag);
+	
+	con -> response.content_length = 0;
+	con -> response.keep_alive = 0;
+	array_reset(con -> response.headers);
+	con -> header_len = 0; 
+	
+	con -> got_response = 0;
+	con -> in_joblist = 0;
+	con -> plugin_ctx = NULL;	
+	
+	buffer_reset(con -> parse_full_path);
+	buffer_reset(con -> response_header);
+	buffer_reset(con -> response_range);
+	buffer_reset(con -> tmp_buf);
+	buffer_reset(con -> tmp_chunk_len);
+	buffer_reset(con -> cond_check_buf);
+	buffer_reset(con -> request.request);
+	
+	con -> server_name = buffer_init_string("swiftd");
+	buffer_reset(con -> error_handler);
+	con -> error_handler_saved_status = 0;
+	con -> in_error_handler = 0;
+	con -> srv_sock = NULL;	
+	
+	return;
+}
+
+/*
+ * 获得一个connection结构体。返回其指针。
+ * 如果失败，返回NULL。
+ */
 connection * connection_get_new(server *srv)
 {
 	connection *con;
@@ -117,12 +187,12 @@ connection * connection_get_new(server *srv)
 				|| srv -> conns -> ptr[i] -> state == CON_STATE_CLOSE )
 		{
 			srv -> conns -> ptr[i] = (connection *)malloc(sizeof(connection));
-			if (NULL == srv -> conns -> ptr[ndx])
+			if (NULL == srv -> conns -> ptr[i])
 			{
 				return NULL;
 			}
 			connection_init(srv, srv -> conns -> ptr[i]);
-			srv -> conns -> ptr[ndx] -> ndx = i;
+			srv -> conns -> ptr[i] -> ndx = i;
 			return srv -> conns -> ptr[i];
 		}
 	}
@@ -189,6 +259,7 @@ void connection_free(connection *con)
 	buffer_free(con -> tmp_chunk_len);
 	buffer_free(con -> cond_check_buf );
 	
+	buffer_free(con -> request.request);
 	//这两个变量要释放空间？
 	//con -> plugin_ctx
 	//con -> srv_socket
@@ -214,22 +285,26 @@ static int connection_handle_read(server *srv, connection *con)
 			log_error_write(srv, __FILE__, __LINE__, "s", "ioctl error. FIONREAD.");
 			return -1;
 		}
-		log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
-
+		//log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
+		
+		/*
 		if(need_to_read <= 0)
 		{
 			return 0;
 		}
-
+		*/
+		
 		buffer *b = chunkqueue_get_append_buffer(con -> read_queue);
 		buffer_prepare_copy(b, need_to_read);
 
 		int len;
+		//log_error_write(srv, __FILE__, __LINE__, "s", "read data from client.");
 		if (-1 == (len = read(con -> fd, b -> ptr, need_to_read)))
 		{
 			if (errno == EAGAIN)
 			{
 				//非阻塞IO，但是没有数据可读
+				log_error_write(srv, __FILE__, __LINE__, "s", "NO data to read.");
 				return 0;
 			}
 
@@ -246,6 +321,7 @@ static int connection_handle_read(server *srv, connection *con)
 		else if (len == 0)
 		{
 			//对方关闭了链接。
+			log_error_write(srv, __FILE__, __LINE__, "s", "Client closes the connection.");
 			connection_set_state(srv, con, CON_STATE_CLOSE);
 			return -1;
 		}
@@ -255,6 +331,8 @@ static int connection_handle_read(server *srv, connection *con)
 		{
 			con -> is_readable = 1;
 		}
+		b -> used = len;
+		//log_error_write(srv, __FILE__, __LINE__, "sdsb", "read data len: ", len, "the data :", b);
 	}
 
 	//查看是否HTTP头读取完毕。
@@ -262,13 +340,15 @@ static int connection_handle_read(server *srv, connection *con)
 	buffer *b;
 	int i, havechars, misschars;
 	int found = 0; //标记是否找到了http结束标志“\r\n\r\n”
-	for (c = con -> read_queue -> first; c != con -> read_queue -> last;)
+	//log_error_write(srv, __FILE__, __LINE__, "s", "try to find the \\r\\n\\r\\n");
+	for (c = con -> read_queue -> first;;)
 	{
-		if (found)
+		if (found || NULL == c)
 		{
 			break;
 		}
 		b = c -> mem;
+		//log_error_write(srv, __FILE__, __LINE__, "sb", "chunk mem:", b);
 		for (i = 0; i < b -> used; ++i)
 		{
 			if (b -> ptr[i] == '\r')
@@ -301,6 +381,11 @@ static int connection_handle_read(server *srv, connection *con)
 				}
 			}
 		}
+		
+		if ( c == con -> read_queue -> last)
+		{
+			break;
+		}
 		c = c -> next;
 	}
 	
@@ -309,17 +394,27 @@ static int connection_handle_read(server *srv, connection *con)
 	{
 		buffer_reset(con -> request.request);
 		b = con -> request.request;
-		for (c = con -> read_queue -> first; c != lastchunk; c = c -> next)
+		for (c = con -> read_queue -> first;;)
 		{
 			buffer_append_string_buffer(b, c -> mem);
+			c -> mem -> used = 0;
 			if (c == lastchunk)
 			{
 				buffer_prepare_append(b, 1);
+				//log_error_write(srv, __FILE__, __LINE__, "sdd", "b -> ptr used and size", b -> used, b -> size);
 				b -> ptr[b -> used] = '\0';
 				++ b -> used;
+				break;
 			}
+			
+			if ( c == con -> read_queue -> last)
+			{
+				break;
+			}
+			c = c -> next;
 		}
-		log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
+		//log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
+		connection_set_state(srv, con, CON_STATE_REQUEST_END);
 	}
 
 	return 0;
@@ -351,6 +446,7 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		return HANDLER_ERROR;
 	}
 	
+	//log_error_write(srv, __FILE__, __LINE__, "sdsd", "fd:", con -> fd, "events:", revents);
 	if (revents & FDEVENT_IN)
 	{
 		log_error_write(srv, __FILE__, __LINE__, "sd", "readable fd:", con -> fd);
@@ -363,19 +459,19 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		con -> is_writable = 1;
 	}
 	
-	if (revents & (FDEVENT_IN | FDEVENT_OUT))
+	if ((revents & FDEVENT_IN) && (revents & FDEVENT_OUT))
 	{
 		/*
 		 * 同时可读可写意味着出错。。。
 		 */
-		log_error_write(srv, __FILE__, __LINE__, "sd", "error fd: ", con -> fd);
+		 
 		if (revents & FDEVENT_ERR)
 		{
 			connection_set_state(srv, con, CON_STATE_ERROR);
 		}
 		else if (revents & FDEVENT_HUP)
 		{
-			if (con -> state == CON_STATE_CLOSE)
+			if (con -> state == CON_STATE_CLOSE || con -> state == CON_STATE_CONNECT)
 			{
 				con -> close_timeout_ts = 0;
 			}
@@ -384,11 +480,14 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 				log_error_write(srv, __FILE__, __LINE__, "s", "Client closes connection!");
 				connection_set_state(srv, con, CON_STATE_ERROR);
 			}
+			connection_set_state(srv, con, CON_STATE_CLOSE);
 		}
 		else
 		{
 			log_error_write(srv, __FILE__, __LINE__, "s", "epoll unknown event!");
+			connection_set_state(srv, con, CON_STATE_ERROR);
 		}
+		return HANDLER_ERROR;
 	}
 	
 	if (con -> state == CON_STATE_READ_POST || con -> state == CON_STATE_READ)
@@ -462,10 +561,54 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 		log_error_write(srv, __FILE__, __LINE__, "sd", "fcntl failed. fd:", con -> fd);
 		return NULL;
 	}
-	log_error_write(srv, __FILE__, __LINE__,"sd"
-						, "Add a connection socket fd in fdevent. fd:", fd);
 	
 	return con;
+}
+
+//处理连接的关闭。
+//回收资源。
+static int connection_handle_close(server *srv, connection *con)
+{
+	if (NULL == srv || NULL == con)
+	{
+		return -1;
+	}
+	
+	//查看缓冲区中的数据。
+	//如果有数据，则读取。
+	int len = 0;
+	if (-1 == ioctl(con -> fd, FIONREAD, &len))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "ss", "ioctl failed. ", strerror(errno));
+	}
+	
+	if (len > 0)
+	{
+		char buf[len + 1];
+		int r;
+		if ( -1 == (r = read(con -> fd, buf, len)))
+		{
+			log_error_write(srv, __FILE__, __LINE__, "ss", "close : read error."
+							, strerror(errno));
+		}
+	}
+	
+	log_error_write(srv, __FILE__, __LINE__, "sd", "close fd:", con -> fd);
+	//关闭连接。
+	//直接关闭两个方向。
+	if (-1 == shutdown(con -> fd, SHUT_RDWR))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "ss", "shutdown error."
+							, strerror(errno));
+		return -1;
+	}
+	
+	//从fdevent系统中删除。
+	fdevent_event_del(srv -> ev, con -> fd);
+	fdevent_unregister(srv -> ev, con -> fd);
+	
+	connection_set_state(srv, con, CON_STATE_CONNECT);
+	return 0;
 }
 
 /*
@@ -488,25 +631,48 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_READ);
 				break;
 			case CON_STATE_REQUEST_END:
+			
+				connection_set_state(srv, con, CON_STATE_HANDLE_REQUEST);
 				break;
 			case CON_STATE_HANDLE_REQUEST:
+			
+				connection_set_state(srv, con, CON_STATE_RESPONSE_START);
 				break;
 			case CON_STATE_RESPONSE_START:
+			
+				connection_set_state(srv, con, CON_STATE_WRITE);
 				break;
 			case CON_STATE_RESPONSE_END:
+			
+				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_READ:
+				//log_error_write(srv, __FILE__, __LINE__, "s", "begin CON_STATE_READ.");
 				connection_handle_read(srv, con);
+				//log_error_write(srv, __FILE__, __LINE__, "s", "end CON_STATE_READ.");
 				break;
 			case CON_STATE_READ_POST:
 				break;
 			case CON_STATE_WRITE:
+				
+				connection_set_state(srv, con, CON_STATE_RESPONSE_END);
 				break;
 			case CON_STATE_ERROR:
+				//关闭连接。
+				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_CONNECT:
+				//connection_reset(con);
+				connection_set_state(srv, con, CON_STATE_CONNECT);
 				break;
 			case CON_STATE_CLOSE:
+				if (-1 == connection_handle_close(srv, con))
+				{
+					log_error_write(srv, __FILE__, __LINE__, "s", "close error.");
+					shutdown(con -> fd, SHUT_RDWR);
+				}
+				//连接关闭以后，连接处于connect状态，等待下一次连接。
+				connection_set_state(srv, con, CON_STATE_CONNECT);
 				break;
 			default:
 				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown state!");

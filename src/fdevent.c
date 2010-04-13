@@ -12,8 +12,9 @@
 fdevent* fdevent_init(size_t maxfds, fdevent_handler_t type)
 {
 	fdevent* ev = NULL;
-	ev = (fdevent *)calloc(1, sizeof(*ev));
-
+	ev = (fdevent *)malloc(sizeof(*ev));
+	memset(ev, 0, sizeof(*ev));
+	
 	ev -> fdarray = (fdnode **)calloc(maxfds, sizeof(fdnode *));
 	ev -> maxfds = maxfds;
 
@@ -234,18 +235,12 @@ int fdevent_fcntl(fdevent *ev, int fd)
 	{
 		exit(1);
 	}
-
-#ifdef FD_CLOEXEC
-		fcntl(fd, F_SETFD, FD_CLOEXEC);
-#endif
-
+	
 	if (ev -> fcntl)
 	{
 		return ev -> fcntl(ev, fd);
 	}
-#ifdef O_NONBLOCK
 	return fcntl(fd, F_SETFL, O_NONBLOCK | O_RDWR);
-#endif
-	return 0;
+	
 }
 

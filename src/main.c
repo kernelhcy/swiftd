@@ -16,56 +16,25 @@
 #include <error.h>
 #include <errno.h>
 
-static volatile siginfo_t last_sigterm_info;
-static volatile siginfo_t last_sighup_info;
+static volatile int shutdown_server = 0;
 /**
  * 信号处理函数。用于sigaction函数。
  * @PARM sig 	 : 信号的值 
- * @PARM si  	 : 包含信号产生原因的有关信息。
- * @PARM context : 标识信号传递时的进程上下文。可以被强制转换成ucntext_t类型。
  */
-static void sigaction_handler(int sig, siginfo_t * si, void *context)
-{
-	UNUSED(context);
-
-	switch (sig)
-	{
-	case SIGTERM: 	//终止 由kill命令发送的系统默认终止信号
-
-		break;
-	case SIGINT: 	//终端中断符 Ctrl-C或DELETE
-
-
-		break;
-	case SIGALRM: 	//超时信号
-
-		break;
-	case SIGHUP: 	//连接断开信号
-		
-	case SIGCHLD: 	//子进程终止或停止。
-		break;
-	}
-}
-
 static void signal_handler(int sig)
 {
-
 	switch (sig)
 	{
-	case SIGTERM: 	//终止 由kill命令发送的系统默认终止信号
-
-		break;
-	case SIGINT: 	//终端中断符 Ctrl-C或DELETE
-
-
-		break;
-	case SIGALRM: 	//超时信号
-
-		break;
-	case SIGHUP: 	//连接断开信号
-		
-	case SIGCHLD: 	//子进程终止或停止。
-		break;
+		case SIGTERM: 	//终止 由kill命令发送的系统默认终止信号
+		case SIGINT: 	//终端中断符 Ctrl-C或DELETE
+			shutdown_server = 1;
+			break;
+		case SIGALRM: 	//超时信号
+			break;
+		case SIGHUP: 	//连接断开信号
+			break;
+		case SIGCHLD: 	//子进程终止或停止。
+			break;
 	}
 }
 
@@ -196,13 +165,15 @@ static void server_free(server * srv)
 	
 	for (i = 0; i < srv -> sockets -> used; ++i)
 	{
-		free(srv -> sockets -> ptr);
+		free(srv -> sockets -> ptr[i]);
 	}
 	free(srv -> sockets -> ptr);
 	free(srv -> sockets);
 	
 	buffer_free(srv -> errorlog_buf);
 	buffer_free(srv -> ts_debug_str);
+	
+	tp_free(srv -> tp);
 	
 	pthread_mutex_destroy(&srv -> plugin_lock);
 	pthread_mutex_destroy(&srv -> sockets_lock);
@@ -212,6 +183,7 @@ static void server_free(server * srv)
 	pthread_mutex_destroy(&srv -> fdwaitqueue_lock);
 	pthread_mutex_destroy(&srv -> unused_nodes_lock);
 	pthread_mutex_destroy(&srv -> log_lock);
+	pthread_mutex_destroy(&srv -> jc_lock);
 	
 	job_ctx *jc = srv -> jc_nodes, *tmp;
 	while(NULL != jc)
@@ -220,8 +192,6 @@ static void server_free(server * srv)
 		jc = jc -> next;
 		free(tmp);
 	}
-	pthread_mutex_destroy(&srv -> jc_lock);
-	tp_free(srv -> tp);
 	
 	free(srv);
 }
@@ -360,7 +330,6 @@ int main(int argc, char *argv[])
 			{
 				log_error_write(srv, __FILE__, __LINE__, "sbs", "open pid-file failed:", srv -> srvconf.pid_file
 						, strerror(errno));
-				return -1;
 			}
 
 			if (0 != stat(srv -> srvconf.pid_file -> ptr, &st))
@@ -372,7 +341,6 @@ int main(int argc, char *argv[])
 			{
 				log_error_write(srv, __FILE__, __LINE__, "sb", "pid-file exists and isn't a regular file."
 						, srv -> srvconf.pid_file);
-				return -1;
 			}
 		}
 	}
@@ -422,7 +390,9 @@ int main(int argc, char *argv[])
 		if (0 != network_init(srv))
 		{
 			fprintf(stderr, "Initial network error!\n");
+			network_close(srv);
 			server_free(srv);
+			return -1;
 		}
 
 		if (srv -> srvconf.changeroot -> used)
@@ -446,7 +416,9 @@ int main(int argc, char *argv[])
 		if (0 != network_init(srv))
 		{
 			fprintf(stderr, "Initial network error!\n");
+			network_close(srv);
 			server_free(srv);
+			return -1;
 		}
 	
 	}
@@ -483,7 +455,8 @@ int main(int argc, char *argv[])
 	
 	do
 	{
-		n = fdevent_poll(srv -> ev, 5000);
+		log_error_write(srv, __FILE__, __LINE__, "s", "begin epoll..........");
+		n = fdevent_poll(srv -> ev, -1);
 		
 		if (srv -> cur_ts != time(NULL))
 		{
@@ -497,11 +470,6 @@ int main(int argc, char *argv[])
 			log_error_write(srv, __FILE__, __LINE__, "ss", "fdevent_poll error."
 						, strerror(errno));
 		}
-		else
-		{
-			log_error_write(srv, __FILE__, __LINE__,"sd", "some fd got IO event. num:", n);
-			sleep(1);
-		}
 		
 		ndx = 0;
 		while(--n >= 0)
@@ -512,8 +480,11 @@ int main(int argc, char *argv[])
 			handler = fdevent_event_get_handler(srv -> ev, fd);
 			ctx = fdevent_event_get_context(srv -> ev, fd);			
 			
+			log_error_write(srv, __FILE__, __LINE__, "sd", "fd got IO event.", fd);
+			
 			jc = job_ctx_get_new(srv);
 			if (NULL == jc)
+
 			{
 				log_error_write(srv, __FILE__, __LINE__, "s", "Get new job ctx failed.");
 			}
@@ -531,9 +502,21 @@ int main(int argc, char *argv[])
 					log_error_write(srv, __FILE__, __LINE__, "s", "Try to run a job failed.");
 				}
 			}
-			
 		}
-	}while(1);
+	}while(!shutdown_server);
+	
+	log_error_write(srv, __FILE__, __LINE__, "s", "shut down the server.");
+	fprintf(stderr, "close log.\n");
+	log_error_close(srv);
+	
+	fprintf(stderr, "close network.\n");
+	network_close(srv);
+	
+	fprintf(stderr, "close fdevent.\n");
+	fdevent_free(srv -> ev);
+	
+	fprintf(stderr, "close server.\n");
+	server_free(srv);
 	
 	return 0;
 }

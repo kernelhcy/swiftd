@@ -141,14 +141,11 @@ void network_close(server *srv)
 	{
 		return;
 	}
-	
 	size_t i;
 	for (i = 0; i < srv -> sockets -> used; ++i)
 	{
 		close(srv -> sockets -> ptr[i] -> fd);
 	}
-	free(srv -> sockets -> ptr);
-	
 	return;
 }
 
@@ -170,10 +167,9 @@ static handler_t server_socket_fdevent_handler(void *srv, void *ctx, int revents
 	server_socket *srv_sock = (server_socket*)ctx;
 	/*
 	 * 监听fd每发生一次IO事件，表示有连接请求。 
-	 * 服务器连续读取10次请求，以提高效率。
+	 * 此时连接请求可能不止一个。
 	 */
-	int i;
-	for (i = 0; i < 10 && NULL != (con = connection_accept(srv, srv_sock)); ++i)
+	while( NULL != (con = connection_accept(srv, srv_sock)))
 	{
 		connection_set_state(srv, con, CON_STATE_REQUEST_START);
 		log_error_write(srv, __FILE__, __LINE__,"s", "start the state machine of the new connection.");
@@ -204,6 +200,13 @@ int network_register_fdevent(server *srv)
 		return -1;
 	}
 	log_error_write(srv, __FILE__, __LINE__,"sd", "Register the listenning fd in fdevent.", srv_sock -> fd);
+	
+	//设置为非阻塞。
+	if ( 0!= fdevent_fcntl(srv -> ev, srv_sock -> fd))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "ss", "fcntl failed.", strerror(errno));
+		return -1;
+	}
 	
 	//监听读事件。
 	if(0 != fdevent_event_add(srv -> ev, srv_sock -> fd, FDEVENT_IN))

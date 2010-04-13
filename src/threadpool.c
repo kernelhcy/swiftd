@@ -86,7 +86,7 @@ static void * thread_main(void *arg)
 		
 		pthread_mutex_unlock(&info -> lock);
 
-	//	debug_info("Thread %d is idle.", info -> id);
+		debug_info("Thread %d is idle.", info -> id);
 	}
 
 	return NULL;
@@ -127,17 +127,14 @@ static void * manage_thread(void *arg)
 
 		debug_info("Idle thread num : %d cur num %d", idle_cnt, tp -> cur_num);
 		/*
-		 * 如果空闲的线程占到所有线程的50%以上，那么将空闲
+		 * 如果空闲的线程占到最大线程数量的一半以上，那么将空闲
 		 * 线程的数量控制在50%以内。
 		 */
-		if ((float)idle_cnt / (float)tp -> cur_num > 0.5)
+		if (idle_cnt > tp -> max_num /2)
 		{
-			int need_stop_cnt = idle_cnt * 2 - tp -> cur_num - 1;
-			if (tp -> cur_num - need_stop_cnt < tp -> min_num)
-			{
-				need_stop_cnt = tp -> cur_num - tp -> min_num;
-			}
-			debug_info("Need stop %d threads", need_stop_cnt);
+			int need_stop_cnt = idle_cnt * 2 - tp -> max_num - 1;
+
+			//debug_info("Need stop %d threads", need_stop_cnt);
 			int del;
 			for(i = 0; i < tp -> cur_num && need_stop_cnt > 0; ++i)
 			{
@@ -176,10 +173,10 @@ static void * manage_thread(void *arg)
 					pthread_mutex_unlock(&tp -> lock);
 				}
 			}
-			debug_info("Clear thread over.");
+			//debug_info("Clear thread over.");
 		}
 
-		sleep(1);
+		sleep(10);
 
 	}
 
@@ -207,12 +204,6 @@ thread_pool* tp_init(int minnum, int maxnum)
 	pthread_mutex_init(&tp -> lock, NULL);
 
 	sem_init(&tp -> thread_cnt_sem, 0, maxnum); //信号量不跨进程。
-
-	//创建管理线程。
-	if (0 != pthread_create(&tp -> manage_thread_id , NULL, manage_thread, tp))
-	{
-		return NULL;
-	}
 
 	tp -> threads = (thread_info *)calloc(maxnum, sizeof(thread_info));
 	if (NULL == tp -> threads)
@@ -255,9 +246,18 @@ thread_pool* tp_init(int minnum, int maxnum)
 	}
 
 	tp -> cur_num = minnum;
+	
+	
+	//创建管理线程。
+	if (0 != pthread_create(&tp -> manage_thread_id , NULL, manage_thread, tp))
+	{
+		return NULL;
+	}
+	
 	return tp;
 
 }
+
 void tp_free(thread_pool *tp)
 {
 	if (NULL == tp)
@@ -269,6 +269,7 @@ void tp_free(thread_pool *tp)
 
 	int i;
 	//标记所有的线程终止。
+	debug_info("Tell all threads to stop.");
 	for (i = 0; i < tp -> cur_num; ++i)
 	{
 		if (0 != tp -> threads[i].id)
@@ -278,7 +279,9 @@ void tp_free(thread_pool *tp)
 			pthread_mutex_unlock(&tp -> threads[i].lock);
 		}
 	}
+	
 	//等待线程退出。
+	debug_info("Wait all threads to stop .........");
 	for (i = 0; i < tp -> cur_num; ++i)
 	{
 		if (0 != tp -> threads[i].id)
@@ -294,7 +297,7 @@ void tp_free(thread_pool *tp)
 		}
 	}
 
-	//debug_info("Free thread pool.");
+	debug_info("Free thread pool.");
 	pthread_mutex_destroy(&tp -> lock);
 	sem_destroy(&tp -> thread_cnt_sem);
 	free(tp -> threads);
@@ -417,6 +420,7 @@ int tp_run_job(thread_pool *tp, job_func job, void *ctx)
 	}
 	//先要初始化线程的数据在启动线程。
 	//否则出错。
+	debug_info("创建一个新线程：%d", ndx);
 	tp -> threads[ndx].is_busy = 1;
 	tp -> threads[ndx].stop = 0;
 	tp -> threads[ndx].tp = tp;
@@ -443,7 +447,7 @@ int tp_run_job(thread_pool *tp, job_func job, void *ctx)
 static pthread_mutex_t debug_lock = PTHREAD_MUTEX_INITIALIZER;
 void debug_info(const char *fmt, ...)
 {
-	/*
+	
 	pthread_mutex_lock(&debug_lock);
 	va_list ap;
 	va_start(ap, fmt);
@@ -452,5 +456,5 @@ void debug_info(const char *fmt, ...)
 	va_end(ap);
 	pthread_mutex_unlock(&debug_lock);
 	return;
-	*/
+	
 }

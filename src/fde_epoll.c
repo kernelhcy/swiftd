@@ -34,12 +34,17 @@ int fdevent_epoll_event_add(fdevent *ev, int fd, int events)
 	}
 
 
-	/**
+	/*
 	 * 对于所有描述符，默认监听出错事件和挂断事件。
 	 * 虽然我们关心的是可读可写事件，但是这两个事件是完全有可能发生的。
 	 */
 	ee.events |= EPOLLERR;
 	ee.events |= EPOLLHUP;
+	/*
+	 * 对所有描述符，默认使用ET模式。
+	 * ET：边缘触发。所有事件只触发一次。
+	 */
+	ee.events |= EPOLLET;
 
 	ee.data.ptr = NULL;
 	ee.data.fd = fd;
@@ -51,6 +56,8 @@ int fdevent_epoll_event_add(fdevent *ev, int fd, int events)
 		fprintf(stderr, "(%s %d)epoll_ctl error.(%s)", __FILE__, __LINE__, strerror(errno));
 		return -1;
 	}
+	
+	ev -> fdarray[fd] -> is_listened = 1;
 	return 0;
 
 }

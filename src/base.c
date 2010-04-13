@@ -1,5 +1,6 @@
 #include "base.h"
 #include "log.h"
+#include "connection.h"
 
 void *job_entry(void *ctx)
 {
@@ -23,6 +24,8 @@ void *job_entry(void *ctx)
 			break;
 	}
 	
+	connection_state_machine(jc -> srv, jc -> ctx);
+	log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "A job done.");
 	return ctx;
 }
 

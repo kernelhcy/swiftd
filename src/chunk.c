@@ -470,8 +470,11 @@ int chunkqueue_is_empty(chunkqueue * cq)
  */
 int chunkqueue_remove_finished_chunks(chunkqueue * cq)
 {
+	if (NULL == cq || NULL == cq -> first)
+	{
+		return 0;
+	}
 	chunk *c;
-
 	for (c = cq->first; c; c = cq->first)
 	{
 		int is_finished = 0;
@@ -495,25 +498,14 @@ int chunkqueue_remove_finished_chunks(chunkqueue * cq)
 
 		chunk_reset(c);
 
-		cq->first = c->next;
+		cq -> first = c -> next;
+		
 		if (c == cq->last)
 			cq->last = NULL;
 
-		/*
-		 * keep at max 4 chunks in the 'unused'-cache 
-		 * 将块放到未使用栈中。
-		 * 保持栈中至多有四个空闲块。
-		 */
-		if (cq->unused_chunks > 4)
-		{
-			chunk_free(c);
-		} 
-		else
-		{
-			c->next = cq->unused;
-			cq->unused = c;
-			cq->unused_chunks++;
-		}
+		c->next = cq->unused;
+		cq->unused = c;
+		cq->unused_chunks++;
 	}
 
 	return 0;
