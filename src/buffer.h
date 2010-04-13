@@ -64,6 +64,7 @@ int buffer_prepare_append(buffer * b, size_t size);
 int buffer_copy_string(buffer * b, const char *s);
 int buffer_copy_string_len(buffer * b, const char *s, size_t s_len);
 int buffer_copy_string_buffer(buffer * b, const buffer * src);
+int buffer_copy_string_buffer_len(buffer * b, const buffer * src, size_t len);
 int buffer_copy_string_hex(buffer * b, const char *in, size_t in_len);
 
 int buffer_copy_long(buffer * b, long val);
@@ -73,6 +74,7 @@ int buffer_copy_memory(buffer * b, const char *s, size_t s_len);
 int buffer_append_string(buffer * b, const char *s);
 int buffer_append_string_len(buffer * b, const char *s, size_t s_len);
 int buffer_append_string_buffer(buffer * b, const buffer * src);
+int buffer_append_string_buffer_len(buffer * b, const buffer * src, size_t b_len);
 int buffer_append_string_lfill(buffer * b, const char *s, size_t maxlen);
 int buffer_append_string_rfill(buffer * b, const char *s, size_t maxlen);
 

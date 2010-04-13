@@ -141,7 +141,6 @@ static server *server_init(void)
 	pthread_mutex_init(&srv -> unused_nodes_lock, NULL);
 
 	srv -> network_backend_write = NULL;
-	srv -> network_backend_read = NULL;
 	
 	srv -> ts_debug_str = buffer_init();
 	

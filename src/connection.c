@@ -268,77 +268,98 @@ void connection_free(connection *con)
 }
 
 /*
+ * 从网络读取数据。存储在con -> read_queue中。
+ * 可能是http头，也可能是POST数据。
+ */
+static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
+{
+	int need_to_read;
+	
+	con -> is_readable = 0;
+
+	//获取需要读取的数据长度.
+	if (-1 == ioctl(con -> fd, FIONREAD, &need_to_read))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "ioctl error. FIONREAD.");
+		return -1;
+	}
+	//log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
+		
+	buffer *b = chunkqueue_get_append_buffer(cq);
+	buffer_prepare_copy(b, need_to_read);
+
+	int len;
+	//log_error_write(srv, __FILE__, __LINE__, "s", "read data from client.");
+	if (-1 == (len = read(con -> fd, b -> ptr, need_to_read)))
+	{
+		if (errno == EAGAIN)
+		{
+			//非阻塞IO，但是没有数据可读
+			log_error_write(srv, __FILE__, __LINE__, "s", "NO data to read.");
+			return -2;
+		}
+
+		if (errno == EINTR)
+		{
+			//被信号中断。
+			con -> is_readable = 1;
+			return -3;
+		}
+
+		connection_set_state(srv, con, CON_STATE_ERROR);
+		return -1;
+	}
+	else if (len == 0)
+	{
+		//对方关闭了链接。
+		log_error_write(srv, __FILE__, __LINE__, "s", "Client closes the connection.");
+		connection_set_state(srv, con, CON_STATE_CLOSE);
+		return -1;
+	}
+
+	//数据没有读完。
+	if (len < need_to_read)
+	{
+		con -> is_readable = 1;
+	}
+	b -> used = len;
+	//log_error_write(srv, __FILE__, __LINE__, "sdsb", "read data len: ", len, "the data :", b);
+	
+	return 0;
+}
+
+/*
  * 处理读事件。
  * 从网络中读取数据，HTTP头或POST数据。
  */
 static int connection_handle_read(server *srv, connection *con)
 {
-	 int need_to_read;
 
 	if (con -> is_readable)
 	{
-		con -> is_readable = 0;
-
-		//获取需要读取的数据长度.
-		if (-1 == ioctl(con -> fd, FIONREAD, &need_to_read))
+		switch(connection_network_read(srv, con, con -> read_queue))
 		{
-			log_error_write(srv, __FILE__, __LINE__, "s", "ioctl error. FIONREAD.");
-			return -1;
-		}
-		//log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
-		
-		/*
-		if(need_to_read <= 0)
-		{
-			return 0;
-		}
-		*/
-		
-		buffer *b = chunkqueue_get_append_buffer(con -> read_queue);
-		buffer_prepare_copy(b, need_to_read);
-
-		int len;
-		//log_error_write(srv, __FILE__, __LINE__, "s", "read data from client.");
-		if (-1 == (len = read(con -> fd, b -> ptr, need_to_read)))
-		{
-			if (errno == EAGAIN)
-			{
-				//非阻塞IO，但是没有数据可读
-				log_error_write(srv, __FILE__, __LINE__, "s", "NO data to read.");
-				return 0;
-			}
-
-			if (errno == EINTR)
-			{
-				//被信号中断。
+			case 0: 	//读取到数据。
+				break;
+			case -1: 	//出错。
+				connection_set_state(srv, con, CON_STATE_ERROR);
+				break;
+			case -2: 	//非阻塞IO，但是没有数据可读。
+			case -3: 	//被信号中断。
 				con -> is_readable = 1;
-				return 0;
-			}
-
-			connection_set_state(srv, con, CON_STATE_ERROR);
-			return -1;
+				break;
+			default: 
+				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown status.");
+				connection_set_state(srv, con, CON_STATE_ERROR);
+				break;
 		}
-		else if (len == 0)
-		{
-			//对方关闭了链接。
-			log_error_write(srv, __FILE__, __LINE__, "s", "Client closes the connection.");
-			connection_set_state(srv, con, CON_STATE_CLOSE);
-			return -1;
-		}
-
-		//数据没有读完。
-		if (len < need_to_read)
-		{
-			con -> is_readable = 1;
-		}
-		b -> used = len;
-		//log_error_write(srv, __FILE__, __LINE__, "sdsb", "read data len: ", len, "the data :", b);
 	}
 
 	//查看是否HTTP头读取完毕。
 	chunk *c, *lastchunk;
 	buffer *b;
 	int i, havechars, misschars;
+	off_t offset;
 	int found = 0; //标记是否找到了http结束标志“\r\n\r\n”
 	//log_error_write(srv, __FILE__, __LINE__, "s", "try to find the \\r\\n\\r\\n");
 	for (c = con -> read_queue -> first;;)
@@ -360,6 +381,7 @@ static int connection_handle_read(server *srv, connection *con)
 					{
 						found = 1;
 						lastchunk = c;
+						c -> offset = i + 4;
 						break;
 					}
 				}
@@ -374,7 +396,8 @@ static int connection_handle_read(server *srv, connection *con)
 								&& 0 == strncmp(c -> next -> mem -> ptr, "\r\n\r\n" + havechars, misschars))
 						{
 							found = 1;
-							lastchunk = c;
+							lastchunk = c -> next;
+							c -> next -> offset = misschars;
 							break;
 						}
 					}
@@ -395,16 +418,22 @@ static int connection_handle_read(server *srv, connection *con)
 		buffer_reset(con -> request.request);
 		b = con -> request.request;
 		for (c = con -> read_queue -> first;;)
-		{
-			buffer_append_string_buffer(b, c -> mem);
-			c -> mem -> used = 0;
+		{			
 			if (c == lastchunk)
 			{
-				buffer_prepare_append(b, 1);
-				//log_error_write(srv, __FILE__, __LINE__, "sdd", "b -> ptr used and size", b -> used, b -> size);
-				b -> ptr[b -> used] = '\0';
-				++ b -> used;
+				buffer_append_memory(b, c -> mem -> ptr, c -> offset);
+				
+				if (c -> offset == c -> mem -> used)
+				{
+					c -> finished = 1;
+				}
+				
 				break;
+			}
+			else
+			{
+				buffer_append_memory(b, c -> mem -> ptr, c -> mem -> used);
+				c -> finished = 1;
 			}
 			
 			if ( c == con -> read_queue -> last)
@@ -413,10 +442,77 @@ static int connection_handle_read(server *srv, connection *con)
 			}
 			c = c -> next;
 		}
+		
+		//删除已经处理过的数据。
+		chunkqueue_remove_finished_chunks(con -> read_queue);
+		
+		//有一部分POST数据被读取进来。
+		//将POST数据转存到con -> request_content_queue中。
+		if (NULL != con -> read_queue -> first)
+		{
+			b = chunkqueue_get_append_buffer(con -> request_content_queue);
+			
+			for (c = con -> read_queue -> first; c;)
+			{
+				buffer_append_memory(b, c -> mem -> ptr + c -> offset
+											, c -> mem -> used - c -> offset);
+				
+				c -> finished = 1;
+				c = c -> next;
+			}
+		}
+		
 		//log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 		connection_set_state(srv, con, CON_STATE_REQUEST_END);
 	}
 
+	return 0;
+}
+
+/*
+ * 读取POST数据。
+ */
+static int connection_handle_read_post(server *srv, connection *con)
+{
+	if (con -> is_readable)
+	{
+		switch(connection_network_read(srv, con, con -> request_content_queue))
+		{
+			case 0: 	//读取到数据。
+				break;
+			case -1: 	//出错。
+				connection_set_state(srv, con, CON_STATE_ERROR);
+				break;
+			case -2: 	//非阻塞IO，但是没有数据可读。
+			case -3: 	//被信号中断。
+				con -> is_readable = 1;
+				break;
+			default: 
+				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown status.");
+				connection_set_state(srv, con, CON_STATE_ERROR);
+				break;
+		}
+	}
+	
+	int wehave = chunkqueue_length(con -> request_content_queue);
+	
+	//我们已经读取到所有的POST数据，开始处理连接请求。
+	if (wehave == con -> request.content_length)
+	{
+		connection_set_state(srv, con, CON_STATE_RESPONSE_START);
+	}
+	else
+	{
+		//POST数据没有读取完。	
+	}
+	
+	
+	if ( wehave > 4096 * 4096)
+	{
+		//POST数据过长。
+		//出错处理。
+	}
+	
 	return 0;
 }
 
@@ -635,7 +731,13 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_HANDLE_REQUEST);
 				break;
 			case CON_STATE_HANDLE_REQUEST:
-			
+				
+				if (http_parse_request(srv, con))
+				{
+					//读取POST数据。
+					connection_set_state(srv, con, CON_STATE_READ_POST);
+				}
+				
 				connection_set_state(srv, con, CON_STATE_RESPONSE_START);
 				break;
 			case CON_STATE_RESPONSE_START:
@@ -643,15 +745,16 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_WRITE);
 				break;
 			case CON_STATE_RESPONSE_END:
-			
+				
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_READ:
-				//log_error_write(srv, __FILE__, __LINE__, "s", "begin CON_STATE_READ.");
+				//状态的改变视读取数据的情况而定。
 				connection_handle_read(srv, con);
-				//log_error_write(srv, __FILE__, __LINE__, "s", "end CON_STATE_READ.");
 				break;
 			case CON_STATE_READ_POST:
+				//状态的改变视读取数据的情况而定。
+				connection_handle_read_post(srv, con);
 				break;
 			case CON_STATE_WRITE:
 				

@@ -91,9 +91,6 @@ typedef struct s_index_node
 typedef struct 
 {
 	/** HEADER */
-	/*
-	 * the request-line 
-	 */
 	buffer *request;
 	buffer *request_line;
 	buffer *uri;
@@ -105,7 +102,6 @@ typedef struct
 	/*
 	 * strings to the header 
 	 */
-	buffer *http_host;			/* not alloced */
 	const char *http_range;
 	const char *http_content_type;
 	const char *http_if_modified_since;
@@ -433,7 +429,6 @@ typedef struct server
 	pthread_mutex_t unused_nodes_lock;
 
 	int (*network_backend_write) (struct server * srv, connection * con, int fd, chunkqueue * cq);
-	int (*network_backend_read) (struct server * srv, connection * con, int fd, chunkqueue * cq);
 
 }server;
 

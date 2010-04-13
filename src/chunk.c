@@ -21,13 +21,13 @@
 chunkqueue *chunkqueue_init(void)
 {
 	chunkqueue *cq;
-
 	cq = calloc(1, sizeof(*cq));
 
-	cq->first = NULL;
-	cq->last = NULL;
+	cq -> first = NULL;
+	cq -> last = NULL;
 
-	cq->unused = NULL;
+	cq -> unused = NULL;
+	cq -> unused_chunks = 0;
 
 	return cq;
 }
@@ -38,11 +38,14 @@ static chunk *chunk_init(void)
 
 	c = calloc(1, sizeof(*c));
 
-	c->mem = buffer_init();
-	c->file.name = buffer_init();
-	c->file.fd = -1;
-	c->file.mmap.start = MAP_FAILED;
-	c->next = NULL;
+	c -> mem = buffer_init();
+	c -> file.name = buffer_init();
+	c -> file.fd = -1;
+	c -> file.mmap.start = MAP_FAILED;
+	c -> next = NULL;
+	
+	c -> finished = 0;
+	c -> offset = 0;
 
 	return c;
 }
@@ -50,10 +53,11 @@ static chunk *chunk_init(void)
 static void chunk_free(chunk * c)
 {
 	if (!c)
+	{
 		return;
-
-	buffer_free(c->mem);
-	buffer_free(c->file.name);
+	}
+	buffer_free(c -> mem);
+	buffer_free(c -> file.name);
 
 	free(c);
 }
@@ -61,26 +65,29 @@ static void chunk_free(chunk * c)
 static void chunk_reset(chunk * c)
 {
 	if (!c)
+	{
 		return;
+	}
+	
+	buffer_reset(c -> mem);
 
-	buffer_reset(c->mem);
-
-	if (c->file.is_temp && !buffer_is_empty(c->file.name))
+	if (c -> file.is_temp && !buffer_is_empty(c -> file.name))
 	{
-		unlink(c->file.name->ptr);
+		unlink(c -> file.name -> ptr);
 	}
 
-	buffer_reset(c->file.name);
+	buffer_reset(c -> file.name);
 
-	if (c->file.fd != -1)
+	if (c -> file.fd != -1)
 	{
-		close(c->file.fd);
-		c->file.fd = -1;
+		close(c -> file.fd);
+		c -> file.fd = -1;
 	}
-	if (MAP_FAILED != c->file.mmap.start)
+	
+	if (MAP_FAILED != c -> file.mmap.start)
 	{
-		munmap(c->file.mmap.start, c->file.mmap.length);
-		c->file.mmap.start = MAP_FAILED;
+		munmap(c -> file.mmap.start, c -> file.mmap.length);
+		c -> file.mmap.start = MAP_FAILED;
 	}
 }
 
@@ -90,8 +97,10 @@ void chunkqueue_free(chunkqueue * cq)
 	chunk *c, *pc;
 
 	if (!cq)
+	{
 		return;
-
+	}
+	
 	for (c = cq->first; c;)
 	{
 		pc = c;
@@ -114,22 +123,21 @@ static chunk *chunkqueue_get_unused_chunk(chunkqueue * cq)
 	chunk *c;
 
 	/*
-	 * check if we have a unused chunk 
+	 * 检查是否有空闲的chunk
 	 */
-	if (!cq->unused)
+	if (!cq -> unused)
 	{
 		c = chunk_init();
 	} 
 	else
 	{
 		/*
-		 * take the first element from the list (a stack) 
 		 * 从ununsed的chunk的栈顶返回一个未用的chunk。
 		 */
-		c = cq->unused;
-		cq->unused = c->next;
-		c->next = NULL;
-		cq->unused_chunks--;
+		c = cq -> unused;
+		cq -> unused = c -> next;
+		c -> next = NULL;
+		--cq -> unused_chunks;
 	}
 
 	return c;
@@ -170,22 +178,21 @@ static int chunkqueue_append_chunk(chunkqueue * cq, chunk * c)
 void chunkqueue_reset(chunkqueue * cq)
 {
 	chunk *c;
-	/*
-	 * move everything to the unused queue 
-	 */
 
 	/*
-	 * mark all read written 
+	 * 标记所有的chunk已经处理完毕。
 	 */
 	for (c = cq->first; c; c = c->next)
 	{
+		c -> finished = 1;
+		c -> offset = 0;
 		switch (c->type)
 		{
 		case MEM_CHUNK:
-			c->offset = c->mem->used - 1; 	//表示块已经处理完毕
+			c->mem->used = 0; 				
 			break;
 		case FILE_CHUNK:
-			c->offset = c->file.length;  	//表示处理完毕
+			c->file.length = 0;
 			break;
 		default:
 			break;
@@ -193,8 +200,7 @@ void chunkqueue_reset(chunkqueue * cq)
 	}
 
 	chunkqueue_remove_finished_chunks(cq);
-	cq->bytes_in = 0;
-	cq->bytes_out = 0;
+
 }
 
 
@@ -207,8 +213,10 @@ int chunkqueue_append_file(chunkqueue * cq, buffer * fn, off_t offset, off_t len
 	chunk *c;
 
 	if (len == 0)
+	{
 		return 0;
-
+	}
+	
 	c = chunkqueue_get_unused_chunk(cq);
 
 	c->type = FILE_CHUNK;
@@ -235,8 +243,10 @@ int chunkqueue_append_buffer(chunkqueue * cq, buffer * mem)
 	chunk *c;
 
 	if (mem->used == 0)
+	{
 		return 0;
-
+	}
+	
 	c = chunkqueue_get_unused_chunk(cq);
 	c->type = MEM_CHUNK;
 	c->offset = 0;
@@ -255,13 +265,17 @@ int chunkqueue_append_buffer_weak(chunkqueue * cq, buffer * mem)
 	chunk *c;
 
 	if (mem->used == 0)
+	{
 		return 0;
-
+	}
+	
 	c = chunkqueue_get_unused_chunk(cq);
 	c->type = MEM_CHUNK;
 	c->offset = 0;
 	if (c->mem)
+	{
 		buffer_free(c->mem);
+	}
 	c->mem = mem;
 
 	chunkqueue_append_chunk(cq, c);
@@ -275,8 +289,10 @@ int chunkqueue_prepend_buffer(chunkqueue * cq, buffer * mem)
 	chunk *c;
 
 	if (mem->used == 0)
+	{
 		return 0;
-
+	}
+	
 	c = chunkqueue_get_unused_chunk(cq);
 	c->type = MEM_CHUNK;
 	c->offset = 0;
@@ -293,8 +309,10 @@ int chunkqueue_append_mem(chunkqueue * cq, const char *mem, size_t len)
 	chunk *c;
 
 	if (len == 0)
+	{
 		return 0;
-
+	}
+	
 	c = chunkqueue_get_unused_chunk(cq);
 	c->type = MEM_CHUNK;
 	c->offset = 0;
@@ -314,8 +332,9 @@ buffer *chunkqueue_get_prepend_buffer(chunkqueue * cq)
 
 	c = chunkqueue_get_unused_chunk(cq);
 
-	c->type = MEM_CHUNK;
-	c->offset = 0;
+	c -> type = MEM_CHUNK;
+	c -> offset = 0;
+	c -> finished = 0;
 	buffer_reset(c->mem);
 
 	chunkqueue_prepend_chunk(cq, c);
@@ -330,8 +349,9 @@ buffer *chunkqueue_get_append_buffer(chunkqueue * cq)
 
 	c = chunkqueue_get_unused_chunk(cq);
 
-	c->type = MEM_CHUNK;
-	c->offset = 0;
+	c -> type = MEM_CHUNK;
+	c -> offset = 0;
+	c -> finished = 0;
 	buffer_reset(c->mem);
 
 	chunkqueue_append_chunk(cq, c);
@@ -342,8 +362,10 @@ buffer *chunkqueue_get_append_buffer(chunkqueue * cq)
 int chunkqueue_set_tempdirs(chunkqueue * cq, array * tempdirs)
 {
 	if (!cq)
+	{
 		return -1;
-
+	}
+	
 	cq->tempdirs = tempdirs;
 
 	return 0;
@@ -356,23 +378,23 @@ chunk *chunkqueue_get_append_tempfile(chunkqueue * cq)
 
 	c = chunkqueue_get_unused_chunk(cq);
 
-	c->type = FILE_CHUNK;
-	c->offset = 0;
+	c -> type = FILE_CHUNK;
+	c -> offset = 0;
+	c -> finished = 0;
 
 	if (cq->tempdirs && cq->tempdirs->used)
 	{
 		size_t i;
 
 		/*
-		 * we have several tempdirs, only if all of them fail we jump out 
 		 * 已经有一个临时目录列表，试试哪个可以使用。
 		 */
 
 		for (i = 0; i < cq->tempdirs->used; i++)
 		{
-			data_string *ds = (data_string *) cq->tempdirs->data[i];
+			data_string *ds = (data_string *) cq -> tempdirs -> data[i];
 
-			buffer_copy_string_buffer(template, ds->value);
+			buffer_copy_string_buffer(template, ds -> value);
 			BUFFER_APPEND_SLASH(template);
 			buffer_append_string_len(template, CONST_STR_LEN("lighttpd-upload-XXXXXX"));
 
@@ -403,7 +425,7 @@ chunk *chunkqueue_get_append_tempfile(chunkqueue * cq)
 	}
 
 	buffer_copy_string_buffer(c->file.name, template);
-	c->file.length = 0;
+	c -> file.length = 0;
 
 	chunkqueue_append_chunk(cq, c);
 
@@ -444,13 +466,13 @@ off_t chunkqueue_written(chunkqueue * cq)
 	off_t len = 0;
 	chunk *c;
 
-	for (c = cq->first; c; c = c->next)
+	for (c = cq -> first; c; c = c -> next)
 	{
-		switch (c->type)
+		switch (c -> type)
 		{
 		case MEM_CHUNK:
 		case FILE_CHUNK:
-			len += c->offset;
+			len += c -> offset;
 			break;
 		default:
 			break;
@@ -462,7 +484,7 @@ off_t chunkqueue_written(chunkqueue * cq)
 
 int chunkqueue_is_empty(chunkqueue * cq)
 {
-	return cq->first ? 0 : 1;
+	return cq -> first ? 0 : 1;
 }
 
 /**
@@ -475,37 +497,22 @@ int chunkqueue_remove_finished_chunks(chunkqueue * cq)
 		return 0;
 	}
 	chunk *c;
-	for (c = cq->first; c; c = cq->first)
+	for (c = cq -> first; c; c = cq -> first)
 	{
-		int is_finished = 0;
-
-		switch (c->type)
+		if (c -> finished)
 		{
-		case MEM_CHUNK:
-			if (c->mem->used == 0 || (c->offset == (off_t) c->mem->used - 1))
-				is_finished = 1;
-			break;
-		case FILE_CHUNK:
-			if (c->offset == c->file.length)
-				is_finished = 1;
-			break;
-		default:
-			break;
-		}
-
-		if (!is_finished)
-			break;
-
-		chunk_reset(c);
-
-		cq -> first = c -> next;
+			chunk_reset(c);
+			cq -> first = c -> next;
 		
-		if (c == cq->last)
-			cq->last = NULL;
-
-		c->next = cq->unused;
-		cq->unused = c;
-		cq->unused_chunks++;
+			if (c == cq -> last)
+			{
+				cq -> last = NULL;
+			}
+			
+			c -> next = cq -> unused;	
+			cq -> unused = c;
+			++cq -> unused_chunks;
+		}
 	}
 
 	return 0;

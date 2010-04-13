@@ -192,6 +192,25 @@ int buffer_copy_string_buffer(buffer *b, const buffer *src)
 	return buffer_copy_string_len(b, src->ptr, src->used - 1);
 }
 
+/**
+ * 将src中的长度为len的内容复制给b
+ */
+int buffer_copy_string_buffer_len(buffer *b, const buffer *src, size_t len) 
+{
+	if (!src) 
+	{
+		return -1;
+	}
+	
+	if (src -> used == 0) 
+	{
+		b -> used = 0;
+		return 0;
+	}
+	return buffer_copy_string_len(b, src -> ptr, len);
+}
+
+
 //将s追加到b中
 int buffer_append_string(buffer *b, const char *s)
 {
@@ -253,11 +272,6 @@ int buffer_append_string_rfill(buffer *b, const char *s, size_t maxlen)
 }
 
 /**
- * append a string to the end of the buffer
- *
- * the resulting buffer is terminated with a '\0'
- * s is treated as a un-terminated string (a \0 is handled a normal character)
- *
  * 追加s到b中。
  * s被看作是一个不以'\0'结尾的字符串，s_len是s的长度。
  * 最终b中的数据以'\0'结尾。
@@ -292,6 +306,21 @@ int buffer_append_string_buffer(buffer *b, const buffer *src)
 	if (src->used == 0) return 0;
 
 	return buffer_append_string_len(b, src->ptr, src->used - 1);
+}
+
+//将src中的数据追加到b中
+int buffer_append_string_buffer_len(buffer *b, const buffer *src, size_t len) 
+{
+	if (!src) 
+	{
+		return -1;
+	}
+	if (src->used == 0) 
+	{
+		return 0;
+	}
+	
+	return buffer_append_string_len(b, src -> ptr, len);
 }
 
 /**

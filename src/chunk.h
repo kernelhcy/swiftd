@@ -7,7 +7,6 @@
 /**
  * chunk的意思是大块的。
  * 很明显，这个chunk结构体就是处理大块的数据用的。
- *
  * chunk分两种，内存chunk和文件chunk。
  */
 
@@ -15,31 +14,28 @@ typedef struct chunk
 {
 	enum { UNUSED_CHUNK, MEM_CHUNK, FILE_CHUNK } type;
 
-	/* 内存中的存储块或预读缓存 */
-	buffer *mem;				/* either the storage of the mem-chunk or the read-ahead buffer */
+	int finished; 				//标记存储的数据是否已经处理完毕。
+	off_t offset;				//块中数据的偏移位置
+	
+	buffer *mem;				//内存中的存储块或预读缓存
 
 	struct 
 	{
-		/*
-		 * filechunk 文件块
-		 */
-		buffer *name;			/* name of the file */
-		off_t start;			/* starting offset in the file */
-		off_t length;			/* octets to send from the starting offset */
-
-		int fd;
+		// 文件块
+		buffer *name;			//文件名
+		off_t start;			//文件数据开始的偏移量。
+		off_t length;			//数据的长度
+		int fd; 				//文件描述符。
+		//将文件映射到内存中。
 		struct 
 		{
-			char *start;		/* the start pointer of the mmap'ed area */
-			size_t length;		/* size of the mmap'ed area */
-			off_t offset;		/* start is <n> octet away from the start of the file */
+			char *start;		//文件映射的开始地址。
+			size_t length;		//映射区域的长度
+			off_t offset;		//数据偏移量
 		} mmap;
 
-		int is_temp;			/* file is temporary and will be deleted if on cleanup */
+		int is_temp;			//表示是否是临时文件。临时文件使用完后自动清理。
 	} file;
-
-	off_t offset;				/* octets sent from this chunk the size of the
-								 * chunk is either - mem-chunk: mem->used - 1 -  file-chunk: file.length */
 
 	struct chunk *next;
 } chunk;
@@ -56,9 +52,7 @@ typedef struct
 	chunk *unused;
 	size_t unused_chunks;
 
-	array *tempdirs;
-
-	off_t bytes_in, bytes_out;
+	array *tempdirs; 			//临时文件目录
 } chunkqueue;
 
 chunkqueue *chunkqueue_init(void);
