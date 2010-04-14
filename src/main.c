@@ -172,8 +172,6 @@ static void server_free(server * srv)
 	buffer_free(srv -> errorlog_buf);
 	buffer_free(srv -> ts_debug_str);
 	
-	tp_free(srv -> tp);
-	
 	pthread_mutex_destroy(&srv -> plugin_lock);
 	pthread_mutex_destroy(&srv -> sockets_lock);
 	pthread_mutex_destroy(&srv -> conns_lock);
@@ -503,6 +501,9 @@ int main(int argc, char *argv[])
 			}
 		}
 	}while(!shutdown_server);
+	
+	fprintf(stderr, "free the thread pool.\n");
+	tp_free(srv -> tp);
 	
 	log_error_write(srv, __FILE__, __LINE__, "s", "shut down the server.");
 	fprintf(stderr, "close log.\n");

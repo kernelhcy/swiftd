@@ -89,7 +89,16 @@ int network_init(server *srv)
 
 	srv_sock -> addr.ipv4.sin_port = htons(port);
 	addr_len = sizeof(struct sockaddr_in);
-
+	
+	//设置地址可重用。
+	//如果不设置可重用，在关闭服务器并重启时，会提示地址被占用。
+	int val;
+	if (setsockopt(srv_sock -> fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val)) < 0)
+	{
+		log_error_write(srv, __FILE__, __LINE__, "ss", "socketsockopt failed:", strerror(errno));
+		return -1;
+	}
+	
 	//绑定地址
 	log_error_write(srv, __FILE__, __LINE__, "s", "bind the socket!");
 	if (-1 == bind(srv_sock -> fd, (struct sockaddr *)&(srv_sock -> addr), addr_len))

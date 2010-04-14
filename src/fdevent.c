@@ -236,6 +236,11 @@ int fdevent_fcntl(fdevent *ev, int fd)
 		exit(1);
 	}
 	
+	/*
+	 * 当运行exec()系列函数的时候，在子进程中关闭这个fd。主要是运行cgi。
+	 */
+	fcntl(fd, F_SETFD, FD_CLOEXEC);
+	
 	if (ev -> fcntl)
 	{
 		return ev -> fcntl(ev, fd);
