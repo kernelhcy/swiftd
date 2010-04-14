@@ -51,13 +51,14 @@ typedef struct
 	int fd;
 	void *ctx;
 	int is_listened; 	//标记是否已经被监听。
+	int is_registered; 	//是否已经被注册。
 }fdnode;
 
 
 typedef struct fdevent
 {
 	fdevent_handler_t type;
-	fdnode **fdarray;
+	fdnode *fdarray;
 	size_t maxfds;
 
 	pthread_mutex_t lock; //锁

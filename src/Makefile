@@ -1,5 +1,6 @@
 OBJS=buffer.o log.o  chunk.o connection.o array.o  configure.o fdevent.o threadpool.o\
-	 fde_epoll.o joblist.o main.o network.o base.o request.o
+	 fde_epoll.o joblist.o main.o network.o base.o request.o\
+	 data_string.o data_integer.o data_array.o
 FLAGS=-g
 swiftd: ${OBJS}
 	gcc ${OBJS} ${FLAGS} -o swiftd -lpthread
@@ -12,6 +13,12 @@ connection.o:connection.c
 	gcc -c ${FLAGS} connection.c  -o  connection.o
 array.o: array.c
 	gcc -c ${FLAGS} array.c  -o  array.o
+data_array.o:data_array.c
+	gcc -c ${FLAGS} data_array.c  -o data_array.o
+data_integer.o:data_integer.c
+	gcc -c ${FLAGS} data_integer.c  -o data_integer.o
+data_string.o:data_string.c
+	gcc -c ${FLAGS} data_string.c  -o data_string.o
 log.o:log.c
 	gcc -c ${FLAGS} log.c  -o  log.o
 configure.o:configure.c

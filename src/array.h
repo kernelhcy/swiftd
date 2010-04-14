@@ -13,35 +13,18 @@
 /*
  * 通用数组
  */
-
-/* 判断数据的类型是不是字符串string */
-#define DATA_IS_STRING(x) (x->type == TYPE_STRING)
-
+ 
 /* 定义数据类型的枚举类型 */
-typedef enum { 
+typedef enum 
+{ 
 
-	TYPE_UNSET, 	/* 数据的类型未设置，
-					   这几种数据类型使用了面向对象的设计思想，
-					   这个类型相当于父类型，继承关系见后面 
-					 */
+	TYPE_UNSET, 	/* 数据的类型未设置，这几种数据类型使用了面向对象的设计思想，
+					   这个类型相当于父类型 */
 	TYPE_STRING, 	/* 字符串类型 */
-	TYPE_COUNT, 	/* COUNT类型 */
 	TYPE_ARRAY, 	/* 数组类型 */
 	TYPE_INTEGER, 	/* 整数类型 */
-	TYPE_FASTCGI, 	/* FASTCGI类型 */
-	TYPE_CONFIG 	/* CONFIG类型 */
-} data_type_t;
 
-/*
- * 以上几种数据类型的继承关系
- * 						
- * 				            		UNSET
- * 						              |
- * 		-------------------------------------------------------------
- * 		|           |           |            |           |           |
- * 	 STRING      COUNT        ARRAY        INTERGER    FASTCGI    CONFIG
- *
- */
+} data_type_t;
 
 /* 定义UNSET数据类型所包含的数据成员 */
 #define DATA_UNSET \
@@ -54,10 +37,7 @@ typedef enum {
 	int (*insert_dup)(struct data_unset *dst, struct data_unset *src); \
 	void (*print)(const struct data_unset *p, int depth)
 /*
- * 上面的五个函数指针指向各个子数据类型的操作函数。
- * 用函数指针模拟虚函数！
- * 	Nice!!
- * Java中的函数覆盖。
+ * 上面的五个函数指针指向各个子数据类型的操作函数。用函数指针模拟虚函数
  */
 
 /* 定义UNSET数据类型，UNSET类 */
@@ -66,31 +46,21 @@ typedef struct data_unset
 	DATA_UNSET;
 } data_unset;
 
-typedef struct {
+typedef struct 
+{
 	/* UNSET数据的指针型数组 */
 	data_unset **data;
-
+	
+	//对数组中的数据索引进行排序。
 	size_t *sorted;
 
 	size_t used;
 	size_t size;
 
-	size_t unique_ndx;
-
+	size_t unique_ndx; 			//用于产生key。始终是小的未使用的key值。
 	size_t next_power_of_2;
-	int is_weakref;				/* data is weakref, don't bother the data */
 } array;
 
-typedef struct 
-{
-	DATA_UNSET;
-
-	int count;
-} data_count;
-/*
- * COUNT类特有的初始化函数，后面的各个数据类型也都有自己特有的初始化函数
- */
-data_count *data_count_init(void);
 
 typedef struct 
 {
@@ -100,123 +70,73 @@ typedef struct
 } data_string;
 
 data_string *data_string_init(void);
-data_string *data_response_init(void);
 
-typedef struct {
+
+typedef struct
+{
 	DATA_UNSET;
-
 	array *value;
 } data_array;
 
 data_array *data_array_init(void);
 
-/**
- * possible compare ops in the configfile parser
- */
-typedef enum {
-	CONFIG_COND_UNSET,
-	CONFIG_COND_EQ,		 /** == */
-	CONFIG_COND_MATCH,			 /** =~ */
-	CONFIG_COND_NE,		 /** != */
-	CONFIG_COND_NOMATCH			 /** !~ */
-} config_cond_t;
-
-/**
- * possible fields to match against
- */
-typedef enum {
-	COMP_UNSET,
-	COMP_SERVER_SOCKET,
-	COMP_HTTP_URL,
-	COMP_HTTP_HOST,
-	COMP_HTTP_REFERER,
-	COMP_HTTP_USER_AGENT,
-	COMP_HTTP_COOKIE,
-	COMP_HTTP_REMOTE_IP,
-	COMP_HTTP_QUERY_STRING,
-	COMP_HTTP_SCHEME,
-	COMP_HTTP_REQUEST_METHOD,
-
-	COMP_LAST_ELEMENT
-} comp_key_t;
-
-/*
- * $HTTP["host"] == "incremental.home.kneschke.de" { ... } for print: comp_key
- * op string for compare: comp cond string/regex 
- */
-
-typedef struct _data_config data_config;
-struct _data_config {
+typedef struct 
+{
 	DATA_UNSET;
-
-	array *value;
-
-	buffer *comp_key;
-	comp_key_t comp;
-
-	config_cond_t cond;
-	buffer *op;
-
-	int context_ndx;			/* more or less like an id */
-	array *childs;
-	/*
-	 * nested 
-	 */
-	data_config *parent;
-	/*
-	 * for chaining only 
-	 */
-	data_config *prev;
-	data_config *next;
-
-	buffer *string;
-#ifdef HAVE_PCRE_H
-	pcre *regex;
-	pcre_extra *regex_study;
-#endif
-};
-
-data_config *data_config_init(void);
-
-typedef struct {
-	DATA_UNSET;
-
 	int value;
 } data_integer;
 
 data_integer *data_integer_init(void);
 
-typedef struct {
-	DATA_UNSET;
-
-	buffer *host;
-
-	unsigned short port;
-
-	time_t disable_ts;
-	int is_disabled;
-	size_t balance;
-
-	int usage;					/* fair-balancing needs the no. of connections
-								 * active on this host */
-	int last_used_ndx;			/* round robin */
-} data_fastcgi;
-
-data_fastcgi *data_fastcgi_init(void);
-
-/* 数组的操作函数 */
+/*
+ * 初始化一个数组。
+ */
 array *array_init(void);
-array *array_init_array(array * a);
+/*
+ * 用数组src初始化一个新的数组。
+ * 拷贝src中的所有数据到新数组中。
+ * 深拷贝。
+ */
+array *array_init_array(array * src);
+/*
+ * 释放数组。
+ */
 void array_free(array * a);
+/*
+ * 重置数组和数组中的数据。
+ */
 void array_reset(array * a);
+/*
+ * 将str插入到数组中。
+ * 如果在数据中有和str具有相同key的元素，则替换之。
+ * 如果没有，则将str插入数组中，同时，保持sorted数组的有序。
+ * 对于string类型数据，将要插入的数据追加到原来的数据中，并以','分割。
+ */
 int array_insert_unique(array * a, data_unset * str);
+/*
+ * 返回数组中最后一个数据。
+ * 并将数据从数组中删除。
+ */
 data_unset *array_pop(array * a);
-int array_print(array * a, int depth);
+/*
+ * 返回数组中第一个未使用的数据。并将这个数据从数组中删除。
+ * 如果没有，则返回NULL。 参数t未使用。
+ */
 data_unset *array_get_unused_element(array * a, data_type_t t);
+/*
+ * 通过key查找元素。 没有则返回NULL。
+ */
 data_unset *array_get_element(array * a, const char *key);
+/*
+ * 使用du替换数组中具有相同key的元素，并返回被替换的元素的指针。
+ * 如果不存在key相同的元素，则将du插入数组中。
+ */
 data_unset *array_replace(array * a, data_unset * du);
-int array_strcasecmp(const char *a, size_t a_len, const char *b, size_t b_len);
-void array_print_indent(int depth);
+/*
+ * 返回数组中最长的key的长度。
+ */
 size_t array_get_max_key_length(array * a);
+
+
 
 #endif

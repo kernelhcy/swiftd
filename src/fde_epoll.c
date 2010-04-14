@@ -49,7 +49,7 @@ int fdevent_epoll_event_add(fdevent *ev, int fd, int events)
 	ee.data.ptr = NULL;
 	ee.data.fd = fd;
 	
-	int op = ev -> fdarray[fd] -> is_listened ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
+	int op = ev -> fdarray[fd].is_listened ? EPOLL_CTL_MOD : EPOLL_CTL_ADD;
 
 	if (0 != epoll_ctl(ev -> epoll_fd, op, fd, &ee))
 	{
@@ -57,7 +57,7 @@ int fdevent_epoll_event_add(fdevent *ev, int fd, int events)
 		return -1;
 	}
 	
-	ev -> fdarray[fd] -> is_listened = 1;
+	ev -> fdarray[fd].is_listened = 1;
 	return 0;
 
 }
@@ -69,7 +69,7 @@ int fdevent_epoll_event_del(fdevent *ev, int fd)
 		return -1;
 	}
 
-	if (!ev -> fdarray[fd] -> is_listened)
+	if (!ev -> fdarray[fd].is_listened)
 	{
 		return 0;
 	}

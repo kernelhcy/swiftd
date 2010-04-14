@@ -65,6 +65,19 @@ static void connection_init(server *srv, connection *con)
 	con -> srv_sock = NULL;	
 	
 	con -> request.request = buffer_init();
+	con -> request.request_line = buffer_init();
+	con -> request.uri = buffer_init();
+	con -> request.orig_uri = buffer_init();
+	con -> request.pathinfo = buffer_init();
+	con -> split_vals = array_init();
+	con -> request.headers = array_init();
+	con -> request.http_range = NULL;
+	con -> request.http_content_type = NULL;
+	con -> request.http_if_modified_since = NULL;
+	con -> request.http_if_none_match = NULL;
+	con -> request.content_length = 0;
+	con -> request.http_method = HTTP_METHOD_UNSET;
+	con -> request.http_version = HTTP_VERSION_UNSET;
 	
 	return;
 }
@@ -120,12 +133,26 @@ static void connection_reset(connection *con)
 	buffer_reset(con -> tmp_chunk_len);
 	buffer_reset(con -> cond_check_buf);
 	buffer_reset(con -> request.request);
+	buffer_reset(con -> request.request_line);
+	buffer_reset(con -> request.uri);
+	buffer_reset(con -> request.orig_uri);
+	buffer_reset(con -> request.pathinfo);
 	
 	con -> server_name = buffer_init_string("swiftd");
 	buffer_reset(con -> error_handler);
 	con -> error_handler_saved_status = 0;
 	con -> in_error_handler = 0;
 	con -> srv_sock = NULL;	
+	
+	array_reset(con -> split_vals);
+	array_reset(con -> request.headers);
+	con -> request.http_range = NULL;
+	con -> request.http_content_type = NULL;
+	con -> request.http_if_modified_since = NULL;
+	con -> request.http_if_none_match = NULL;
+	con -> request.content_length = 0;
+	con -> request.http_method = HTTP_METHOD_UNSET;
+	con -> request.http_version = HTTP_VERSION_UNSET;
 	
 	return;
 }
@@ -260,6 +287,14 @@ void connection_free(connection *con)
 	buffer_free(con -> cond_check_buf );
 	
 	buffer_free(con -> request.request);
+	buffer_free(con -> request.request_line);
+	buffer_free(con -> request.uri);
+	buffer_free(con -> request.orig_uri);
+	buffer_free(con -> request.pathinfo);
+	
+	array_free(con -> split_vals);
+	array_free(con -> request.headers);
+	
 	//这两个变量要释放空间？
 	//con -> plugin_ctx
 	//con -> srv_socket
@@ -421,7 +456,7 @@ static int connection_handle_read(server *srv, connection *con)
 		{			
 			if (c == lastchunk)
 			{
-				buffer_append_memory(b, c -> mem -> ptr, c -> offset);
+				buffer_append_memory(b, c -> mem -> ptr, c -> offset + 1);
 				
 				if (c -> offset == c -> mem -> used)
 				{
@@ -698,6 +733,12 @@ static int connection_handle_close(server *srv, connection *con)
 							, strerror(errno));
 		return -1;
 	}
+	
+	/*
+	 * 这必须再调用一次关闭。
+	 * shutdown仅仅是关闭了连接，没有关闭socket。
+	 */
+	close(con -> fd);
 	
 	//从fdevent系统中删除。
 	fdevent_event_del(srv -> ev, con -> fd);

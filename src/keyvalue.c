@@ -5,13 +5,15 @@
 #include "server.h"
 #include "keyvalue.h"
 
-static keyvalue http_versions[] = {
+static keyvalue http_versions[] = 
+{
 	{HTTP_VERSION_1_1, "HTTP/1.1"},
 	{HTTP_VERSION_1_0, "HTTP/1.0"},
 	{HTTP_VERSION_UNSET, NULL}
 };
 
-static keyvalue http_methods[] = {
+static keyvalue http_methods[] = 
+{
 	{HTTP_METHOD_GET, "GET"},
 	{HTTP_METHOD_POST, "POST"},
 	{HTTP_METHOD_HEAD, "HEAD"},
@@ -38,7 +40,8 @@ static keyvalue http_methods[] = {
 	{HTTP_METHOD_UNSET, NULL}
 };
 
-static keyvalue http_status[] = {
+static keyvalue http_status[] = 
+{
 	{100, "Continue"},
 	{101, "Switching Protocols"},
 	{102, "Processing"},		/* WebDAV */
@@ -91,7 +94,8 @@ static keyvalue http_status[] = {
 	{-1, NULL}
 };
 
-static keyvalue http_status_body[] = {
+static keyvalue http_status_body[] = 
+{
 	{400, "400.html"},
 	{401, "401.html"},
 	{403, "403.html"},
@@ -350,105 +354,3 @@ http_method_t get_http_method_key(const char *s)
 	return (http_method_t) keyvalue_get_key(http_methods, s);
 }
 
-
-
-
-pcre_keyvalue_buffer *pcre_keyvalue_buffer_init(void)
-{
-	pcre_keyvalue_buffer *kvb;
-
-	kvb = calloc(1, sizeof(*kvb));
-
-	return kvb;
-}
-
-int
-pcre_keyvalue_buffer_append(pcre_keyvalue_buffer * kvb, const char *key,
-							const char *value)
-{
-#ifdef HAVE_PCRE_H
-	size_t i;
-	const char *errptr;
-	int erroff;
-	pcre_keyvalue *kv;
-#endif
-
-	if (!key)
-		return -1;
-
-#ifdef HAVE_PCRE_H
-	if (kvb->size == 0)
-	{
-		kvb->size = 4;
-		kvb->used = 0;
-
-		kvb->kv = malloc(kvb->size * sizeof(*kvb->kv));
-
-		for (i = 0; i < kvb->size; i++)
-		{
-			kvb->kv[i] = calloc(1, sizeof(**kvb->kv));
-		}
-	} else if (kvb->used == kvb->size)
-	{
-		kvb->size += 4;
-
-		kvb->kv = realloc(kvb->kv, kvb->size * sizeof(*kvb->kv));
-
-		for (i = kvb->used; i < kvb->size; i++)
-		{
-			kvb->kv[i] = calloc(1, sizeof(**kvb->kv));
-		}
-	}
-
-	kv = kvb->kv[kvb->used];
-	if (NULL == (kv->key = pcre_compile(key, 0, &errptr, &erroff, NULL)))
-	{
-
-		fprintf(stderr, "%s.%d: rexexp compilation error at %s\n",
-				__FILE__, __LINE__, errptr);
-		return -1;
-	}
-
-	if (NULL == (kv->key_extra = pcre_study(kv->key, 0, &errptr)) &&
-		errptr != NULL)
-	{
-		return -1;
-	}
-
-	kv->value = buffer_init_string(value);
-
-	kvb->used++;
-
-	return 0;
-#else
-	UNUSED(kvb);
-	UNUSED(value);
-
-	return -1;
-#endif
-}
-
-void pcre_keyvalue_buffer_free(pcre_keyvalue_buffer * kvb)
-{
-#ifdef HAVE_PCRE_H
-	size_t i;
-	pcre_keyvalue *kv;
-
-	for (i = 0; i < kvb->size; i++)
-	{
-		kv = kvb->kv[i];
-		if (kv->key)
-			pcre_free(kv->key);
-		if (kv->key_extra)
-			pcre_free(kv->key_extra);
-		if (kv->value)
-			buffer_free(kv->value);
-		free(kv);
-	}
-
-	if (kvb->kv)
-		free(kvb->kv);
-#endif
-
-	free(kvb);
-}

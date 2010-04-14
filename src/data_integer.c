@@ -38,18 +38,8 @@ static void data_integer_reset(data_unset * d)
 static int data_integer_insert_dup(data_unset * dst, data_unset * src)
 {
 	UNUSED(dst);
-
-	src->free(src);
-
+	src -> free(src);
 	return 0;
-}
-
-static void data_integer_print(const data_unset * d, int depth)
-{
-	data_integer *ds = (data_integer *) d;
-	UNUSED(depth);
-
-	fprintf(stdout, "%d", ds->value);
 }
 
 
@@ -66,7 +56,6 @@ data_integer *data_integer_init(void)
 	ds->free = data_integer_free;
 	ds->reset = data_integer_reset;
 	ds->insert_dup = data_integer_insert_dup;
-	ds->print = data_integer_print;
 	ds->type = TYPE_INTEGER;
 
 	return ds;

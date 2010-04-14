@@ -1,5 +1,5 @@
-	#ifndef _BASE_H_
-#define _BASE_H_
+#ifndef __SWIFTD_BASE_H_
+#define __SWIFTD_BASE_H_
 
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -25,30 +25,7 @@
 
 #include <pthread.h>
 
-#ifndef O_BINARY
-# define O_BINARY 0
-#endif
-
-#ifndef O_LARGEFILE
-# define O_LARGEFILE 0
-#endif
-
-#ifndef SIZE_MAX
-# ifdef SIZE_T_MAX
-#  define SIZE_MAX SIZE_T_MAX
-# else
-#  define SIZE_MAX ((size_t)~0)
-# endif
-#endif
-
-#ifndef SSIZE_MAX
-# define SSIZE_MAX ((size_t)~0 >> 1)
-#endif
-
-
-#ifndef SHUT_WR
-# define SHUT_WR 1
-#endif
+#define CRLF "\\r\\n"
 
 #include "settings.h"
 
@@ -109,7 +86,7 @@ typedef struct
 
 	array *headers;
 
-	size_t content_length;	
+	unsigned long content_length;	
 
 	/*
 	 * internal representation 
@@ -290,6 +267,8 @@ typedef struct
 	buffer *error_handler;
 	int error_handler_saved_status;
 	int in_error_handler;
+	
+	array *split_vals; 		//用于分割headers中的value。
 
 	void *srv_sock;			/* server socket */
 } connection;

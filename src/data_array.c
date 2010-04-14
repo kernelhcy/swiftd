@@ -40,18 +40,10 @@ static void data_array_reset(data_unset * d)
 static int data_array_insert_dup(data_unset * dst, data_unset * src)
 {
 	UNUSED(dst);
-
 	src->free(src);
-
 	return 0;
 }
 
-static void data_array_print(const data_unset * d, int depth)
-{
-	data_array *ds = (data_array *) d;
-
-	array_print(ds->value, depth);
-}
 
 data_array *data_array_init(void)
 {
@@ -66,7 +58,6 @@ data_array *data_array_init(void)
 	ds->free = data_array_free;
 	ds->reset = data_array_reset;
 	ds->insert_dup = data_array_insert_dup;
-	ds->print = data_array_print;
 	ds->type = TYPE_ARRAY;
 
 	return ds;
