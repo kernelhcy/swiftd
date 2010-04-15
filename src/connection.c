@@ -857,8 +857,12 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_READ:
+				/*
+				 * 对于可能一次运行处理不完的状态。
+				 * 在开始处理前，将连接加到作业队列中。
+				 */
 				joblist_append(srv, con);
-				log_error_write(srv, __FILE__, __LINE__, "sd", "connection addr: ", con);
+				
 				//状态的改变视读取数据的情况而定。
 				connection_handle_read(srv, con);
 				

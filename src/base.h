@@ -151,6 +151,8 @@ typedef struct
 	buffer *username; 					//用户名
 	buffer *groupname; 					//组名
 
+	buffer *plugin_conf_file;			//plugin的配置文件。
+
 	buffer *pid_file; 					//进程ID文件名，保证只有一个服务器实例
 
 	buffer *event_handler; 				//多路IO系统的名称。
@@ -186,14 +188,6 @@ typedef enum
 	CON_STATE_ERROR, 			//error 出错
 	CON_STATE_CLOSE 			//close 连接关闭
 } connection_state_t;
-
-//网络连接运行的结果状态
-typedef enum 
-{ 
-	COND_RESULT_UNSET, 
-	COND_RESULT_FALSE,
-	COND_RESULT_TRUE
-} cond_result_t;
 
 /**
  * 定义网络连接
@@ -283,14 +277,6 @@ typedef struct
 } connections;
 
 
-typedef struct 
-{
-	void **ptr;
-	size_t used;
-	size_t size;
-} buffer_plugin;
-
-
 /**
  * 服务器使用的socket连接。
  * 包含socket地址，socket的fd。
@@ -322,6 +308,7 @@ typedef struct s_con_list_node
 	struct s_con_list_node *next;
 }con_list_node;
 
+/////////////////////  作业  ////////////////////////
 /*
  * 定义一个job的环境。
  */
@@ -336,6 +323,31 @@ typedef struct s_job_ctx
 	struct s_job_ctx *next;
 }job_ctx;
 
+//////////////////////////  插件  //////////////////////////////
+/*
+ * 存储插件的名称和路径
+ * name[i]对应的插件的路径为path[i]
+ */
+typedef struct 
+{
+	buffer **name;
+	buffer **path;
+	int 	*isloaded; 		//标记插件是否已经加载。
+	size_t used;
+	size_t size;
+} plugin_name_path;
+
+/*
+ * 定义插件数组。用于存放插件结构体。
+ */
+typedef struct 
+{
+	void **ptr;
+	size_t used;
+	size_t size;
+}plugin_array;
+
+/////////////////////////  服务器数据  //////////////////////////
 /**
  * server数据。
  * 保存服务器运行期间所需的数据。
@@ -367,7 +379,8 @@ typedef struct server
 	fdevent *ev; 	//fdevent系统
 
 	pthread_mutex_t plugin_lock;
-	buffer_plugin plugins;
+	plugin_name_path *plugins_np;
+	plugin_array *plugins;
 	void *plugin_slots;
 
 	pthread_mutex_t sockets_lock;

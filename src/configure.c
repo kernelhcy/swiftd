@@ -26,6 +26,8 @@ int config_setdefaults(server *srv)
 	srv -> srvconf.log_request_header_on_error = 1;
 	srv -> srvconf.log_state_handling = 1;
 
+	srv -> srvconf.plugin_conf_file = buffer_init_string("/home/hcy/swiftd-plugin.conf");
+
 	struct ev_map 
 	{
 		fdevent_handler_t t;

@@ -94,6 +94,14 @@ static server *server_init(void)
 	srv -> ev = NULL; 
 
 	// plugins;
+	srv -> plugins = (plugin_array *)malloc(sizeof(plugin_array));
+	srv -> plugins -> size = 0;
+	srv -> plugins -> used = 0;
+
+	srv -> plugins_np = (plugin_name_path *)malloc(sizeof(plugin_name_path));
+	srv -> plugins_np -> size = 0;
+	srv -> plugins_np -> used = 0;
+	
 	srv -> plugin_slots = NULL;
 	pthread_mutex_init(&srv -> plugin_lock, NULL);
 
@@ -168,6 +176,9 @@ static void server_free(server * srv)
 	}
 	free(srv -> sockets -> ptr);
 	free(srv -> sockets);
+
+	free(srv -> plugins);
+	free(srv -> plugins_np);
 	
 	buffer_free(srv -> errorlog_buf);
 	buffer_free(srv -> ts_debug_str);

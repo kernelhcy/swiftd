@@ -1,5 +1,5 @@
 OBJS=buffer.o log.o  chunk.o connection.o array.o  configure.o fdevent.o threadpool.o\
-	 fde_epoll.o joblist.o main.o network.o base.o request.o\
+	 fde_epoll.o joblist.o main.o network.o base.o request.o plugin.o\
 	 data_string.o data_integer.o data_array.o keyvalue.o
 FLAGS=-g
 swiftd: ${OBJS}
@@ -41,6 +41,8 @@ request.o:request.c
 	gcc -c ${FLAGS} request.c  -o  request.o
 keyvalue.o:keyvalue.c
 	gcc -c ${FLAGS} keyvalue.c -o keyvalue.o
+plugin.o:plugin.c
+	gcc -c ${FLAGS} plugin.c  -o  plugin.o
 clean:
 	rm *.o
 #	gcc -c ${FLAGS}   -o 
