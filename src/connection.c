@@ -7,6 +7,41 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 
+static struct connection_state_name
+{
+	connection_state_t state;
+	const char *name;
+}state_names[]=
+{
+	{CON_STATE_CONNECT, "CON_STATE_CONNECT"}, 			
+	{CON_STATE_REQUEST_START, "CON_STATE_REQUEST_START"}, 	
+	{CON_STATE_READ, "CON_STATE_READ"},	
+	{CON_STATE_REQUEST_END, "CON_STATE_REQUEST_END"}, 	
+	{CON_STATE_READ_POST, "CON_STATE_READ_POST"}, 	
+	{CON_STATE_HANDLE_REQUEST, "CON_STATE_HANDLE_REQUEST"}, 
+	{CON_STATE_RESPONSE_START, "CON_STATE_RESPONSE_START"}, 
+	{CON_STATE_WRITE, "CON_STATE_WRITE"},
+	{CON_STATE_RESPONSE_END, "CON_STATE_RESPONSE_END"}, 	
+	{CON_STATE_ERROR, "CON_STATE_ERROR"},
+	{CON_STATE_CLOSE, "CON_STATE_CLOSE"},
+	{-1, "Unknown State"}			
+};
+
+//获得状态对应的字符串名称。
+static const char *connection_get_state_name(connection_state_t s)
+{
+	int i = 0;
+	for (; state_names[i].state != -1; ++i)
+	{
+		if (s == state_names[i].state)
+		{
+			return state_names[i].name;
+		}
+	}
+	
+	//Unkown state.
+	return state_names[i].name;
+}
 /*
  * 初始化一个连接。
  */
@@ -26,7 +61,7 @@ static void connection_init(server *srv, connection *con)
 	con -> keep_alive = 0;				
 
 	con -> write_queue = chunkqueue_init();			
-	con -> read_queue = chunkqueue_init();				
+	con -> read_queue = chunkqueue_init();	
 	con -> request_content_queue = chunkqueue_init();
 	con -> http_status = 0; 				
 
@@ -71,10 +106,11 @@ static void connection_init(server *srv, connection *con)
 	con -> request.pathinfo = buffer_init();
 	con -> split_vals = array_init();
 	con -> request.headers = array_init();
-	con -> request.http_range = NULL;
+	con -> request.http_if_range = NULL;
 	con -> request.http_content_type = NULL;
 	con -> request.http_if_modified_since = NULL;
 	con -> request.http_if_none_match = NULL;
+	con -> request.http_host = NULL;
 	con -> request.content_length = 0;
 	con -> request.http_method = HTTP_METHOD_UNSET;
 	con -> request.http_version = HTTP_VERSION_UNSET;
@@ -85,7 +121,7 @@ static void connection_init(server *srv, connection *con)
 /*
  * 重置一个连接结构体。
  */
-static void connection_reset(connection *con)
+static void connection_reset(server *srv, connection *con)
 {
 	if (NULL == con)
 	{
@@ -100,9 +136,9 @@ static void connection_reset(connection *con)
 	con -> is_writable = 0;
 	con -> keep_alive = 0;				
 
-	chunkqueue_remove_finished_chunks(con -> write_queue);			
-	chunkqueue_remove_finished_chunks(con -> read_queue);				
-	chunkqueue_remove_finished_chunks(con -> request_content_queue);
+	chunkqueue_reset(con -> write_queue);			
+	chunkqueue_reset(con -> read_queue);				
+	chunkqueue_reset(con -> request_content_queue);
 	con -> http_status = 0; 				
 
 	buffer_reset(con -> parse_request); 	
@@ -123,6 +159,7 @@ static void connection_reset(connection *con)
 	con -> header_len = 0; 
 	
 	con -> got_response = 0;
+	joblist_find_del(srv, con);
 	con -> in_joblist = 0;
 	con -> plugin_ctx = NULL;	
 	
@@ -138,6 +175,7 @@ static void connection_reset(connection *con)
 	buffer_reset(con -> request.orig_uri);
 	buffer_reset(con -> request.pathinfo);
 	
+	free(con -> server_name);
 	con -> server_name = buffer_init_string("swiftd");
 	buffer_reset(con -> error_handler);
 	con -> error_handler_saved_status = 0;
@@ -146,10 +184,11 @@ static void connection_reset(connection *con)
 	
 	array_reset(con -> split_vals);
 	array_reset(con -> request.headers);
-	con -> request.http_range = NULL;
+	con -> request.http_if_range = NULL;
 	con -> request.http_content_type = NULL;
 	con -> request.http_if_modified_since = NULL;
 	con -> request.http_if_none_match = NULL;
+	con -> request.http_host = NULL;
 	con -> request.content_length = 0;
 	con -> request.http_method = HTTP_METHOD_UNSET;
 	con -> request.http_version = HTTP_VERSION_UNSET;
@@ -251,7 +290,7 @@ connection * connection_get_new(server *srv)
 	return con;
 }
 
-void connection_free(connection *con)
+void connection_free(server *srv, connection *con)
 {
 	if (NULL == con)
 	{
@@ -295,6 +334,7 @@ void connection_free(connection *con)
 	array_free(con -> split_vals);
 	array_free(con -> request.headers);
 	
+	joblist_find_del(srv, con);
 	//这两个变量要释放空间？
 	//con -> plugin_ctx
 	//con -> srv_socket
@@ -372,6 +412,7 @@ static int connection_handle_read(server *srv, connection *con)
 
 	if (con -> is_readable)
 	{
+		//log_error_write(srv, __FILE__, __LINE__, "s", "Read the data from the client.");
 		switch(connection_network_read(srv, con, con -> read_queue))
 		{
 			case 0: 	//读取到数据。
@@ -558,7 +599,9 @@ static int connection_handle_read_post(server *srv, connection *con)
  */
 static int connection_handle_write(server *srv, connection *con)
 {
-	
+
+	//调用状态机。
+	connection_state_machine(srv, con);
 	return 0;
 }
 
@@ -618,6 +661,7 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 			log_error_write(srv, __FILE__, __LINE__, "s", "epoll unknown event!");
 			connection_set_state(srv, con, CON_STATE_ERROR);
 		}
+		
 		return HANDLER_ERROR;
 	}
 	
@@ -657,17 +701,34 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 		return NULL;
 	}
 	
-	
 	int fd;
 	sock_addr acpt_sock;
 	int addr_len = sizeof(sock_addr);
 	if (-1 == (fd = accept(srv_sock -> fd, (struct sockaddr *)&acpt_sock, &addr_len)))
 	{
-		log_error_write(srv, __FILE__, __LINE__, "ss"
-					, "accpet failed. error: ", strerror(errno));
 		//accpet函数也有可能是被信号中断，
 		//虽然accpet函数报错，但是连接依然处于代处理状态，可以在下次
 		//IO事件中继续处理。
+		switch (errno)
+		{
+		case EAGAIN:
+			/*
+			 * 没有可以接受的连接请求。
+			 */
+		case EINTR:
+			/*
+			 * 信号中断。
+			 */
+			break;
+		case EMFILE:
+			/*
+			 * 描述符超出最大限制。
+			 */
+			break;
+		default:
+			log_error_write(srv, __FILE__, __LINE__, "ssd", "accept failed:"
+							, strerror(errno), errno);
+		}
 		return NULL;	
 	}
 	
@@ -710,7 +771,8 @@ static int connection_handle_close(server *srv, connection *con)
 	int len = 0;
 	if (-1 == ioctl(con -> fd, FIONREAD, &len))
 	{
-		log_error_write(srv, __FILE__, __LINE__, "ss", "ioctl failed. ", strerror(errno));
+		log_error_write(srv, __FILE__, __LINE__, "ssd", "ioctl failed. "
+							, strerror(errno), con -> fd);
 	}
 	
 	if (len > 0)
@@ -724,13 +786,17 @@ static int connection_handle_close(server *srv, connection *con)
 		}
 	}
 	
+	//从fdevent系统中删除。
+	fdevent_event_del(srv -> ev, con -> fd);
+	fdevent_unregister(srv -> ev, con -> fd);
+	
 	log_error_write(srv, __FILE__, __LINE__, "sd", "close fd:", con -> fd);
 	//关闭连接。
 	//直接关闭两个方向。
 	if (-1 == shutdown(con -> fd, SHUT_RDWR))
 	{
-		log_error_write(srv, __FILE__, __LINE__, "ss", "shutdown error."
-							, strerror(errno));
+		log_error_write(srv, __FILE__, __LINE__, "ssd", "shutdown error."
+							, strerror(errno), con -> fd);
 		return -1;
 	}
 	
@@ -739,10 +805,6 @@ static int connection_handle_close(server *srv, connection *con)
 	 * shutdown仅仅是关闭了连接，没有关闭socket。
 	 */
 	close(con -> fd);
-	
-	//从fdevent系统中删除。
-	fdevent_event_del(srv -> ev, con -> fd);
-	fdevent_unregister(srv -> ev, con -> fd);
 	
 	connection_set_state(srv, con, CON_STATE_CONNECT);
 	return 0;
@@ -756,9 +818,14 @@ int connection_state_machine(server *srv, connection *con)
 	int done;
 	connection_state_t old_state;
 	done = 0;
+	
 	while(!done)
 	{
 		old_state = con -> state;
+		//log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
+		//				, connection_get_state_name(con -> state), "fd:", con -> fd
+		//				, "connection ndx:", con -> ndx);
+						
 		switch(con -> state)
 		{
 			case CON_STATE_REQUEST_START:
@@ -790,15 +857,19 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_READ:
+				joblist_append(srv, con);
+				log_error_write(srv, __FILE__, __LINE__, "sd", "connection addr: ", con);
 				//状态的改变视读取数据的情况而定。
 				connection_handle_read(srv, con);
+				
 				break;
 			case CON_STATE_READ_POST:
+				joblist_append(srv, con);
 				//状态的改变视读取数据的情况而定。
 				connection_handle_read_post(srv, con);
 				break;
 			case CON_STATE_WRITE:
-				
+				joblist_append(srv, con);
 				connection_set_state(srv, con, CON_STATE_RESPONSE_END);
 				break;
 			case CON_STATE_ERROR:
@@ -806,7 +877,7 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_CONNECT:
-				//connection_reset(con);
+				connection_reset(srv, con);
 				connection_set_state(srv, con, CON_STATE_CONNECT);
 				break;
 			case CON_STATE_CLOSE:
@@ -817,9 +888,10 @@ int connection_state_machine(server *srv, connection *con)
 				}
 				//连接关闭以后，连接处于connect状态，等待下一次连接。
 				connection_set_state(srv, con, CON_STATE_CONNECT);
+				//log_error_write(srv, __FILE__, __LINE__, "s", "close done.");
 				break;
 			default:
-				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown state!");
+				log_error_write(srv, __FILE__, __LINE__, "sd", "Unknown state!", con -> state);
 				connection_set_state(srv, con, CON_STATE_ERROR);
 				break;
 		}

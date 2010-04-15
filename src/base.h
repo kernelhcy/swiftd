@@ -77,12 +77,13 @@ typedef struct
 	http_version_t http_version;
 
 	/*
-	 * strings to the header 
+	 * 指向对应header值。 
 	 */
-	const char *http_range;
+	const char *http_if_range;
 	const char *http_content_type;
 	const char *http_if_modified_since;
 	const char *http_if_none_match;
+	const char *http_host;
 
 	array *headers;
 

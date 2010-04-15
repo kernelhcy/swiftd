@@ -161,14 +161,7 @@ int buffer_copy_string(buffer *b, const char *s) {
 int buffer_copy_string_len(buffer *b, const char *s, size_t s_len) 
 {
 	if (!s || !b) return -1;
-#if 0
-	/* removed optimization as we have to keep the empty string
-	 * in some cases for the config handling
-	 * 复制空串
-	 * url.access-deny = ( "" )
-	 */
-	if (s_len == 0) return 0;
-#endif
+
 	buffer_prepare_copy(b, s_len + 1);
 
 	memcpy(b->ptr, s, s_len);
@@ -469,7 +462,6 @@ int buffer_copy_long(buffer *b, long val)
 
 //追加off_t类型的val到b中。
 //如果off_t的长度和long相同，则不需要下面的函数定义。
-#if !defined(SIZEOF_LONG) || (SIZEOF_LONG != SIZEOF_OFF_T)
 int buffer_append_off_t(buffer *b, off_t val) 
 {
 	char swap;
@@ -518,7 +510,6 @@ int buffer_copy_off_t(buffer *b, off_t val) {
 	b->used = 0;
 	return buffer_append_off_t(b, val);
 }
-#endif /* !defined(SIZEOF_LONG) || (SIZEOF_LONG != SIZEOF_OFF_T) */
 
 //将c转化成对应的16进制形式
 char int2hex(char c) 
@@ -764,12 +755,10 @@ int buffer_caseless_compare(const char *a, size_t a_len, const char *b, size_t b
 		}
 	}
 
-	/* all chars are the same, and the length match too
-	 *
-	 * they are the same */
+	/* 相同 */
 	if (a_len == b_len) return 0;
 
-	/* if a is shorter then b, then b is larger */
+	/* 不同 */
 	return (a_len - b_len);
 }
 
@@ -974,7 +963,7 @@ int buffer_append_string_encoded(buffer *b, const char *s, size_t s_len, buffer_
 	//b中存放的不是亦'\0'结尾的字符串。报错。
 	if (b->ptr[b->used - 1] != '\0') 
 	{
-		SEGFAULT();
+		abort();
 	}
 
 	if (s_len == 0) return 0;
@@ -1042,7 +1031,8 @@ int buffer_append_string_encoded(buffer *b, const char *s, size_t s_len, buffer_
 
 	//下面这个循环就是开始做实际的编码转换工作。
 	//ds指向字符串s中的字符。d指向b的数据去存放字符的位置。
-	for (ds = (unsigned char *)s, d = (unsigned char *)b->ptr + b->used - 1, d_len = 0, ndx = 0; ndx < s_len; ds++, ndx++) 
+	for (ds = (unsigned char *)s, d = (unsigned char *)b->ptr + b->used - 1, d_len = 0, ndx = 0; 
+						ndx < s_len; ds++, ndx++) 
 	{
 		if (map[*ds]) 
 		{
@@ -1203,19 +1193,6 @@ int buffer_path_simplify(buffer *dest, buffer *src)
 	out   = dest->ptr;
 	slash = dest->ptr;
 
-
-#if defined(__WIN32) || defined(__CYGWIN__)
-	/* 
-	 * cygwin is treating \ and / the same, so we have to that too
-	 * cygwin中\和/相同。转化之。
-	 */
-
-	for (walk = src->ptr; *walk; walk++) 
-	{
-		if (*walk == '\\') *walk = '/';
-	}
-	walk = src->ptr;
-#endif
 	//过滤掉开始的空格。
 	while (*walk == ' ') 
 	{

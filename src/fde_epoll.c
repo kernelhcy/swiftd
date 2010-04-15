@@ -81,10 +81,11 @@ int fdevent_epoll_event_del(fdevent *ev, int fd)
 
 	if (0  != epoll_ctl(ev -> epoll_fd, EPOLL_CTL_DEL, fd, &ee))
 	{
-		fprintf(stderr, "(%s %d) epoll ctl failed:%s \n", __FILE__, __LINE__, strerror(errno));
+		fprintf(stderr, "(%s %d) epoll ctl EPOLL_CTL_DEL failed:%s fd %d\n", __FILE__, __LINE__
+							, strerror(errno), fd);
 		return -1;
 	}
-
+	ev -> fdarray[fd].is_listened = 0;
 	return 0;
 	
 }

@@ -24,6 +24,13 @@ void joblist_free(server * srv, con_list_node * joblist);
  */
 connection* joblist_pop(server *srv);
 
+/*
+ * 从作业队列中查找是否有con，
+ * 如果有，则从最也对列中删除并返回1
+ * 没有，返回0
+ */
+int joblist_find_del(server *srv, connection *con);
+
 /**
  * 将con追加到srv中的fdwaitqueue中
  */

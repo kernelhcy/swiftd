@@ -2,7 +2,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "server.h"
 #include "keyvalue.h"
 
 static keyvalue http_versions[] = 

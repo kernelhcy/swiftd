@@ -9,7 +9,7 @@
 connection * connection_get_new(server *srv);
 
 //释放空间,一般情况不释放空间。节约时间。
-void connection_free(connection *);
+void connection_free(server *srv, connection *);
 
 /*
  * 状态机函数。

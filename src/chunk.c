@@ -177,30 +177,31 @@ static int chunkqueue_append_chunk(chunkqueue * cq, chunk * c)
 
 void chunkqueue_reset(chunkqueue * cq)
 {
+	if (NULL == cq)
+	{
+		return;
+	}
 	chunk *c;
-
 	/*
 	 * 标记所有的chunk已经处理完毕。
 	 */
-	for (c = cq->first; c; c = c->next)
+	for (c = cq -> first; c; c = c -> next)
 	{
 		c -> finished = 1;
 		c -> offset = 0;
-		switch (c->type)
+		switch (c -> type)
 		{
 		case MEM_CHUNK:
-			c->mem->used = 0; 				
+			c -> mem -> used = 0; 				
 			break;
 		case FILE_CHUNK:
-			c->file.length = 0;
+			c -> file.length = 0;
 			break;
 		default:
 			break;
 		}
 	}
-
 	chunkqueue_remove_finished_chunks(cq);
-
 }
 
 

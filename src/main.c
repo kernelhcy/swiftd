@@ -157,7 +157,7 @@ static void server_free(server * srv)
 	size_t i;
 	for (i = 0; i < srv -> conns -> used; ++i)
 	{
-		connection_free(srv -> conns -> ptr[i]);
+		connection_free(srv, srv -> conns -> ptr[i]);
 	}
 	free(srv -> conns -> ptr);
 	free(srv -> conns);

@@ -1,6 +1,7 @@
 #include "base.h"
 #include "log.h"
 #include "connection.h"
+#include "joblist.h"
 
 void *job_entry(void *ctx)
 {
@@ -24,7 +25,16 @@ void *job_entry(void *ctx)
 			break;
 	}
 	
-	connection_state_machine(jc -> srv, jc -> ctx);
+	//log_error_write((server *)jc -> srv, __FILE__, __LINE__, "sd", "ctx addr: "
+	//											, (connection *)jc -> ctx);
+	if (joblist_find_del((server *)jc -> srv, (connection *)jc -> ctx))
+	{
+		//ctx所指向的地址在joblist中，说明ctx是一个connection的指针。
+		//调用嗯状态机。
+		//log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "This is a connection. ");
+		connection_state_machine((server *)jc -> srv, (connection *)jc -> ctx);
+	}
+	
 	log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "A job done.");
 	return ctx;
 }

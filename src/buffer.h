@@ -81,13 +81,8 @@ int buffer_append_string_rfill(buffer * b, const char *s, size_t maxlen);
 int buffer_append_long_hex(buffer * b, unsigned long len);
 int buffer_append_long(buffer * b, long val);
 
-#if defined(SIZEOF_LONG) && (SIZEOF_LONG == SIZEOF_OFF_T)
-#define buffer_copy_off_t(x, y)		buffer_copy_long(x, y)
-#define buffer_append_off_t(x, y)	buffer_append_long(x, y)
-#else
 int buffer_copy_off_t(buffer * b, off_t val);
 int buffer_append_off_t(buffer * b, off_t val);
-#endif
 
 int buffer_append_memory(buffer * b, const char *s, size_t s_len);
 
@@ -100,7 +95,8 @@ int buffer_is_equal_string(buffer * a, const char *s, size_t b_len);
 int buffer_caseless_compare(const char *a, size_t a_len,
 							const char *b, size_t b_len);
 
-typedef enum {
+typedef enum 
+{
 	ENCODING_UNSET,
 	ENCODING_REL_URI,			/* for coding a rel-uri (/with
 								 * space/and%percent) nicely as part of a href */
@@ -144,8 +140,6 @@ int light_isalnum(int c);
 #define CONST_STR_LEN(x) x, x ? sizeof(x) - 1 : 0
 #define CONST_BUF_LEN(x) x->ptr, x->used ? x->used - 1 : 0
 
-
-#define SEGFAULT() do { fprintf(stderr, "%s.%d: aborted\n", __FILE__, __LINE__); abort(); } while(0)
 #define UNUSED(x) ( (void)(x) )
 
 #endif

@@ -172,7 +172,7 @@ static handler_t server_socket_fdevent_handler(void *srv, void *ctx, int revents
 	}
 	
 	//处理监听fd事件。建立连接。
-	connection *con;
+	connection *con = NULL;
 	server_socket *srv_sock = (server_socket*)ctx;
 	/*
 	 * 监听fd每发生一次IO事件，表示有连接请求。 
@@ -184,7 +184,6 @@ static handler_t server_socket_fdevent_handler(void *srv, void *ctx, int revents
 		log_error_write(srv, __FILE__, __LINE__,"s", "start the state machine of the new connection.");
 		connection_state_machine(srv, con);
 	}
-	
 	return HANDLER_FINISHED;
 }
 

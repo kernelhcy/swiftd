@@ -1,9 +1,9 @@
 OBJS=buffer.o log.o  chunk.o connection.o array.o  configure.o fdevent.o threadpool.o\
 	 fde_epoll.o joblist.o main.o network.o base.o request.o\
-	 data_string.o data_integer.o data_array.o
+	 data_string.o data_integer.o data_array.o keyvalue.o
 FLAGS=-g
 swiftd: ${OBJS}
-	gcc ${OBJS} ${FLAGS} -o swiftd -lpthread
+	gcc  ${FLAGS} ${OBJS} -o swiftd -lpthread
 
 buffer.o: buffer.c
 	gcc -c ${FLAGS} buffer.c -o buffer.o
@@ -39,6 +39,8 @@ base.o:base.c
 	gcc -c ${FLAGS} base.c -o  base.o
 request.o:request.c
 	gcc -c ${FLAGS} request.c  -o  request.o
+keyvalue.o:keyvalue.c
+	gcc -c ${FLAGS} keyvalue.c -o keyvalue.o
 clean:
 	rm *.o
 #	gcc -c ${FLAGS}   -o 
