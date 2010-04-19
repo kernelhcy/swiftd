@@ -455,10 +455,23 @@ int main(int argc, char *argv[])
 	
 	//初始化文件监测系统。
 	
+	//加载插件。
+	if (-1 == plugin_load(srv))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "Load plugins failed.");
+		network_close(srv);
+		plugin_free(srv);
+		server_free(srv);
+		return -1;
+	}
+	
 	//初始化线程池
 	if (NULL == (srv -> tp = tp_init(1, 20)))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "s", "Init the thread pool failed.");
+		network_close(srv);
+		plugin_free(srv);
+		server_free(srv);
 		return -1;
 	}
 	

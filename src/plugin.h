@@ -14,6 +14,9 @@
  * 中的data成员。
  *
  * 服务器在调用插件的时候，会将这个指针作为最后一个参数传入到各个函数中。
+ * 所有插件必须包含一个函数XXXXXX_init。这个函数接受一个plugin指针，
+ * XXXXXX为插件的名称。这个函数初始化plugin结构体中的指针。
+ * 在加载插件的时候，程序调用此函数以初始化plugin结构体。
  */
 
 //这个宏定义了插件所使用的数据的公共部分。
@@ -28,8 +31,8 @@ struct plugin_data
  */
 typedef enum
 {
-	PLUGIN_SLOT_INIT = 0,
-	PLUGIN_SLOT_SET_DEFAULT,
+	//PLUGIN_SLOT_INIT = 0,
+	PLUGIN_SLOT_SET_DEFAULT= 0,
 	PLUGIN_SLOT_CLEANUP,
 	PLUGIN_SLOT_TRIGGER,
 	PLUGIN_SLOT_SIGHUP,

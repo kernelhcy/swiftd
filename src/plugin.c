@@ -35,8 +35,9 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 	}
 
 	/*
-	 * Plugin Name:Plugin Path\n
-	 * Plugin Name:Plugin Path\n
+	 * Plugin Name:Plugin Path$
+	 * Plugin Name:Plugin Path$
+	 * 其中$是分割符
 	 */
 	buffer *namefile = buffer_init();
 	char buf[1024];
@@ -54,7 +55,7 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 
 	}while(len >= 1024);
 	
-	log_error_write(srv, __FILE__, __LINE__, "sb", "Plugin configure file :", namefile);
+	//log_error_write(srv, __FILE__, __LINE__, "sb", "Plugin configure file :", namefile);
 	
 	size_t i;
 	for (i = 0; i < pnp -> used; ++i)
@@ -64,25 +65,58 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 	}
 	pnp -> used = 0;
 	
-	char *name, *path; //分别指向名称和路径。	
+	char *name = NULL, *path = NULL; //分别指向名称和路径。	
 	int done = 0;
-	name = namefile -> ptr;
+	char *start;
+	
+	start = namefile -> ptr;
 	for (i = 0; i < namefile -> used && !done; ++i)
 	{
 		switch(namefile -> ptr[i])
 		{
+			case '#':
+				//删除注释
+				while(i < namefile -> used && namefile -> ptr[i] != '\n')
+				{
+					++i;
+				}
+				start = namefile -> ptr + i + 1;
+				break;
 			case ':':
 				/*
 				 * 找到一个path
 				 */
 				path = namefile -> ptr + i + 1;
+				name = start;
 				namefile -> ptr[i] = '\0';
-			case '\n':
+				break;
+			case '$':
 				/*
 				 * 找到一个name path对。
 				 */
 				namefile -> ptr[i] = '\0';
+				start = namefile -> ptr + i + 1;
 				
+				if (NULL == path)
+				{
+					done = 1;
+					break;
+				}
+				
+				//删除开始的空白
+				while(*name != '\0' && (*name == '\n' || *name == '\t' 
+									|| *name == '\r' || *name == ' '))
+				{
+					++name;
+				}
+				while(*path != '\0' && (*path == '\n' || *path == '\t' 
+									|| *path == '\r' || *path == ' '))
+				{
+					++path;
+				}
+				//log_error_write(srv, __FILE__, __LINE__, "ssss", "Plugin Name:", name
+				//							, "Path:", path);
+											
 				if (pnp -> size == 0)
 				{
 					pnp -> size = 8;
@@ -111,14 +145,15 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 					
 				tmp_b = buffer_init_string(name);
 				pnp -> name[pnp -> used] = tmp_b;
-				buffer_free(tmp_b);
-
+				
 				tmp_b = buffer_init_string(path);
 				pnp -> path[pnp -> used] = tmp_b;
-				buffer_free(tmp_b);
 
 				++pnp -> used;
-
+				
+				name = NULL;
+				path = NULL;
+				
 				if (i != namefile -> used - 1)
 				{
 					name = namefile -> ptr + i + 1;
@@ -184,9 +219,9 @@ int plugin_load(server *srv)
 	}
 
 	int i;
-	for (i == 0; i < srv -> plugins_np -> used; ++i)
+	for (i = 0; i < srv -> plugins_np -> used; ++i)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "sbsbsd", "Name: ", srv -> plugins_np -> name[i]
+		log_error_write(srv, __FILE__, __LINE__, "sbsb", "Name: ", srv -> plugins_np -> name[i]
 													, "Path: ", srv -> plugins_np -> path[i]);
 	}
 	//删除已经加载的插件。
@@ -299,7 +334,7 @@ int plugin_load(server *srv)
 		}\
 	}
 	
-	PLUGIN_REGISTER_SLOT(PLUGIN_SLOT_INIT, init);
+	//PLUGIN_REGISTER_SLOT(PLUGIN_SLOT_INIT, init);
 	PLUGIN_REGISTER_SLOT(PLUGIN_SLOT_SET_DEFAULT, set_default);
 	PLUGIN_REGISTER_SLOT(PLUGIN_SLOT_CLEANUP, cleanup);
 	PLUGIN_REGISTER_SLOT(PLUGIN_SLOT_TRIGGER, handle_trigger);
@@ -336,8 +371,18 @@ void plugin_free(server *srv)
 		plugin_plugin_free(srv -> plugins -> ptr[i]);
 	}
 	free(srv -> plugins -> ptr);
+	
+	for (i = 0; i < srv -> plugins_np -> used; ++i)
+	{
+		buffer_free(srv -> plugins_np -> name[i]);
+		buffer_free(srv -> plugins_np -> path[i]);
+	}
+	free(srv -> plugins_np -> name);
+	free(srv -> plugins_np -> path);
 }
-
+/*
+ * 定义插件调用函数的宏模板。
+ */
 #define PLUGIN_CALL_HANDLER(x,y)\
 	handler_t plugin_handle_##y(server *srv, connection *con, void *p_d)\
 	{\
@@ -346,20 +391,106 @@ void plugin_free(server *srv)
 			return HANDLER_ERROR;\
 		}\
 		\
+		if (!srv -> slots -> ptr)\
+		{\
+			return HANDLER_GO_ON;\
+		}\
+		if (!srv -> slots -> ptr[x])\
+		{\
+			return HANDLER_GO_ON;\
+		}\
+		\
 		plugin *p;\
 		size_t i;\
+		handler_t ht;\
 		for (i = 0; i < srv -> slots -> used[x]; ++i)\
 		{\
 			if (srv -> slots -> ptr[x][i])\
 			{\
 				p = (plugin*)srv -> slots -> ptr[x][i];\
-				switch(p -> handle_##y(srv, con, p_d))\
+				switch(ht = p -> handle_##y(srv, con, p_d))\
 				{\
-					default:\
+					case HANDLER_GO_ON:\
 						break;\
+					case HANDLER_FINISHED:\
+					case HANDLER_COMEBACK:\
+					case HANDLER_WAIT_FOR_EVENT:\
+					case HANDLER_ERROR:\
+					case HANDLER_WAIT_FOR_FD:\
+						return ht;\
+					default:\
+						log_error_write(srv, __FILE__, __LINE__, "Unknown handler type.");\
+						return HANDLER_ERROR;\
 				}\
 			}\
 		}\
+		return ht;\
 	}
+	
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_URL_RAW, url_raw);
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_URL_CLEAN, url_clean);
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_DOCROOT, docroot);
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_PHYSICAL, physical);
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_CONNECTION_CLOSE, connection_close);
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_CONNECTION_RESET, connection_reset);
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_JOBLIST, joblist);
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_SUBREQUEST_START, subrequest_start);
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_HANDLE_SUBREQUEST, handle_subrequest );
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_SUBREQUEST_END, subrequest_end);
+	
 #undef PLUGIN_CALL_HANDLER
+
+/*
+ * 定义插件调用函数的宏模板。这两个函数调用的时候，不需要con参数。
+ */
+#define PLUGIN_CALL_HANDLER(x,y)\
+	handler_t plugin_handle_##y(server *srv, void *p_d)\
+	{\
+		if (NULL == srv)\
+		{\
+			return HANDLER_ERROR;\
+		}\
+		\
+		if (!srv -> slots -> ptr)\
+		{\
+			return HANDLER_GO_ON;\
+		}\
+		if (!srv -> slots -> ptr[x])\
+		{\
+			return HANDLER_GO_ON;\
+		}\
+		\
+		plugin *p;\
+		size_t i;\
+		handler_t ht;\
+		for (i = 0; i < srv -> slots -> used[x]; ++i)\
+		{\
+			if (srv -> slots -> ptr[x][i])\
+			{\
+				p = (plugin*)srv -> slots -> ptr[x][i];\
+				switch(ht = p -> handle_##y(srv, p_d))\
+				{\
+					case HANDLER_GO_ON:\
+						break;\
+					case HANDLER_FINISHED:\
+					case HANDLER_COMEBACK:\
+					case HANDLER_WAIT_FOR_EVENT:\
+					case HANDLER_ERROR:\
+					case HANDLER_WAIT_FOR_FD:\
+						return ht;\
+					default:\
+						log_error_write(srv, __FILE__, __LINE__, "Unknown handler type.");\
+						return HANDLER_ERROR;\
+				}\
+			}\
+		}\
+		return ht;\
+	}
+	
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_TRIGGER, trigger);
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_SIGHUP, sighup);
+	
+#undef PLUGIN_CALL_HANDLER
+
+
 
