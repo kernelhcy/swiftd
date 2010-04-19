@@ -139,19 +139,19 @@ void plugin_free(server *srv);
  * 下面的一些类函数有服务器调用。
  * 这些函数依次调用各个插件对应的函数进行处理。
  */
-handler_t plugin_handle_url_raw(server *srv, connection *con, void *p_d);
-handler_t plugin_handle_url_clean(server *srv, connection *con, void *p_d);
-handler_t plugin_handle_docroot(server *srv, connection *con, void *p_d);
-handler_t plugin_handle_physical(server *srv, connection *con, void *p_d);
-handler_t plugin_handle_connection_close(server *srv, connection *con, void *p_d);
-handler_t plugin_handle_joblist(server *srv, connection *con, void *p_d);
-handler_t plugin_handle_subrequest_start(server *srv, connection *con, void *p_d);
-handler_t plugin_handle_handle_subrequest(server *srv, connection *con, void *p_d);
-handler_t plugin_handle_request_end(server *srv, connection *con, void *p_d);
-handler_t plugin_handle_connection_reeset(server *srv, connection *con, void *p_d);
+handler_t plugin_handle_url_raw(server *srv, connection *con);
+handler_t plugin_handle_url_clean(server *srv, connection *con);
+handler_t plugin_handle_docroot(server *srv, connection *con);
+handler_t plugin_handle_physical(server *srv, connection *con);
+handler_t plugin_handle_connection_close(server *srv, connection *con);
+handler_t plugin_handle_joblist(server *srv, connection *con);
+handler_t plugin_handle_subrequest_start(server *srv, connection *con);
+handler_t plugin_handle_handle_subrequest(server *srv, connection *con);
+handler_t plugin_handle_request_end(server *srv, connection *con);
+handler_t plugin_handle_connection_reeset(server *srv, connection *con);
 
-handler_t plugin_handle_trigger(server *srv, void *p_d);
-handler_t plugin_handle_cleanup(server *srv, void *p_d);
+handler_t plugin_handle_trigger(server *srv);
+handler_t plugin_handle_cleanup(server *srv);
 
 
 #endif

@@ -1,7 +1,7 @@
 OBJS=${OBJSPATH}/buffer.o ${OBJSPATH}/log.o  ${OBJSPATH}/chunk.o ${OBJSPATH}/connection.o ${OBJSPATH}/array.o\
-	 ${OBJSPATH}/configure.o ${OBJSPATH}/fdevent.o ${OBJSPATH}/threadpool.o\
+	 ${OBJSPATH}/configure.o ${OBJSPATH}/fdevent.o ${OBJSPATH}/threadpool.o ${OBJSPATH}/error_page.o\
 	 ${OBJSPATH}/fde_epoll.o ${OBJSPATH}/joblist.o ${OBJSPATH}/main.o ${OBJSPATH}/network.o\
-	 ${OBJSPATH}/base.o ${OBJSPATH}/request.o ${OBJSPATH}/plugin.o\
+	 ${OBJSPATH}/base.o ${OBJSPATH}/request.o ${OBJSPATH}/plugin.o ${OBJSPATH}/response.o\
 	 ${OBJSPATH}/data_string.o ${OBJSPATH}/data_integer.o ${OBJSPATH}/data_array.o ${OBJSPATH}/keyvalue.o
 FLAGS=-g
 OBJSPATH=../objects
@@ -48,6 +48,12 @@ ${OBJSPATH}/keyvalue.o:keyvalue.c
 	gcc -c ${FLAGS} keyvalue.c -o ${OBJSPATH}/keyvalue.o
 ${OBJSPATH}/plugin.o:plugin.c
 	gcc -c ${FLAGS} plugin.c  -o  ${OBJSPATH}/plugin.o
+${OBJSPATH}/response.o:response.c
+	gcc -c ${FLAGS} response.c  -o  ${OBJSPATH}/response.o
+${OBJSPATH}/error_page.o:error_page.c
+	gcc -c ${FLAGS} error_page.c  -o  ${OBJSPATH}/error_page.o
+
+
 clean:
 	rm ${OBJSPATH}/*.o
 #	gcc -c ${FLAGS}   -o 

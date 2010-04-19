@@ -128,9 +128,9 @@ typedef struct
  */
 typedef struct 
 {
-	buffer *path; 			//完整的物理地址
+	buffer *path; 			//request请求中的地址。
 	buffer *doc_root;		//根目录
-	buffer *rel_path; 		//request请求中的地址。
+	buffer *real_path; 		//完整的物理地址
 	buffer *etag; 			//etag
 } physical;
 

@@ -2,6 +2,9 @@
 #include "chunk.h"
 #include "buffer.h"
 #include "array.h"
+#include "response.h"
+#include "request.h"
+
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -74,7 +77,7 @@ static void connection_init(server *srv, connection *con)
 	
 	con -> physical.path = buffer_init();
 	con -> physical.doc_root = buffer_init();
-	con -> physical.rel_path = buffer_init();
+	con -> physical.real_path = buffer_init();
 	con -> physical.etag = buffer_init();
 	
 	con -> response.content_length = 0;
@@ -150,7 +153,7 @@ static void connection_reset(server *srv, connection *con)
 	
 	buffer_reset(con -> physical.path);
 	buffer_reset(con -> physical.doc_root);
-	buffer_reset(con -> physical.rel_path);
+	buffer_reset(con -> physical.real_path);
 	buffer_reset(con -> physical.etag);
 	
 	con -> response.content_length = 0;
@@ -310,7 +313,7 @@ void connection_free(server *srv, connection *con)
 	
 	buffer_free(con -> physical.path);
 	buffer_free(con -> physical.doc_root);
-	buffer_free(con -> physical.rel_path);
+	buffer_free(con -> physical.real_path);
 	buffer_free(con -> physical.etag);
 	
 	array_free(con -> response.headers);
@@ -844,13 +847,35 @@ int connection_state_machine(server *srv, connection *con)
 				{
 					//读取POST数据。
 					connection_set_state(srv, con, CON_STATE_READ_POST);
+					break;
 				}
 				
 				connection_set_state(srv, con, CON_STATE_RESPONSE_START);
 				break;
 			case CON_STATE_RESPONSE_START:
-			
-				connection_set_state(srv, con, CON_STATE_WRITE);
+				/*
+				 * 处理http请求。
+				 */
+				switch(http_prepare_response(srv, con))
+				{
+					case HANDLER_GO_ON:
+						break;
+					case HANDLER_FINISHED:
+						connection_set_state(srv, con, CON_STATE_WRITE);
+						break;
+					case HANDLER_COMEBACK:
+					case HANDLER_WAIT_FOR_FD:
+					case HANDLER_WAIT_FOR_EVENT:
+						break;
+					case HANDLER_ERROR:
+						log_error_write(srv, __FILE__, __LINE__, "s", "http_prepare_response error.");
+						connection_set_state(srv, con, CON_STATE_ERROR);
+						break;
+					default:
+						log_error_write(srv, __FILE__, __LINE__, "s", "Unknown handler state.");
+						connection_set_state(srv, con, CON_STATE_ERROR);
+						break;
+				}
 				break;
 			case CON_STATE_RESPONSE_END:
 				

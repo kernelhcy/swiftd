@@ -580,7 +580,6 @@ int http_parse_request(server *srv, connection *con)
  					 * Request line结束。
  					 */
  					//log_error_write(srv, __FILE__, __LINE__, "ss", "Method:", method);
- 					//log_error_write(srv, __FILE__, __LINE__, "ss", "URL:", url);
  					//log_error_write(srv, __FILE__, __LINE__, "ss", "HTTP Version:", version);
  					http_method_t hm;
  					http_version_t hv;
@@ -598,12 +597,12 @@ int http_parse_request(server *srv, connection *con)
  					con -> request.http_method = hm;
  					
  					/*
- 					 * 分析url地址。
+ 					 * 分析url地址。ndex.html?key=%E6%95%B0%E6%8D%AE 
  					 * 对于url地址中的host部分，乎略之。因为Host header中有。
  					 * 将地址部分拷贝到con -> request.uri中。
  					 * 另外，在con -> requset.orig_uri中保存一个备份。
  					 */
- 					if (0 != buffer_caseless_compare(url, 7, "http://", 7))
+ 					if (0 == buffer_caseless_compare(url, 7, "http://", 7))
  					{
  						//url地址中有host，乎略之。
  						url += 7;
@@ -635,6 +634,8 @@ int http_parse_request(server *srv, connection *con)
  							return 0;
  						}
  					}
+ 					
+ 					//log_error_write(srv, __FILE__, __LINE__, "ss", "URL:", url);
  					//保存url地址。
  					buffer_copy_string(con -> request.uri, url);
  					buffer_copy_string(con -> request.orig_uri, url);

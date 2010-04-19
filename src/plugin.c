@@ -137,7 +137,8 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 
 					if (NULL == pnp -> name || NULL == pnp -> path)
 					{
-						log_error_write(srv, __FILE__, __LINE__, "s", "realloc memory for plugin_name_path failed.");
+						log_error_write(srv, __FILE__, __LINE__, "s"
+										, "realloc memory for plugin_name_path failed.");
 						return -1;
 					}
 				}
@@ -384,7 +385,7 @@ void plugin_free(server *srv)
  * 定义插件调用函数的宏模板。
  */
 #define PLUGIN_CALL_HANDLER(x,y)\
-	handler_t plugin_handle_##y(server *srv, connection *con, void *p_d)\
+	handler_t plugin_handle_##y(server *srv, connection *con)\
 	{\
 		if (NULL == srv || NULL == con)\
 		{\
@@ -408,7 +409,7 @@ void plugin_free(server *srv)
 			if (srv -> slots -> ptr[x][i])\
 			{\
 				p = (plugin*)srv -> slots -> ptr[x][i];\
-				switch(ht = p -> handle_##y(srv, con, p_d))\
+				switch(ht = p -> handle_##y(srv, con, p -> data))\
 				{\
 					case HANDLER_GO_ON:\
 						break;\
@@ -444,7 +445,7 @@ void plugin_free(server *srv)
  * 定义插件调用函数的宏模板。这两个函数调用的时候，不需要con参数。
  */
 #define PLUGIN_CALL_HANDLER(x,y)\
-	handler_t plugin_handle_##y(server *srv, void *p_d)\
+	handler_t plugin_handle_##y(server *srv)\
 	{\
 		if (NULL == srv)\
 		{\
@@ -468,7 +469,7 @@ void plugin_free(server *srv)
 			if (srv -> slots -> ptr[x][i])\
 			{\
 				p = (plugin*)srv -> slots -> ptr[x][i];\
-				switch(ht = p -> handle_##y(srv, p_d))\
+				switch(ht = p -> handle_##y(srv, p -> data))\
 				{\
 					case HANDLER_GO_ON:\
 						break;\

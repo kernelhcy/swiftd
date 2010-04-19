@@ -458,7 +458,7 @@ int main(int argc, char *argv[])
 	//加载插件。
 	if (-1 == plugin_load(srv))
 	{
-		log_error_write(srv, __FILE__, __LINE__, "Load plugins failed.");
+		log_error_write(srv, __FILE__, __LINE__, "s", "Load plugins failed.");
 		network_close(srv);
 		plugin_free(srv);
 		server_free(srv);
