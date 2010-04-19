@@ -1,6 +1,7 @@
 #ifndef __SWIFTD_PLUGIN_H
 #define __SWIFTD_PLUGIN_H
 #include "base.h"
+#include <pthread.h>
 /**
  * 定义插件系统的接口。
  */
@@ -21,6 +22,29 @@ struct plugin_data
 {
 	PLUGIN_DATA;
 };
+
+/*
+ * 定义slot的类型。
+ */
+typedef enum
+{
+	PLUGIN_SLOT_INIT = 0,
+	PLUGIN_SLOT_SET_DEFAULT,
+	PLUGIN_SLOT_CLEANUP,
+	PLUGIN_SLOT_TRIGGER,
+	PLUGIN_SLOT_SIGHUP,
+	PLUGIN_SLOT_URL_RAW,
+	PLUGIN_SLOT_URL_CLEAN,
+	PLUGIN_SLOT_DOCROOT,
+	PLUGIN_SLOT_PHYSICAL,
+	PLUGIN_SLOT_JOBLIST,
+	PLUGIN_SLOT_CONNECTION_CLOSE,
+	PLUGIN_SLOT_CONNECTION_RESET,
+	PLUGIN_SLOT_SUBREQUEST_START,
+	PLUGIN_SLOT_HANDLE_SUBREQUEST,
+	PLUGIN_SLOT_SUBREQUEST_END,
+	PLUGIN_SLOT_SIZE, 			//slot的数量。
+}plugin_slot_t;
 
 /*
  * 插件
@@ -77,9 +101,16 @@ typedef struct
 	 */
 	handler_t (*handle_connection_close)(server *srv, connection *con, void *p_d);
 	/*
+	 * 在reset connection结构体是调用。
+	 */
+	handler_t (*handle_connection_reset)(server *srv, connection *con, void *p_d);
+	/*
 	 * 在每次处理完IO事件后调用。
 	 */
 	handler_t (*handle_joblist)(server *srv, connection *con, void *p_d);
+	
+	//请求的主要处理工作通过子请求函数进行处理。
+	//通常，下面三个函数处理请求的实质性工作。
 	/*
 	 * 处理子请求开始。
 	 */
@@ -92,11 +123,6 @@ typedef struct
 	 * 子请求处理结束。
 	 */
 	handler_t (*handle_subrequest_end)(server *srv, connection *con, void *p_d);
-	
-	/*
-	 * 在reset connection结构体是调用。
-	 */
-	handler_t (*connection_reset)(server *srv, connection *con, void *p_d);
 	
 }plugin;
 
@@ -119,7 +145,7 @@ handler_t plugin_handle_joblist(server *srv, connection *con, void *p_d);
 handler_t plugin_handle_subrequest_start(server *srv, connection *con, void *p_d);
 handler_t plugin_handle_handle_subrequest(server *srv, connection *con, void *p_d);
 handler_t plugin_handle_request_end(server *srv, connection *con, void *p_d);
-handler_t plugin_connection_reeset(server *srv, connection *con, void *p_d);
+handler_t plugin_handle_connection_reeset(server *srv, connection *con, void *p_d);
 
 handler_t plugin_handle_trigger(server *srv, void *p_d);
 handler_t plugin_handle_cleanup(server *srv, void *p_d);

@@ -332,7 +332,7 @@ typedef struct
 {
 	buffer **name;
 	buffer **path;
-	int 	*isloaded; 		//标记插件是否已经加载。
+
 	size_t used;
 	size_t size;
 } plugin_name_path;
@@ -346,6 +346,21 @@ typedef struct
 	size_t used;
 	size_t size;
 }plugin_array;
+
+/*
+ * 插件的slot。
+ * ptr是一个二维数组。数组中存放的是函数指针。
+ * 数组的每一行对应一个slot类型，也就是插件的功能函数。
+ * 如果插件实现了对应的函数，则将插件的指针存在对应的行。
+ */
+typedef struct
+{
+	void ***ptr;
+	
+	//上面数组每一行的大小和使用量。
+	size_t *used;
+	size_t *size;
+}plugin_slot;
 
 /////////////////////////  服务器数据  //////////////////////////
 /**
@@ -381,7 +396,7 @@ typedef struct server
 	pthread_mutex_t plugin_lock;
 	plugin_name_path *plugins_np;
 	plugin_array *plugins;
-	void *plugin_slots;
+	plugin_slot *slots; 		
 
 	pthread_mutex_t sockets_lock;
 	socket_array *sockets; //保存socket
