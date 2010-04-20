@@ -1,7 +1,7 @@
 OBJS=${OBJSPATH}/buffer.o ${OBJSPATH}/log.o  ${OBJSPATH}/chunk.o ${OBJSPATH}/connection.o ${OBJSPATH}/array.o\
 	 ${OBJSPATH}/configure.o ${OBJSPATH}/fdevent.o ${OBJSPATH}/threadpool.o ${OBJSPATH}/error_page.o\
 	 ${OBJSPATH}/fde_epoll.o ${OBJSPATH}/joblist.o ${OBJSPATH}/main.o ${OBJSPATH}/network.o\
-	 ${OBJSPATH}/base.o ${OBJSPATH}/request.o ${OBJSPATH}/plugin.o ${OBJSPATH}/response.o\
+	 ${OBJSPATH}/base.o ${OBJSPATH}/request.o ${OBJSPATH}/plugin.o ${OBJSPATH}/response.o ${OBJSPATH}/network_write.o\
 	 ${OBJSPATH}/data_string.o ${OBJSPATH}/data_integer.o ${OBJSPATH}/data_array.o ${OBJSPATH}/keyvalue.o
 FLAGS=-g
 OBJSPATH=../objects
@@ -52,6 +52,8 @@ ${OBJSPATH}/response.o:response.c
 	gcc -c ${FLAGS} response.c  -o  ${OBJSPATH}/response.o
 ${OBJSPATH}/error_page.o:error_page.c
 	gcc -c ${FLAGS} error_page.c  -o  ${OBJSPATH}/error_page.o
+${OBJSPATH}/network_write.o:network_write.c
+	gcc -c ${FLAGS} network_write.c  -o  ${OBJSPATH}/network_write.o
 
 
 clean:

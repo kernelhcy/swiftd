@@ -104,11 +104,6 @@ typedef struct
 	off_t content_length;	//回复数据的长度
 	int keep_alive;	 		//是否保持连接。
 	array *headers;  		//回复的头
-	enum 
-	{
-		HTTP_TRANSFER_ENCODING_IDENTITY, 
-		HTTP_TRANSFER_ENCODING_CHUNKED
-	} transfer_encoding; 	//数据的编码
 } response;
 
 /*
