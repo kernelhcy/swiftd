@@ -509,7 +509,7 @@ int main(int argc, char *argv[])
 			handler = fdevent_event_get_handler(srv -> ev, fd);
 			ctx = fdevent_event_get_context(srv -> ev, fd);			
 			
-			log_error_write(srv, __FILE__, __LINE__, "sd", "fd got IO event.", fd);
+			//log_error_write(srv, __FILE__, __LINE__, "sd", "fd got IO event.", fd);
 			
 			jc = job_ctx_get_new(srv);
 			if (NULL == jc)

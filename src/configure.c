@@ -13,7 +13,7 @@ int config_setdefaults(server *srv)
 	srv -> srvconf.errorlog_file = buffer_init_string("/var/log/swiftd.log");
 	srv -> srvconf.errorlog_use_syslog = 0;
 	srv -> srvconf.dont_daemonize = 0;
-	srv -> srvconf.changeroot = buffer_init_string("/home/hcy/");
+	srv -> srvconf.changeroot = buffer_init_string("/home/hcy/tmp/swiftdtest/");
 	srv -> srvconf.username = buffer_init_string("hcy");
 	srv -> srvconf.groupname = buffer_init_string("hcy");
 	srv -> srvconf.pid_file = buffer_init_string("/var/run/swiftd.pid");

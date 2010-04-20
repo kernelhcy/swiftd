@@ -24,6 +24,8 @@ static int network_write_mem(server *srv, connection *con, chunk *c)
 		return 0;
 	}
 	
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Write chunk MEM need len :"
+								, c -> mem -> used - c -> offset);
 	int w_len;
 	if (-1 == (w_len = write(con -> fd, c -> mem -> ptr + c -> offset
 								, c -> mem -> used - c -> offset)))
@@ -41,6 +43,7 @@ static int network_write_mem(server *srv, connection *con, chunk *c)
 				return -1;
 		}
 	}
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Write chunk MEM len :", w_len);
 	
 	if (w_len < c -> mem -> used - c -> offset)
 	{
@@ -126,6 +129,7 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 
 handler_t network_write(server *srv, connection *con)
 {
+	
 	if(NULL == srv || NULL == con)
 	{
 		return HANDLER_ERROR;
@@ -134,12 +138,13 @@ handler_t network_write(server *srv, connection *con)
 	chunkqueue_remove_finished_chunks(con -> write_queue);
 	if(chunkqueue_is_empty(con -> write_queue))
 	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "No data to write.");
 		//没有数据要写。
 		return HANDLER_FINISHED;
 	}
 	
-	chunk *c;
-	for (c = con -> write_queue -> first ; c ; c = c -> next)
+	chunk *c = con -> write_queue -> first;
+	for ( ; c ; c = c -> next)
 	{
 		switch(c -> type)
 		{

@@ -21,12 +21,19 @@ int error_page_get_new(server *srv, connection *con, buffer *errorpage)
 									"<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\" lang=\"en\">\n"
 									" <head>\n" "  <title>"));
 	
+	buffer_append_string_len(errorpage, CONST_STR_LEN("ERROR - \n"));
 	buffer_append_long(errorpage, con -> http_status);
-	buffer_append_string_len(errorpage, CONST_STR_LEN("ERROR</title></head>\n"));
+	buffer_append_string_len(errorpage, CONST_STR_LEN("</title></head>\n"));
 	buffer_append_string_len(errorpage, CONST_STR_LEN("<body>"));
+	
+	buffer_append_string_len(errorpage, CONST_STR_LEN("<h2>"));
 	buffer_append_long(errorpage, con -> http_status);
-	//buffer_append_string_len(errorpage, CONST_STR_LEN("<body>"));
+	buffer_append_string_len(errorpage, CONST_STR_LEN("</h2>"));
+	
+	buffer_append_string_len(errorpage, CONST_STR_LEN("<h3>"));
 	buffer_append_string(errorpage, get_http_status_name(con -> http_status));
+	buffer_append_string_len(errorpage, CONST_STR_LEN("</h3>"));
+	
 	buffer_append_string_len(errorpage, CONST_STR_LEN("</br>"));
 	buffer_append_string_len(errorpage, CONST_STR_LEN("<body>"));
 	buffer_append_string_len(errorpage, CONST_STR_LEN("</body>"));

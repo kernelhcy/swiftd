@@ -25,6 +25,7 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 	}
 	
 	buffer *file = con -> physical.real_path;
+	log_error_write(srv, __FILE__, __LINE__, "sb", "Static file:", file);
 	
 	struct stat s; 		//获取文件的长度。
 	if (-1 == lstat(file -> ptr, &s))
@@ -53,9 +54,13 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 				return -1;
 		}
 	}
+	buffer_reset(con -> tmp_buf);
+	buffer_append_long(con -> tmp_buf, s.st_size);
+	http_response_insert_header(srv, con, CONST_STR_LEN("Content-Length")
+									, con -> tmp_buf -> ptr, con -> tmp_buf -> used);
 	
 	chunkqueue_append_file(con -> write_queue, file, 0, s.st_size);
-	
+	log_error_write(srv, __FILE__, __LINE__, "sd", "file len:" , s.st_size);
 	return HANDLER_FINISHED;
 }
 
@@ -84,6 +89,7 @@ static int response_physical_exist(server *srv, connection *con, const buffer *p
 				return -1;
 			case ENOENT:
 			case ENOTDIR:
+				log_error_write(srv, __FILE__, __LINE__, "sb", "File not exits!", con -> physical.path);
 				/*
 				 * 资源不存在。
 				 */
@@ -458,10 +464,6 @@ int http_response_finish_header(server *srv, connection *con)
 	 * Headers:
 	 *		Key:Value CRLF
 	 */
-	buffer_append_string_len(b, CONST_STR_LEN("Content-Length"));
-	buffer_append_string_len(b, CONST_STR_LEN(":"));
-	buffer_append_long(b, con -> response.content_length);
-	buffer_append_string_len(b, CONST_STR_LEN(CRLF));
 	
 	size_t i;
 	data_string *ds;
@@ -483,6 +485,7 @@ int http_response_finish_header(server *srv, connection *con)
 	 */
 	buffer_append_string_len(b, CONST_STR_LEN(CRLF));
 	
+	log_error_write(srv, __FILE__, __LINE__, "sb", "Response Headers:", b);
 	return 0;
 }
 

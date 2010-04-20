@@ -25,7 +25,7 @@
 
 #include <pthread.h>
 
-#define CRLF "\\r\\n"
+#define CRLF "\r\n"
 
 #include "settings.h"
 

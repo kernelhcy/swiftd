@@ -4,6 +4,8 @@
 #include "array.h"
 #include "response.h"
 #include "request.h"
+#include "error_page.h"
+#include "network_write.h"
 
 #include <errno.h>
 #include <unistd.h>
@@ -184,6 +186,67 @@ static void connection_reset(server *srv, connection *con)
 	con -> error_handler_saved_status = 0;
 	con -> in_error_handler = 0;
 	con -> srv_sock = NULL;	
+	
+	array_reset(con -> split_vals);
+	array_reset(con -> request.headers);
+	con -> request.http_if_range = NULL;
+	con -> request.http_content_type = NULL;
+	con -> request.http_if_modified_since = NULL;
+	con -> request.http_if_none_match = NULL;
+	con -> request.http_host = NULL;
+	con -> request.content_length = 0;
+	con -> request.http_method = HTTP_METHOD_UNSET;
+	con -> request.http_version = HTTP_VERSION_UNSET;
+	
+	return;
+}
+
+/*
+ * 清空一个连接结构体。
+ */
+static void connection_clear(server *srv, connection *con)
+{
+	if (NULL == con)
+	{
+		return;
+	}				
+
+	con -> is_readable = 0;
+	con -> is_writable = 0;			
+
+	chunkqueue_reset(con -> write_queue);			
+	chunkqueue_reset(con -> read_queue);				
+	chunkqueue_reset(con -> request_content_queue);
+	con -> http_status = 0; 				
+
+	buffer_reset(con -> parse_request); 	
+	buffer_reset(con -> uri.scheme);
+	buffer_reset(con -> uri.authority);
+	buffer_reset(con -> uri.path);
+	buffer_reset(con -> uri.path_raw);
+	buffer_reset(con -> uri.query);
+	
+	buffer_reset(con -> physical.path);
+	buffer_reset(con -> physical.doc_root);
+	buffer_reset(con -> physical.real_path);
+	buffer_reset(con -> physical.etag);
+	
+	con -> response.content_length = 0;
+	array_reset(con -> response.headers);
+	con -> header_len = 0; 
+	
+	buffer_reset(con -> parse_full_path);
+	buffer_reset(con -> response_header);
+	buffer_reset(con -> response_range);
+	buffer_reset(con -> tmp_buf);
+	buffer_reset(con -> tmp_chunk_len);
+	buffer_reset(con -> cond_check_buf);
+	buffer_reset(con -> request.request);
+	buffer_reset(con -> request.request_line);
+	buffer_reset(con -> request.uri);
+	buffer_reset(con -> request.orig_uri);
+	buffer_reset(con -> request.pathinfo);
+	
 	
 	array_reset(con -> split_vals);
 	array_reset(con -> request.headers);
@@ -602,8 +665,29 @@ static int connection_handle_read_post(server *srv, connection *con)
  */
 static int connection_handle_write(server *srv, connection *con)
 {
-
-		
+	if(NULL == srv || NULL == con)
+	{
+		return -1;
+	}
+	
+	if(!con -> is_writable)
+	{
+		return 0;
+	}
+	
+	switch(network_write(srv, con))
+	{
+		case HANDLER_GO_ON:
+			return 0;
+		case HANDLER_FINISHED:
+			connection_set_state(srv, con, CON_STATE_RESPONSE_END);
+			return 0;
+		case HANDLER_ERROR:
+		default:
+			connection_set_state(srv, con, CON_STATE_ERROR);
+			return -1;
+	}
+	
 	return 0;
 }
 
@@ -625,13 +709,13 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 	//log_error_write(srv, __FILE__, __LINE__, "sdsd", "fd:", con -> fd, "events:", revents);
 	if (revents & FDEVENT_IN)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "sd", "readable fd:", con -> fd);
+		//log_error_write(srv, __FILE__, __LINE__, "sd", "readable fd:", con -> fd);
 		con -> is_readable = 1;
 	}
 	
 	if (revents & FDEVENT_OUT)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "sd", "writeable fd:", con -> fd);
+		//log_error_write(srv, __FILE__, __LINE__, "sd", "writeable fd:", con -> fd);
 		con -> is_writable = 1;
 	}
 	
@@ -674,21 +758,6 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		{
 			log_error_write(srv, __FILE__, __LINE__, "s", "Read ERROR.");
 			connection_set_state(srv, con, CON_STATE_ERROR);
-		}
-	}
-	
-	if (con -> state == CON_STATE_WRITE)
-	{
-		//发送数据。
-		if (-1 == connection_handle_write(srv, con))
-		{
-			log_error_write(srv, __FILE__, __LINE__, "s", "Write ERROR.");
-			connection_set_state(srv, con, CON_STATE_ERROR);
-		}
-		else if (con -> state == CON_STATE_WRITE)
-		{
-			//记录是否超时。
-			con -> write_request_ts = srv -> cur_ts;
 		}
 	}
 	
@@ -875,9 +944,51 @@ int connection_state_machine(server *srv, connection *con)
 						connection_set_state(srv, con, CON_STATE_ERROR);
 						break;
 				}
+				
+				if(con -> http_status >= 400 && con -> http_status < 600)
+				{
+					/*
+					 * 返回错误信息。
+					 */
+					buffer *b = chunkqueue_get_append_buffer(con -> write_queue);
+					if ( -1 == error_page_get_new(srv, con, b))
+					{
+						log_error_write(srv, __FILE__, __LINE__, "s", "error_page_get_new failed.");
+						return -1;
+					}
+		
+					buffer_reset(con -> tmp_buf);
+					buffer_append_long(con -> tmp_buf, b -> used);
+					http_response_insert_header(srv, con, CONST_STR_LEN("Content-Length")
+											, con -> tmp_buf -> ptr, con -> tmp_buf -> used);
+		
+				}
+				else
+				{
+					//一切正常。
+					con -> http_status = 200;
+				}
+				
+				/*
+				 * 构造response头。
+				 */
+				if (-1 == http_response_finish_header(srv, con))
+				{
+					log_error_write(srv, __FILE__, __LINE__, "s", "http_response_finish_header failed.");
+					connection_set_state(srv, con, CON_STATE_ERROR);
+					return;
+				}
 				break;
 			case CON_STATE_RESPONSE_END:
 				
+				//对上一个请求的数据进行清空。
+				connection_clear(srv, con);
+				
+				if(con -> keep_alive)
+				{
+					connection_set_state(srv, con, CON_STATE_REQUEST_START);
+					break;
+				}
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_READ:
@@ -898,7 +1009,8 @@ int connection_state_machine(server *srv, connection *con)
 				break;
 			case CON_STATE_WRITE:
 				joblist_append(srv, con);
-				//connection_set_state(srv, con, CON_STATE_RESPONSE_END);
+				
+				connection_handle_write(srv, con);
 				break;
 			case CON_STATE_ERROR:
 				//关闭连接。

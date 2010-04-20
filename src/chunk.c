@@ -498,7 +498,7 @@ int chunkqueue_remove_finished_chunks(chunkqueue * cq)
 		return 0;
 	}
 	chunk *c;
-	for (c = cq -> first; c; c = cq -> first)
+	for (c = cq -> first; c; c = c -> next)
 	{
 		if (c -> finished)
 		{
