@@ -603,8 +603,7 @@ static int connection_handle_read_post(server *srv, connection *con)
 static int connection_handle_write(server *srv, connection *con)
 {
 
-	//调用状态机。
-	connection_state_machine(srv, con);
+		
 	return 0;
 }
 
@@ -899,7 +898,7 @@ int connection_state_machine(server *srv, connection *con)
 				break;
 			case CON_STATE_WRITE:
 				joblist_append(srv, con);
-				connection_set_state(srv, con, CON_STATE_RESPONSE_END);
+				//connection_set_state(srv, con, CON_STATE_RESPONSE_END);
 				break;
 			case CON_STATE_ERROR:
 				//关闭连接。
