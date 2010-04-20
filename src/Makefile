@@ -55,7 +55,6 @@ ${OBJSPATH}/error_page.o:error_page.c
 ${OBJSPATH}/network_write.o:network_write.c
 	gcc -c ${FLAGS} network_write.c  -o  ${OBJSPATH}/network_write.o
 
-
 clean:
 	rm ${OBJSPATH}/*.o
 #	gcc -c ${FLAGS}   -o 
