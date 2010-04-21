@@ -258,7 +258,6 @@ static void connection_clear(server *srv, connection *con)
 	con -> request.content_length = 0;
 	con -> request.http_method = HTTP_METHOD_UNSET;
 	con -> request.http_version = HTTP_VERSION_UNSET;
-	
 	return;
 }
 
@@ -454,8 +453,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 	{
 		//对方关闭了链接。
 		log_error_write(srv, __FILE__, __LINE__, "s", "Client closes the connection.");
-		connection_set_state(srv, con, CON_STATE_CLOSE);
-		return -1;
+		return -4;
 	}
 
 	//数据没有读完。
@@ -489,6 +487,9 @@ static int connection_handle_read(server *srv, connection *con)
 			case -2: 	//非阻塞IO，但是没有数据可读。
 			case -3: 	//被信号中断。
 				con -> is_readable = 1;
+				break;
+			case -4: 	//连接关闭。
+				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			default: 
 				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown status.");
@@ -629,6 +630,9 @@ static int connection_handle_read_post(server *srv, connection *con)
 			case -3: 	//被信号中断。
 				con -> is_readable = 1;
 				break;
+			case -4: 	//连接关闭。
+				connection_set_state(srv, con, CON_STATE_CLOSE);
+				break;
 			default: 
 				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown status.");
 				connection_set_state(srv, con, CON_STATE_ERROR);
@@ -681,6 +685,7 @@ static int connection_handle_write(server *srv, connection *con)
 			return 0;
 		case HANDLER_FINISHED:
 			connection_set_state(srv, con, CON_STATE_RESPONSE_END);
+			log_error_write(srv, __FILE__, __LINE__, "s", "Write done. Go to Response End.");
 			return 0;
 		case HANDLER_ERROR:
 		default:
@@ -738,9 +743,8 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 			else 
 			{
 				log_error_write(srv, __FILE__, __LINE__, "s", "Client closes connection!");
-				connection_set_state(srv, con, CON_STATE_ERROR);
+				connection_set_state(srv, con, CON_STATE_CLOSE);
 			}
-			connection_set_state(srv, con, CON_STATE_CLOSE);
 		}
 		else
 		{
@@ -795,6 +799,8 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 			/*
 			 * 描述符超出最大限制。
 			 */
+			log_error_write(srv, __FILE__, __LINE__, "ssd", "accept failed:"
+							, strerror(errno), errno);
 			break;
 		default:
 			log_error_write(srv, __FILE__, __LINE__, "ssd", "accept failed:"
@@ -868,14 +874,17 @@ static int connection_handle_close(server *srv, connection *con)
 	{
 		log_error_write(srv, __FILE__, __LINE__, "ssd", "shutdown error."
 							, strerror(errno), con -> fd);
-		return -1;
 	}
 	
 	/*
 	 * 这必须再调用一次关闭。
 	 * shutdown仅仅是关闭了连接，没有关闭socket。
 	 */
-	close(con -> fd);
+	if ( -1 == close(con -> fd))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "ssd", "close error."
+							, strerror(errno), con -> fd);
+	}
 	
 	connection_set_state(srv, con, CON_STATE_CONNECT);
 	return 0;
@@ -893,9 +902,9 @@ int connection_state_machine(server *srv, connection *con)
 	while(!done)
 	{
 		old_state = con -> state;
-		//log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
-		//				, connection_get_state_name(con -> state), "fd:", con -> fd
-		//				, "connection ndx:", con -> ndx);
+		log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
+						, connection_get_state_name(con -> state), "fd:", con -> fd
+						, "connection ndx:", con -> ndx);
 						
 		switch(con -> state)
 		{
@@ -963,7 +972,7 @@ int connection_state_machine(server *srv, connection *con)
 											, con -> tmp_buf -> ptr, con -> tmp_buf -> used);
 		
 				}
-				else
+				else if (0 == con -> http_status)
 				{
 					//一切正常。
 					con -> http_status = 200;
@@ -980,15 +989,16 @@ int connection_state_machine(server *srv, connection *con)
 				}
 				break;
 			case CON_STATE_RESPONSE_END:
-				
 				//对上一个请求的数据进行清空。
 				connection_clear(srv, con);
 				
 				if(con -> keep_alive)
 				{
 					connection_set_state(srv, con, CON_STATE_REQUEST_START);
+					log_error_write(srv, __FILE__, __LINE__, "s", "response end. keep alive.........");
 					break;
 				}
+				
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_READ:
@@ -997,7 +1007,7 @@ int connection_state_machine(server *srv, connection *con)
 				 * 在开始处理前，将连接加到作业队列中。
 				 */
 				joblist_append(srv, con);
-				
+				log_error_write(srv, __FILE__, __LINE__, "s", "read. append joblist done.");
 				//状态的改变视读取数据的情况而定。
 				connection_handle_read(srv, con);
 				
@@ -1010,6 +1020,11 @@ int connection_state_machine(server *srv, connection *con)
 			case CON_STATE_WRITE:
 				joblist_append(srv, con);
 				
+				/*
+				 * 进入这个状态后，默认可写。
+				 */
+				con -> is_writable = 1;
+				
 				connection_handle_write(srv, con);
 				break;
 			case CON_STATE_ERROR:
@@ -1021,10 +1036,11 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_CONNECT);
 				break;
 			case CON_STATE_CLOSE:
+				joblist_append(srv, con);
 				if (-1 == connection_handle_close(srv, con))
 				{
 					log_error_write(srv, __FILE__, __LINE__, "s", "close error.");
-					shutdown(con -> fd, SHUT_RDWR);
+					close(con -> fd);
 				}
 				//连接关闭以后，连接处于connect状态，等待下一次连接。
 				connection_set_state(srv, con, CON_STATE_CONNECT);

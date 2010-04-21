@@ -93,9 +93,10 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 	c -> file.mmap.length = c -> file.length;
 	c -> file.mmap.offset = c -> file.start;
 	
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Write chunk FILE need len :"
+								, c -> file.mmap.length);
 	int w_len;
-	if (-1 == (w_len = write(con -> fd, c -> file.mmap.start + c -> offset
-								, c -> file.mmap.length)))
+	if (-1 == (w_len = write(con -> fd, c -> file.mmap.start + c -> file.mmap.offset, c -> file.mmap.length)))
 	{
 		switch(errno)
 		{
@@ -110,6 +111,7 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 				return -1;
 		}
 	}
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Write chunk FILE len :", w_len);
 	
 	if (w_len < c -> file.mmap.length)
 	{

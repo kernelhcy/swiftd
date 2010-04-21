@@ -5,6 +5,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <error.h>
+#include <sys/socket.h>
 
 /*
  * 处理静态页面。
@@ -41,12 +42,16 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 				buffer_reset(con -> physical.path);
 				return -1;
 			case ENOENT:
-			case ENOTDIR:
 				/*
 				 * 资源不存在。
 				 */
 				con -> http_status = 404;
 				buffer_reset(con->physical.path);
+				return -1;
+			case ENOTDIR:
+				/*
+				 * 资源不存在。
+				 */
 				return -1;
 			default:
 				con -> http_status = 500;
@@ -61,7 +66,121 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 	
 	chunkqueue_append_file(con -> write_queue, file, 0, s.st_size);
 	log_error_write(srv, __FILE__, __LINE__, "sd", "file len:" , s.st_size);
+	
+	/*
+	 * 根据文件的扩展名确定Content-Type
+	 */
+	char *ext;
+	ext = file -> ptr + file -> used;
+	while(*ext != '/' && *ext != '.')
+	{
+		//文件路径中至少包含一个'/',因此不会越界。
+		--ext;
+	} 
+	
+	if(*ext == '/')
+	{
+		/*
+		 * 资源没有扩展名。使用默认类型。
+		 */
+		http_response_insert_header(srv, con, CONST_STR_LEN("Content-Type")
+										, CONST_STR_LEN("application/octet-stream"));
+	}
+	else
+	{
+		content_type_map *c;
+		int done = 0;
+		for (c = srv -> srvconf.c_t_map; c -> file_ext; ++c)
+		{
+			if(0 == strncmp(ext, c -> file_ext, strlen(c -> file_ext)))
+			{
+				http_response_insert_header(srv, con, CONST_STR_LEN("Content-Type")
+													, c -> content_type, strlen(c -> content_type));
+				done = 1;
+				break;
+			}
+		}
+		
+		if(!done)
+		{
+			//未知扩展名。
+			http_response_insert_header(srv, con, CONST_STR_LEN("Content-Type")
+										, CONST_STR_LEN("application/octet-stream"));
+		}
+	}
 	return HANDLER_FINISHED;
+}
+
+/*
+ * 处理所请求的资源是个目录。
+ */
+static int response_redirect_to_directory(server *srv, connection *con)
+{
+	if(NULL == srv || NULL == con)
+	{
+		return -1;
+	}
+	
+	buffer *b = con -> tmp_buf;
+	buffer_reset(b);
+	
+	buffer_copy_string_len(b, CONST_STR_LEN("http://"));
+	
+	if(NULL != con -> request.http_host)
+	{
+		buffer_append_string(b, con -> request.http_host);
+	}
+	else
+	{
+		//通过socket得到host名称。
+		struct hostent *he;
+		sock_addr addr;
+		socklen_t addr_len;
+		addr_len = sizeof(addr);
+		
+		if(-1 == getsockname(con -> fd, &(addr.plain), &addr_len))
+		{
+			con -> http_status = 500;
+			log_error_write(srv, __FILE__, __LINE__, "s", "getsockname failed.");
+			return 0;
+		}
+		
+		switch(addr.plain.sa_family)
+		{
+			case AF_INET:
+				/*
+				 * 只支持IPv4。
+				 */
+				if (NULL == (he = gethostbyaddr((char *)&addr.ipv4.sin_addr, sizeof(struct in_addr), AF_INET)))
+				{
+					log_error_write(srv, __FILE__, __LINE__, "sds", "NOTICE: gethostbyaddr failed."
+											, h_errno, ", using ip address instead.");
+					buffer_append_string(b, inet_ntoa(addr.ipv4.sin_addr));
+				}
+				else
+				{
+					buffer_append_string(b, he -> h_name);
+				}
+				break;
+			default:
+				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown address type.");
+				return -1;
+		}
+	}
+	
+	buffer_append_string_len(b, CONST_STR_LEN("/"));
+	buffer_append_string_buffer(b, con -> physical.real_path);
+	
+	if(!buffer_is_empty(con -> uri.query))
+	{
+		buffer_append_string_len(b, CONST_STR_LEN("?"));
+		buffer_append_string_buffer(b, con -> uri.query);
+	}
+	
+	con -> http_status = 301;
+	http_response_insert_header(srv, con, CONST_STR_LEN("Location")
+									, b -> ptr, b -> used);
+	return 0;
 }
 
 /*
@@ -76,7 +195,7 @@ static int response_physical_exist(server *srv, connection *con, const buffer *p
 	}
 	
 	struct stat s;
-	if ( -1 == lstat(p -> ptr, &s))
+	if ( -1 == stat(p -> ptr, &s))
 	{
 		switch(errno)
 		{
@@ -111,7 +230,11 @@ static int response_physical_exist(server *srv, connection *con, const buffer *p
 	else if (S_ISDIR(s.st_mode))
 	{
 		//目录
-		//
+		if(-1 == response_redirect_to_directory(srv, con))
+		{
+			con -> http_status = 500;
+		}
+		return -1;
 	}
 	else if (S_ISLNK(s.st_mode))
 	{
@@ -312,6 +435,11 @@ handler_t http_prepare_response(server *srv, connection *con)
 	{
 		return HANDLER_FINISHED;
 	}
+	//如果请求的是目录，直接提示用户跳转。
+	if(con -> http_status != 0)
+	{
+		return HANDLER_FINISHED;
+	}
 	//资源存在，继续处理请求。
 	
 	/*
@@ -440,6 +568,11 @@ int http_response_finish_header(server *srv, connection *con)
 		return -1;
 	}
 	
+	/*
+	 * 这个header有安全问题。通产默认不添加。
+	 */
+	//http_response_insert_header(srv, con, CONST_STR_LEN("Server"), CONST_STR_LEN("Swiftd/0.1 written by hcy"));
+	
 	buffer *b = chunkqueue_get_prepend_buffer(con -> write_queue);
 	if (NULL == b)
 	{
@@ -486,6 +619,7 @@ int http_response_finish_header(server *srv, connection *con)
 	buffer_append_string_len(b, CONST_STR_LEN(CRLF));
 	
 	log_error_write(srv, __FILE__, __LINE__, "sb", "Response Headers:", b);
+	
 	return 0;
 }
 

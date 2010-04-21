@@ -34,7 +34,7 @@ static void * thread_main(void *arg)
 		while(!info -> is_busy && !info -> stop)
 		{
 			pthread_cond_wait(&info -> cond, &info -> lock);
-			//debug_info("Thread %d got a signal. is_done %d", info -> ndx, info -> job -> is_done);
+			//debug_info("Thread %d got a signal. ", info -> ndx);
 			if (info -> stop && !info -> job)
 			{
 				stop = 1;

@@ -148,12 +148,25 @@ static server *server_init(void)
 	}
 	pthread_mutex_init(&srv -> conns_lock, NULL);
 	
-	srv -> joblist = NULL; 		
+	srv -> joblist = (connections*)malloc(sizeof(connections)); 
+	if(NULL == srv -> joblist)
+	{
+		return NULL;
+	}
+	srv -> joblist -> ptr = NULL;
+	srv -> joblist -> used = 0;
+	srv -> joblist -> size = 0;	
 	pthread_mutex_init(&srv -> joblist_lock, NULL);
-	srv -> fdwaitqueue = NULL; 	
+	 
+	srv -> fdwaitqueue = (connections*)malloc(sizeof(connections));
+	if (NULL == srv -> fdwaitqueue)
+	{
+		return NULL;
+	}
+	srv -> fdwaitqueue -> ptr = NULL;
+	srv -> fdwaitqueue -> used = 0;
+	srv -> fdwaitqueue -> size = 0;
 	pthread_mutex_init(&srv -> fdwaitqueue_lock, NULL);
-	srv -> unused_nodes = NULL;	
-	pthread_mutex_init(&srv -> unused_nodes_lock, NULL);
 
 	srv -> network_backend_write = NULL;
 	
@@ -197,9 +210,13 @@ static void server_free(server * srv)
 	pthread_mutex_destroy(&srv -> con_lock);
 	pthread_mutex_destroy(&srv -> joblist_lock);
 	pthread_mutex_destroy(&srv -> fdwaitqueue_lock);
-	pthread_mutex_destroy(&srv -> unused_nodes_lock);
 	pthread_mutex_destroy(&srv -> log_lock);
 	pthread_mutex_destroy(&srv -> jc_lock);
+	
+	free(srv -> joblist);
+	free(srv -> fdwaitqueue);
+	srv -> joblist = NULL;
+	srv -> fdwaitqueue = NULL;
 	
 	job_ctx *jc = srv -> jc_nodes, *tmp;
 	while(NULL != jc)

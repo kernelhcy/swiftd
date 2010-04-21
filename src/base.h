@@ -129,6 +129,14 @@ typedef struct
 	buffer *etag; 			//etag
 } physical;
 
+/*
+ * 文件扩展名于content type的对应关系表。
+ */
+typedef struct
+{
+	const char *file_ext;  		//文件扩展名。
+	const char *content_type; 	//
+}content_type_map;
 
 /*
  * 服务器的配置信息
@@ -163,6 +171,8 @@ typedef struct
 
 	unsigned short log_request_header_on_error;
 	unsigned short log_state_handling;
+	
+	content_type_map *c_t_map; 
 
 } server_config;
 
@@ -295,14 +305,6 @@ typedef struct
 	size_t used;
 }socket_array;
 
-//一个链表。保存连接。
-//使用在作业队列中。
-typedef struct s_con_list_node
-{
-	connection *con;
-	struct s_con_list_node *next;
-}con_list_node;
-
 /////////////////////  作业  ////////////////////////
 /*
  * 定义一个job的环境。
@@ -422,14 +424,11 @@ typedef struct server
 	connections *conns; 			//连接数组
 	pthread_mutex_t conns_lock;
 	
-	con_list_node *joblist; 		//作业列表
+	connections *joblist; 		//作业列表
 	pthread_mutex_t joblist_lock;
 	
-	con_list_node *fdwaitqueue; 	//描述符等待队列
+	connections *fdwaitqueue; 	//描述符等待队列
 	pthread_mutex_t fdwaitqueue_lock;
-	
-	con_list_node *unused_nodes;	//空闲的链表节点。
-	pthread_mutex_t unused_nodes_lock;
 
 	int (*network_backend_write) (struct server * srv, connection * con, int fd, chunkqueue * cq);
 

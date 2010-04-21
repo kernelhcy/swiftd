@@ -17,7 +17,8 @@ int joblist_append(server * srv, connection * con);
 /**
  * 释放joblist中空闲节点所占用的空间。srv未使用
  */
-void joblist_free(server * srv, con_list_node * joblist);
+void joblist_free(server * srv, connections * joblist);
+
 /**
  * 获取一个在作业队列中等待的连接。
  * 如果joblist为空，则返回NULL。
@@ -30,6 +31,13 @@ connection* joblist_pop(server *srv);
  * 没有，返回0
  */
 int joblist_find_del(server *srv, connection *con);
+
+/*
+ * 从作业队列中查找是否有con，
+ * 如果有，则返回1
+ * 没有，返回0
+ */
+int joblist_find(server *srv, connection *con);
 
 /**
  * 将con追加到srv中的fdwaitqueue中

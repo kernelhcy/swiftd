@@ -89,6 +89,8 @@ static void chunk_reset(chunk * c)
 		munmap(c -> file.mmap.start, c -> file.mmap.length);
 		c -> file.mmap.start = MAP_FAILED;
 	}
+	
+	c -> finished = 0;
 }
 
 
@@ -137,6 +139,7 @@ static chunk *chunkqueue_get_unused_chunk(chunkqueue * cq)
 		c = cq -> unused;
 		cq -> unused = c -> next;
 		c -> next = NULL;
+		c -> finished = 0;
 		--cq -> unused_chunks;
 	}
 
@@ -148,12 +151,12 @@ static chunk *chunkqueue_get_unused_chunk(chunkqueue * cq)
  */
 static int chunkqueue_prepend_chunk(chunkqueue * cq, chunk * c)
 {
-	c->next = cq->first;
-	cq->first = c;
+	c -> next = cq -> first;
+	cq -> first = c;
 
-	if (cq->last == NULL)
+	if (cq -> last == NULL)
 	{
-		cq->last = c;
+		cq -> last = c;
 	}
 
 	return 0;
@@ -202,6 +205,9 @@ void chunkqueue_reset(chunkqueue * cq)
 		}
 	}
 	chunkqueue_remove_finished_chunks(cq);
+	
+	cq -> first = NULL;
+	cq -> last = NULL;
 }
 
 
@@ -336,11 +342,11 @@ buffer *chunkqueue_get_prepend_buffer(chunkqueue * cq)
 	c -> type = MEM_CHUNK;
 	c -> offset = 0;
 	c -> finished = 0;
-	buffer_reset(c->mem);
+	buffer_reset(c -> mem);
 
 	chunkqueue_prepend_chunk(cq, c);
 
-	return c->mem;
+	return c -> mem;
 }
 
 //后面
@@ -502,6 +508,7 @@ int chunkqueue_remove_finished_chunks(chunkqueue * cq)
 	{
 		if (c -> finished)
 		{
+			
 			chunk_reset(c);
 			cq -> first = c -> next;
 		
