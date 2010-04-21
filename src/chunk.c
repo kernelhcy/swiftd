@@ -86,7 +86,7 @@ static void chunk_reset(chunk * c)
 	
 	if (MAP_FAILED != c -> file.mmap.start)
 	{
-		munmap(c -> file.mmap.start, c -> file.mmap.length);
+		munmap(c -> file.mmap.start, c -> file.length);
 		c -> file.mmap.start = MAP_FAILED;
 	}
 	
@@ -215,27 +215,30 @@ void chunkqueue_reset(chunkqueue * cq)
  * 将文件fn的从offset开始，长度为len的数据放到一个块中，并把块加到cq中。
  * 这里仅仅是标记了一下，实际的数据并没有没存储到块中。
  */
-int chunkqueue_append_file(chunkqueue * cq, buffer * fn, off_t offset, off_t len)
+chunk * chunkqueue_append_file(chunkqueue * cq, buffer * fn, off_t offset, off_t len)
 {
 	chunk *c;
 
 	if (len == 0)
 	{
-		return 0;
+		return NULL;
 	}
 	
 	c = chunkqueue_get_unused_chunk(cq);
 
-	c->type = FILE_CHUNK;
+	c -> type = FILE_CHUNK;
 
-	buffer_copy_string_buffer(c->file.name, fn);
-	c->file.start = offset;
-	c->file.length = len;
-	c->offset = 0;
+	buffer_copy_string_buffer(c -> file.name, fn);
+	c -> file.start = offset;
+	c -> file.length = len;
+	c -> offset = 0;
+	
+	c -> file.mmap.length = len;
+	c -> file.mmap.offset = offset;
 
 	chunkqueue_append_chunk(cq, c);
 
-	return 0;
+	return c;
 }
 
 /**

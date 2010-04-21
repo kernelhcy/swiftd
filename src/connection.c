@@ -682,13 +682,16 @@ static int connection_handle_write(server *srv, connection *con)
 	switch(network_write(srv, con))
 	{
 		case HANDLER_GO_ON:
+			con -> is_writable = 0;
 			return 0;
 		case HANDLER_FINISHED:
+			con -> is_writable = 0;
 			connection_set_state(srv, con, CON_STATE_RESPONSE_END);
 			log_error_write(srv, __FILE__, __LINE__, "s", "Write done. Go to Response End.");
 			return 0;
 		case HANDLER_ERROR:
 		default:
+			con -> is_writable = 0;
 			connection_set_state(srv, con, CON_STATE_ERROR);
 			return -1;
 	}
@@ -763,6 +766,12 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 			log_error_write(srv, __FILE__, __LINE__, "s", "Read ERROR.");
 			connection_set_state(srv, con, CON_STATE_ERROR);
 		}
+	}
+	
+	if (con -> state == CON_STATE_WRITE && !chunkqueue_is_empty(con -> write_queue)
+										&& con -> is_writable)
+	{
+		connection_handle_write(srv, con);
 	}
 	
 	return HANDLER_FINISHED;
@@ -902,9 +911,9 @@ int connection_state_machine(server *srv, connection *con)
 	while(!done)
 	{
 		old_state = con -> state;
-		log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
-						, connection_get_state_name(con -> state), "fd:", con -> fd
-						, "connection ndx:", con -> ndx);
+		//log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
+		//				, connection_get_state_name(con -> state), "fd:", con -> fd
+		//				, "connection ndx:", con -> ndx);
 						
 		switch(con -> state)
 		{
@@ -995,7 +1004,7 @@ int connection_state_machine(server *srv, connection *con)
 				if(con -> keep_alive)
 				{
 					connection_set_state(srv, con, CON_STATE_REQUEST_START);
-					log_error_write(srv, __FILE__, __LINE__, "s", "response end. keep alive.........");
+					//log_error_write(srv, __FILE__, __LINE__, "s", "response end. keep alive.........");
 					break;
 				}
 				
@@ -1019,11 +1028,6 @@ int connection_state_machine(server *srv, connection *con)
 				break;
 			case CON_STATE_WRITE:
 				joblist_append(srv, con);
-				
-				/*
-				 * 进入这个状态后，默认可写。
-				 */
-				con -> is_writable = 1;
 				
 				connection_handle_write(srv, con);
 				break;

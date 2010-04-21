@@ -43,7 +43,7 @@ static int network_write_mem(server *srv, connection *con, chunk *c)
 				return -1;
 		}
 	}
-	log_error_write(srv, __FILE__, __LINE__, "sd", "Write chunk MEM len :", w_len);
+	//log_error_write(srv, __FILE__, __LINE__, "sd", "Write chunk MEM len :", w_len);
 	
 	if (w_len < c -> mem -> used - c -> offset)
 	{
@@ -75,7 +75,10 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 	{
 		return 0;
 	}
-	
+									
+	/*
+	 * 将文件映射到内存。
+	 */
 	int fd;
 	if(-1 == (fd = open(c -> file.name -> ptr, O_RDONLY)))
 	{
@@ -84,19 +87,18 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 	}
 	c -> file.fd = fd;
 	//将文件映射到内存。
-	if (MAP_FAILED == (c -> file.mmap.start = mmap(NULL, c -> file.length, PROT_READ, MAP_SHARED, fd, 0)))
+	if (MAP_FAILED == (c -> file.mmap.start = mmap(NULL, c -> file.length, PROT_READ
+																	, MAP_SHARED, fd, 0)))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "ss", "mmap failed.", strerror(errno));
 		close(fd);
+		c -> file.fd = -1;
 		return -1;
 	}
-	c -> file.mmap.length = c -> file.length;
-	c -> file.mmap.offset = c -> file.start;
 	
-	log_error_write(srv, __FILE__, __LINE__, "sd", "Write chunk FILE need len :"
-								, c -> file.mmap.length);
 	int w_len;
-	if (-1 == (w_len = write(con -> fd, c -> file.mmap.start + c -> file.mmap.offset, c -> file.mmap.length)))
+	if (-1 == (w_len = write(con -> fd, c -> file.mmap.start + c -> file.mmap.offset
+										, c -> file.mmap.length)))
 	{
 		switch(errno)
 		{
@@ -105,23 +107,39 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 				 * 非阻塞IO。但当前不能写。
 				 */
 			case EINTR:
+				munmap(c -> file.mmap.start, c -> file.length);
+				c -> file.mmap.start = MAP_FAILED;
+				close(fd);
+				c -> file.fd = -1;
 				//被信号中断。
 				return -2;
 			default:
+				munmap(c -> file.mmap.start, c -> file.length);
+				c -> file.mmap.start = MAP_FAILED;
+				close(fd);
+				c -> file.fd = -1;
 				return -1;
 		}
 	}
-	log_error_write(srv, __FILE__, __LINE__, "sd", "Write chunk FILE len :", w_len);
+	
+	munmap(c -> file.mmap.start, c -> file.length);
+	c -> file.mmap.start = MAP_FAILED;
+	close(fd);
+	c -> file.fd = -1;
 	
 	if (w_len < c -> file.mmap.length)
 	{
 		//数据没有写完。
 		c -> file.mmap.offset += w_len;
 		c -> file.mmap.length -= w_len;
+		log_error_write(srv, __FILE__, __LINE__, "sdsdsd", "Need write more data. Has write:",
+							w_len, " Need write more: ", c -> file.mmap.length
+							, "offset:", c -> file.mmap.offset);
 		return -2;
 	}
 	else 
 	{
+		log_error_write(srv, __FILE__, __LINE__, "sd", "Has write: ", w_len);
 		c -> finished = 1;
 		return 0;
 	}

@@ -6,6 +6,8 @@
 #include <errno.h>
 #include <error.h>
 #include <sys/socket.h>
+#include <sys/mman.h>
+#include <fcntl.h>
 
 /*
  * 处理静态页面。
@@ -65,7 +67,7 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 									, con -> tmp_buf -> ptr, con -> tmp_buf -> used);
 	
 	chunkqueue_append_file(con -> write_queue, file, 0, s.st_size);
-	log_error_write(srv, __FILE__, __LINE__, "sd", "file len:" , s.st_size);
+	log_error_write(srv, __FILE__, __LINE__, "sd", "static file len:" , s.st_size);
 	
 	/*
 	 * 根据文件的扩展名确定Content-Type
@@ -108,6 +110,7 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 										, CONST_STR_LEN("application/octet-stream"));
 		}
 	}
+	
 	return HANDLER_FINISHED;
 }
 
@@ -617,6 +620,11 @@ int http_response_finish_header(server *srv, connection *con)
 	 * header 和 message body之间的CRLF。
 	 */
 	buffer_append_string_len(b, CONST_STR_LEN(CRLF));
+	
+	/*
+	 * 最后一个'\0'不能发送出去！！
+	 */
+	-- b -> used;
 	
 	log_error_write(srv, __FILE__, __LINE__, "sb", "Response Headers:", b);
 	
