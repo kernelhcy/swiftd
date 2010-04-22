@@ -37,6 +37,8 @@ static void signal_handler(int sig)
 			break;
 		case SIGCHLD: 	//子进程终止或停止。
 			break;
+		case SIGPIPE: 	//套接字关闭。
+			break;
 	}
 }
 
@@ -328,6 +330,11 @@ int main(int argc, char *argv[])
 	sigaction(SIGTERM, &sig_action, NULL);
 	sigaction(SIGINT, &sig_action, NULL);
 	sigaction(SIGALRM, &sig_action, NULL);
+	/*
+	 * 这个信号必须捕获！
+	 * 否则，在write时，如果连接关闭。服务器将退出。。。
+	 */
+	sigaction(SIGPIPE, &sig_action, NULL);
 	
 	openDevNull(STDIN_FILENO);
 	openDevNull(STDOUT_FILENO);
@@ -580,10 +587,13 @@ int main(int argc, char *argv[])
 	void *ctx;
 	job_ctx *jc;
 	
+	int fds_with_event[srv -> max_fds]; //记录当前发生了IO事件的fd。用于测试连接超时。
+	size_t i;
+	connection *con;
+	
 	do
 	{
-		log_error_write(srv, __FILE__, __LINE__, "s", "begin epoll..........");
-		n = fdevent_poll(srv -> ev, -1);
+		n = fdevent_poll(srv -> ev, 1000);
 		
 		if (srv -> cur_ts != time(NULL))
 		{
@@ -593,9 +603,14 @@ int main(int argc, char *argv[])
 		
 		if (-1 == n)
 		{
-			//error 
+			//error
 			log_error_write(srv, __FILE__, __LINE__, "ss", "fdevent_poll error."
 						, strerror(errno));
+		}
+		
+		if(n > 0)
+		{
+			memset(fds_with_event, 0, sizeof(fds_with_event));
 		}
 		
 		ndx = 0;
@@ -603,6 +618,7 @@ int main(int argc, char *argv[])
 		{
 			ndx = fdevent_event_get_next_ndx(srv -> ev, ndx);
 			fd  = fdevent_event_get_fd(srv -> ev, ndx);
+			fds_with_event[fd] = 1; 		//标记其发生了IO事件。
 			revents = fdevent_event_get_revent(srv -> ev, ndx);
 			handler = fdevent_event_get_handler(srv -> ev, fd);
 			ctx = fdevent_event_get_context(srv -> ev, fd);			
@@ -629,6 +645,42 @@ int main(int argc, char *argv[])
 					log_error_write(srv, __FILE__, __LINE__, "s", "Try to run a job failed.");
 				}
 			}
+		}
+		
+		/*
+		 * 轮训所有的连接。对于没有发生IO事件，且是READ， WRITE状态的连接进行超时判断。
+		 */
+		log_error_write(srv, __FILE__, __LINE__, "s", "Test Connection Time Out.");
+		for (i = 0; i < srv -> conns -> used; ++i)
+		{
+			con = srv -> conns -> ptr[i];
+			if(fds_with_event[con -> fd] || CON_STATE_CONNECT == con -> state)
+			{
+				//发生了IO事件。
+				continue;
+			}
+			
+			if (CON_STATE_READ == con -> state || CON_STATE_READ_POST == con -> state)
+			{
+				if (srv -> cur_ts - con -> read_idle_ts > srv -> srvconf.max_read_idle)
+				{
+					//读取数据超时。
+					log_error_write(srv, __FILE__, __LINE__, "sd", "Read TIME OUT. fd:", con -> fd);
+					connection_set_state(srv, con, CON_STATE_ERROR);
+					connection_state_machine(srv, con);
+				}
+			}
+			else if(CON_STATE_WRITE == con -> state)
+			{
+				if (srv -> cur_ts - con -> write_request_ts > srv -> srvconf.max_write_idle)
+				{
+					//写超时。
+					log_error_write(srv, __FILE__, __LINE__, "sd", "Write TIME OUT. fd:", con -> fd);
+					connection_set_state(srv, con, CON_STATE_ERROR);
+					connection_state_machine(srv, con);
+				}
+			}
+			
 		}
 	}while(!shutdown_server);
 	

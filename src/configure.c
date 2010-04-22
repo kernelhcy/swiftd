@@ -86,6 +86,11 @@ int config_setdefaults(server *srv)
 	srv -> srvconf.log_request_header_on_error = 1;
 	srv -> srvconf.log_state_handling = 1;
 
+	//用于判断超时。
+	srv -> srvconf.max_read_idle = 3;
+	srv -> srvconf.max_write_idle = 3;
+	srv -> srvconf.max_close_idle = 10;
+	
 	srv -> srvconf.plugin_conf_file = buffer_init_string("/swiftd-plugin.conf");
 
 	struct ev_map 

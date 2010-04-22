@@ -175,6 +175,11 @@ typedef struct
 	unsigned short log_state_handling;
 	
 	content_type_map *c_t_map; 
+	
+	//用于界定超时。
+	int max_read_idle;
+	int max_write_idle;
+	int max_close_idle;
 
 } server_config;
 

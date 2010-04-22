@@ -64,8 +64,8 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 	buffer_reset(con -> tmp_buf);
 	buffer_append_long(con -> tmp_buf, s.st_size);
 	http_response_insert_header(srv, con, CONST_STR_LEN("Content-Length")
-									, con -> tmp_buf -> ptr, con -> tmp_buf -> used);
-	
+									, con -> tmp_buf -> ptr, con -> tmp_buf -> used - 1);
+											
 	chunkqueue_append_file(con -> write_queue, file, 0, s.st_size);
 	log_error_write(srv, __FILE__, __LINE__, "sd", "static file len:" , s.st_size);
 	
@@ -211,7 +211,7 @@ static int response_physical_exist(server *srv, connection *con, const buffer *p
 				return -1;
 			case ENOENT:
 			case ENOTDIR:
-				log_error_write(srv, __FILE__, __LINE__, "sb", "File not exits!", con -> physical.path);
+				log_error_write(srv, __FILE__, __LINE__, "sb", "File not exits!", p);
 				/*
 				 * 资源不存在。
 				 */

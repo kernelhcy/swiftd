@@ -153,7 +153,7 @@ int fdevent_poll(fdevent *ev, int timeout)
 	}
 	if (NULL == ev -> poll)
 	{
-		exit(1);
+		return -1;
 	}
 
 	return ev -> poll(ev, timeout);
@@ -163,6 +163,7 @@ size_t fdevent_event_get_next_ndx(fdevent *ev, size_t ndx)
 {
 	if (NULL == ev || NULL == ev -> event_get_next_ndx)
 	{
+		fprintf(stderr, "fdevent_event_get_next_ndx.\n");
 		exit(1);
 	}
 
@@ -173,7 +174,8 @@ int fdevent_event_get_revent(fdevent *ev, size_t ndx)
 {
 	if(NULL == ev || NULL == ev -> event_get_revent)
 	{
-		exit(1);
+		fprintf(stderr, "fdevent_event_get_event..\n");
+		return -1;
 	}
 
 	return ev -> event_get_revent(ev, ndx);
@@ -184,7 +186,8 @@ int fdevent_event_get_fd(fdevent *ev, size_t ndx)
 {
 	if (NULL == ev || NULL == ev -> event_get_fd)
 	{
-		exit(1);
+		fprintf(stderr, "fdevent_event_get_fd.\n");
+		return -1;
 	}
 	return ev -> event_get_fd(ev, ndx);
 }
@@ -193,7 +196,8 @@ fdevent_handler fdevent_event_get_handler(fdevent *ev, int fd)
 {
 	if (NULL == ev || NULL == ev -> fdarray || fd < 0)
 	{
-		exit(1);
+		fprintf(stderr, "fdevent_event_get_handler.\n");
+		NULL;
 	}
 
 	return ev -> fdarray[fd].handler;
@@ -204,7 +208,8 @@ void* fdevent_event_get_context(fdevent *ev, int fd)
 {
 	if (NULL == ev || NULL == ev -> fdarray || fd < 0)
 	{
-		exit(1);
+		fprintf(stderr, "fdevent_event_get_context.\n");
+		return NULL;
 	}
 	
 	return ev -> fdarray[fd].ctx;
@@ -218,7 +223,7 @@ int fdevent_fcntl(fdevent *ev, int fd)
 {
 	if (NULL == ev)
 	{
-		exit(1);
+		return -1;
 	}
 	
 	/*
