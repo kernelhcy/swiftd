@@ -31,7 +31,7 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 	{
 		log_error_write(srv, __FILE__, __LINE__, "sbs", "Open plugin configure file error."
 						, srv -> srvconf.plugin_conf_file , strerror(errno));
-		return -1;
+		return -2;
 	}
 
 	/*
@@ -213,10 +213,17 @@ int plugin_load(server *srv)
 	pthread_mutex_lock(&srv -> plugin_lock);
 	
 	//读取配置文件。
-	if (-1 == plugin_read_name_path(srv, srv -> plugins_np))
+	switch(plugin_read_name_path(srv, srv -> plugins_np))
 	{
-		pthread_mutex_unlock(&srv -> plugin_lock);
-		return -1;
+		case -1:
+			pthread_mutex_unlock(&srv -> plugin_lock);
+			return -1;
+		case -2:
+			/*
+			 * 插件配置文件不存在。没有插件需要加载。
+			 */
+			pthread_mutex_unlock(&srv -> plugin_lock);
+			return 0;
 	}
 
 	int i;

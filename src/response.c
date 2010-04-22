@@ -387,7 +387,7 @@ handler_t http_prepare_response(server *srv, connection *con)
 		
 	//设置连接处理时的默认根目录。
 	//在调用docroot插件功能时，将根据需要重写这个根目录。
-	buffer_copy_string_buffer(con -> physical.doc_root, srv -> srvconf.changeroot);
+	buffer_copy_string_buffer(con -> physical.doc_root, srv -> srvconf.docroot);
 	
 	/*
 	 * 有些插件需要设置工作根目录。

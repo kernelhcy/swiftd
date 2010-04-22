@@ -150,9 +150,11 @@ typedef struct
 	unsigned short errorlog_use_syslog; //是否使用系统日志
 
 	unsigned short dont_daemonize; 		//是否作为守护进程运行
-	buffer *changeroot; 				//运行时，根目录的位置			
+	buffer *changeroot; 				//运行时，根目录的位置		
 	buffer *username; 					//用户名
 	buffer *groupname; 					//组名
+
+	buffer *docroot; 					//数据的根目录。
 
 	buffer *plugin_conf_file;			//plugin的配置文件。
 

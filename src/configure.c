@@ -72,7 +72,8 @@ int config_setdefaults(server *srv)
 	srv -> srvconf.errorlog_file = buffer_init_string("/var/log/swiftd.log");
 	srv -> srvconf.errorlog_use_syslog = 0;
 	srv -> srvconf.dont_daemonize = 0;
-	srv -> srvconf.changeroot = buffer_init_string("/home/hcy/tmp/swiftdtest/");
+	srv -> srvconf.changeroot = buffer_init_string("/home/hcy/");
+	srv -> srvconf.docroot = buffer_init_string("/tmp/swiftdtest/");
 	srv -> srvconf.username = buffer_init_string("hcy");
 	srv -> srvconf.groupname = buffer_init_string("hcy");
 	srv -> srvconf.pid_file = buffer_init_string("/var/run/swiftd.pid");
@@ -85,7 +86,7 @@ int config_setdefaults(server *srv)
 	srv -> srvconf.log_request_header_on_error = 1;
 	srv -> srvconf.log_state_handling = 1;
 
-	srv -> srvconf.plugin_conf_file = buffer_init_string("/home/hcy/swiftd-plugin.conf");
+	srv -> srvconf.plugin_conf_file = buffer_init_string("/swiftd-plugin.conf");
 
 	struct ev_map 
 	{

@@ -11,6 +11,8 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <error.h>
@@ -267,19 +269,18 @@ int main(int argc, char *argv[])
 	buffer *spe_conf_path; 	//指定的配置文件位置。
 	int is_daemon;
 	
-	fprintf(stderr, "初始化server结构体.\n");
+	fprintf(stderr, "starting server...\n");
+	
 	if ( NULL == (srv = server_init()) )
 	{
 		fprintf(stderr, "initial the server struct error. NULL pointer return.\n");
 		server_free(srv);
 		exit(-1);
 	}
-	fprintf(stderr, "初始化server结构体完毕.\n");
 	
 	int o = -1; 
 	while (-1 != (o = getopt(argc, argv, "hf:vVDt")))
 	{
-		fprintf(stderr, "处理参数。%c \n", (char)o);
 		switch(o)
 		{
 			case 'h':
@@ -308,7 +309,6 @@ int main(int argc, char *argv[])
 		}
 	}
 	
-	fprintf(stderr, "处理参数完毕。\n");
 	if (test_config)
 	{
 		printf("test config\n");
@@ -328,11 +328,10 @@ int main(int argc, char *argv[])
 	sigaction(SIGTERM, &sig_action, NULL);
 	sigaction(SIGINT, &sig_action, NULL);
 	sigaction(SIGALRM, &sig_action, NULL);
-	fprintf(stderr, "设置信号处理函数.\n");
 	
 	openDevNull(STDIN_FILENO);
 	openDevNull(STDOUT_FILENO);
-	fprintf(stderr, "关闭标准输入输出.\n");
+	fprintf(stderr, "close stdin and stdout.\n");
 	
 	/*
 	 * 设置为后台进程。
@@ -349,7 +348,6 @@ int main(int argc, char *argv[])
 		server_free(srv);
 		return -1;
 	}
-	fprintf(stderr, "设置默认配置.\n");
 	
 	//记录服务器启动的时间和当前时间。
 	srv -> cur_ts = time(NULL);
@@ -357,8 +355,7 @@ int main(int argc, char *argv[])
 	
 	//带开日志。
 	log_error_open(srv);
-	fprintf(stderr, "启动日志.\n");
-	log_error_write(srv, __FILE__, __LINE__, "s", "日志打开成功！");
+	log_error_write(srv, __FILE__, __LINE__, "s", "Open log success!");
 	
 	//设置pid文件。
 	if (srv -> srvconf.pid_file -> used)
@@ -398,7 +395,7 @@ int main(int argc, char *argv[])
 	
 	srv -> max_conns = srv -> max_fds;
 	
-	i_am_root = (getuid == 0);
+	i_am_root = (getuid() == 0);
 	if (!i_am_root && issetugid())
 	{
 		log_error_write(srv, __FILE__, __LINE__, "s", "Do not apply a SUID to this binary!");
@@ -410,9 +407,11 @@ int main(int argc, char *argv[])
 
 	if (i_am_root)
 	{
-		struct user *usr;
-		struct passwd *pwd;
-
+		log_error_write(srv, __FILE__, __LINE__, "s", "I am ROOT!!");
+		struct user *usr = NULL;
+		struct passwd *pwd = NULL;
+		struct group *grp = NULL;
+		
 		/*
 		//文件打开数的限制
 		if (0 != getrlimit(RLIMIT_NOFILE, &rlim))
@@ -427,7 +426,6 @@ int main(int argc, char *argv[])
 		*/
 
 		//初始化网络
-		fprintf(stderr, "初始化网络...\n");
 		if (0 != network_init(srv))
 		{
 			fprintf(stderr, "Initial network error!\n");
@@ -435,7 +433,48 @@ int main(int argc, char *argv[])
 			server_free(srv);
 			return -1;
 		}
+		
+		/*
+		 * 放弃管理员权限。
+		 * 防止出现破坏性的行为。
+		 */
+		
+		if (srv -> srvconf.username -> used)
+		{
+			//根据配置中的用户名获取用户信息。
+			if (NULL == (pwd = getpwnam(srv -> srvconf.username -> ptr)))
+			{
+				log_error_write(srv, __FILE__, __LINE__, "ss", "can't find username:"
+											, srv -> srvconf.username -> ptr);
+				return -1;
+			}
+	
+			if (pwd -> pw_uid == 0) 
+			{
+				log_error_write(srv, __FILE__, __LINE__, "s", "I will not set uid to 0\n");
+				return -1;
+			}
+		}
 
+		if (srv -> srvconf.groupname -> used)
+		{
+			//根据上面得到的用户所在的组的组名，获得组的信息。
+			if (NULL == (grp = getgrnam(srv -> srvconf.groupname -> ptr)))
+			{
+				log_error_write(srv, __FILE__, __LINE__, "sb", "can't find groupname"
+														, srv -> srvconf.groupname);
+				return -1;
+			}
+			if (grp -> gr_gid == 0)
+			{
+				log_error_write(srv, __FILE__, __LINE__, "s", "I will not set gid to 0\n");
+				return -1;
+			}
+		}
+		
+		/*
+		 * 切换程序的运行根目录。
+		 */
 		if (srv -> srvconf.changeroot -> used)
 		{
 			tzset();
@@ -449,7 +488,37 @@ int main(int argc, char *argv[])
 				log_error_write(srv, __FILE__, __LINE__, "ss", "chdir failed: ", strerror(errno));
 				return -1;
 			}
+			
+			log_error_write(srv, __FILE__, __LINE__, "sb", "Change root to :"
+										, srv -> srvconf.changeroot);
 		}
+
+		/*
+		 * Change group before chroot, when we have access
+		 * to /etc/group
+		 * */
+		if (srv -> srvconf.groupname -> used)
+		{
+			setgid(grp -> gr_gid);
+			setgroups(0, NULL); //返回用户组的数目。
+			if (srv->srvconf.username->used)
+			{
+				//Initialize the group access list by reading the group database /etc/group 
+				//and using all groups of which user is a member.  
+				//The additional group group is also added to the list.
+				initgroups(srv->srvconf.username->ptr, grp->gr_gid);
+			}
+		}
+		
+		/*
+		 * 放弃超级管理员权限。
+		 */
+		if (srv -> srvconf.username -> used)
+		{
+			setuid(pwd -> pw_uid);
+			log_error_write(srv, __FILE__, __LINE__, "s", "Drop the ROOT privs.");
+		}
+		
 	}
 	else
 	{
@@ -461,11 +530,13 @@ int main(int argc, char *argv[])
 			server_free(srv);
 			return -1;
 		}
+		
+		
 	
 	}
 	
 	//初始化fdevent系统。
-	log_error_write(srv, __FILE__, __LINE__, "s", "启动fdevent系统...");
+	log_error_write(srv, __FILE__, __LINE__, "s", "Starting fdevent system...");
 	if (NULL == (srv -> ev = fdevent_init(srv -> max_fds + 1, srv -> event_handler)))
 	{
 		log_error_write(srv, __FILE__, __LINE__,"s", "fdevent init failed." );
@@ -499,6 +570,8 @@ int main(int argc, char *argv[])
 		server_free(srv);
 		return -1;
 	}
+	
+	fprintf(stderr, "start server. OK!\n");
 	
 	//检测IO事件。
 	int n, fd, revents;
