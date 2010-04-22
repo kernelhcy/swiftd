@@ -579,8 +579,8 @@ int http_parse_request(server *srv, connection *con)
  					/*
  					 * Request line结束。
  					 */
- 					//log_error_write(srv, __FILE__, __LINE__, "ss", "Method:", method);
- 					//log_error_write(srv, __FILE__, __LINE__, "ss", "HTTP Version:", version);
+ 					log_error_write(srv, __FILE__, __LINE__, "ss", "Method:", method);
+ 					log_error_write(srv, __FILE__, __LINE__, "ss", "HTTP Version:", version);
  					http_method_t hm;
  					http_version_t hv;
  					
