@@ -214,9 +214,9 @@ static void connection_clear(server *srv, connection *con)
 	con -> is_readable = 0;
 	con -> is_writable = 0;			
 
-	chunkqueue_reset(con -> write_queue);			
-	chunkqueue_reset(con -> read_queue);				
-	chunkqueue_reset(con -> request_content_queue);
+	chunkqueue_remove_finished_chunks(con -> write_queue);			
+	chunkqueue_remove_finished_chunks(con -> read_queue);				
+	chunkqueue_remove_finished_chunks(con -> request_content_queue);
 	con -> http_status = 0; 				
 
 	buffer_reset(con -> parse_request); 	
@@ -453,14 +453,16 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 		return -4;
 	}
 	
+	
 	//数据没有读完。
 	if (len < need_to_read)
 	{
 		log_error_write(srv, __FILE__, __LINE__, "s", "Read Going On.");
 		con -> is_readable = 1;
 	}
+	
 	b -> used = len;
-	//log_error_write(srv, __FILE__, __LINE__, "sdsb", "read data len: ", len, "the data :", b);
+	log_error_write(srv, __FILE__, __LINE__, "sdsb", "read data len: ", len, "the data :", b);
 	
 	return 0;
 }
@@ -474,7 +476,7 @@ static int connection_handle_read(server *srv, connection *con)
 
 	if (con -> is_readable)
 	{
-		//log_error_write(srv, __FILE__, __LINE__, "s", "Read the data from the client.");
+		log_error_write(srv, __FILE__, __LINE__, "s", "Read the data from the client.");
 		switch(connection_network_read(srv, con, con -> read_queue))
 		{
 			case 0: 	//读取到数据。
@@ -512,7 +514,7 @@ static int connection_handle_read(server *srv, connection *con)
 		}
 		b = c -> mem;
 		//log_error_write(srv, __FILE__, __LINE__, "sb", "chunk mem:", b);
-		for (i = 0; i < b -> used; ++i)
+		for (i = c -> offset; i < b -> used; ++i)
 		{
 			if (b -> ptr[i] == '\r')
 			{
@@ -574,7 +576,7 @@ static int connection_handle_read(server *srv, connection *con)
 			}
 			else
 			{
-				buffer_append_memory(b, c -> mem -> ptr, c -> mem -> used);
+				buffer_append_memory(b, c -> mem -> ptr + c -> offset, c -> mem -> used);
 				c -> finished = 1;
 			}
 			
@@ -588,26 +590,10 @@ static int connection_handle_read(server *srv, connection *con)
 		//删除已经处理过的数据。
 		chunkqueue_remove_finished_chunks(con -> read_queue);
 		
-		//有一部分POST数据被读取进来。
-		//将POST数据转存到con -> request_content_queue中。
-		if (NULL != con -> read_queue -> first)
-		{
-			b = chunkqueue_get_append_buffer(con -> request_content_queue);
-			
-			for (c = con -> read_queue -> first; c;)
-			{
-				buffer_append_memory(b, c -> mem -> ptr + c -> offset
-											, c -> mem -> used - c -> offset);
-				
-				c -> finished = 1;
-				c = c -> next;
-			}
-		}
-		
 		//log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 		connection_set_state(srv, con, CON_STATE_REQUEST_END);
 	}
-
+	
 	return 0;
 }
 
@@ -935,7 +921,7 @@ int connection_state_machine(server *srv, connection *con)
 				/*
 				 * 试着读。没有数据，就在poll中等待。
 				 */
-				con -> is_readable = 1;
+				//con -> is_readable = 1;
 				break;
 			case CON_STATE_REQUEST_END:
 			

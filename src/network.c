@@ -223,7 +223,7 @@ int network_register_fdevent(server *srv)
 		log_error_write(srv, __FILE__, __LINE__, "s", "Add Listenning fd in fdevent failed. FDEVENT_IN");
 		return -1;
 	}
-	log_error_write(srv, __FILE__, __LINE__,"s", "Add listenning fd in fdevent.");
+	log_error_write(srv, __FILE__, __LINE__,"sd", "Add listenning fd in fdevent.", srv_sock -> fd);
 	
 	return 0;
 }
