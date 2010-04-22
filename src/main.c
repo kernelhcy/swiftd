@@ -296,7 +296,7 @@ int main(int argc, char *argv[])
 				show_features();
 				break;
 			case 'D':
-				is_daemon = 0;
+				is_daemon = 1;
 				srv -> is_daemon = 1;
 				break;
 			case 't':
@@ -333,6 +333,14 @@ int main(int argc, char *argv[])
 	openDevNull(STDIN_FILENO);
 	openDevNull(STDOUT_FILENO);
 	fprintf(stderr, "关闭标准输入输出.\n");
+	
+	/*
+	 * 设置为后台进程。
+	 */
+	if(srv -> is_daemon)
+	{
+		daemonize();
+	}
 	
 	//read configure file
 	if( 0!= config_setdefaults(srv))
