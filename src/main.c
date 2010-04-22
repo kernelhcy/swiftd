@@ -650,7 +650,7 @@ int main(int argc, char *argv[])
 		/*
 		 * 轮训所有的连接。对于没有发生IO事件，且是READ， WRITE状态的连接进行超时判断。
 		 */
-		log_error_write(srv, __FILE__, __LINE__, "s", "Test Connection Time Out.");
+		//log_error_write(srv, __FILE__, __LINE__, "s", "Test Connection Time Out.");
 		for (i = 0; i < srv -> conns -> used; ++i)
 		{
 			con = srv -> conns -> ptr[i];
