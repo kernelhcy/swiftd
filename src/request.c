@@ -665,10 +665,9 @@ int http_parse_request(server *srv, connection *con)
  					}
  					
  					*dot = '\0';
- 					r_v_s = version + 5;
- 					l_v_s = dot + 1;
+ 					l_v_s = version + 5;
+ 					r_v_s = dot + 1;
  					
- 					log_error_write(srv, __FILE__, __LINE__, "sdsd", "L version :", l_v_s, "R version :", r_v_s);
  					
  					long int r_v, l_v;
  					char *err;
@@ -1050,6 +1049,7 @@ int http_parse_request(server *srv, connection *con)
 	else if (con -> request.http_version == HTTP_VERSION_1_0)
 	{
 		//处理1.0版本的特殊要求。
+		con -> keep_alive = 0;
 	}
 	
 	switch(con -> request.http_method)
