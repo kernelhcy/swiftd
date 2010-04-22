@@ -59,7 +59,7 @@ int openDevNull(int fd)
 
 int log_error_open(server *srv)
 {
-	int close_stderr = 1;
+	int close_stderr = 0;
 
 	/*
 	 * perhaps someone wants to use syslog() 

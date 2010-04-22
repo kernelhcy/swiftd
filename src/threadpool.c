@@ -50,7 +50,7 @@ static void * thread_main(void *arg)
 		//debug_info("Thread %d get a job.", info -> ndx);
 
 		//运行作业
-		if (info -> job )
+		if (info -> job)
 		{
 			info -> job(info -> ctx);
 		}

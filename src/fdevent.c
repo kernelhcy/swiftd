@@ -159,7 +159,7 @@ int fdevent_poll(fdevent *ev, int timeout)
 	return ev -> poll(ev, timeout);
 }
 
-size_t fdevent_event_get_next_ndx(fdevent *ev, size_t ndx)
+int fdevent_event_get_next_ndx(fdevent *ev, int ndx)
 {
 	if (NULL == ev || NULL == ev -> event_get_next_ndx)
 	{
@@ -170,7 +170,7 @@ size_t fdevent_event_get_next_ndx(fdevent *ev, size_t ndx)
 	return ev -> event_get_next_ndx(ev, ndx);
 }
 
-int fdevent_event_get_revent(fdevent *ev, size_t ndx)
+int fdevent_event_get_revent(fdevent *ev, int ndx)
 {
 	if(NULL == ev || NULL == ev -> event_get_revent)
 	{
@@ -182,7 +182,7 @@ int fdevent_event_get_revent(fdevent *ev, size_t ndx)
 }
 
 
-int fdevent_event_get_fd(fdevent *ev, size_t ndx)
+int fdevent_event_get_fd(fdevent *ev, int ndx)
 {
 	if (NULL == ev || NULL == ev -> event_get_fd)
 	{

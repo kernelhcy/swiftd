@@ -96,6 +96,7 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 		{
 			if(0 == strncmp(ext, c -> file_ext, strlen(c -> file_ext)))
 			{
+				log_error_write(srv, __FILE__, __LINE__, "ssss", "File ext:", ext, "Content_t:", c -> content_type);
 				http_response_insert_header(srv, con, CONST_STR_LEN("Content-Type")
 													, c -> content_type, strlen(c -> content_type));
 				done = 1;

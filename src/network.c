@@ -181,7 +181,8 @@ static handler_t server_socket_fdevent_handler(void *srv, void *ctx, int revents
 	while( NULL != (con = connection_accept(srv, srv_sock)))
 	{
 		connection_set_state(srv, con, CON_STATE_REQUEST_START);
-		log_error_write(srv, __FILE__, __LINE__,"s", "start the state machine of the new connection.");
+		log_error_write(srv, __FILE__, __LINE__,"sd", "start the state machine of the new connection. fd:"
+												, con -> fd);
 		connection_state_machine(srv, con);
 	}
 	return HANDLER_FINISHED;

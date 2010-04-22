@@ -83,6 +83,7 @@ int fdevent_epoll_event_del(fdevent *ev, int fd)
 	{
 		fprintf(stderr, "(%s %d) epoll ctl EPOLL_CTL_DEL failed:%s fd %d\n", __FILE__, __LINE__
 							, strerror(errno), fd);
+		ev -> fdarray[fd].is_listened = 0;
 		return -1;
 	}
 	ev -> fdarray[fd].is_listened = 0;
@@ -90,7 +91,7 @@ int fdevent_epoll_event_del(fdevent *ev, int fd)
 	
 }
 
-int fdevent_epoll_event_get_revent(fdevent *ev, size_t ndx)
+int fdevent_epoll_event_get_revent(fdevent *ev, int ndx)
 {
 	if(NULL == ev || ndx < 0)
 	{
@@ -114,7 +115,7 @@ int fdevent_epoll_event_get_revent(fdevent *ev, size_t ndx)
 	return events;
 }
 
-int fdevent_epoll_event_get_fd(fdevent *ev, size_t ndx)
+int fdevent_epoll_event_get_fd(fdevent *ev, int ndx)
 {
 	if (NULL == ev || ndx < 0)
 	{
@@ -124,9 +125,9 @@ int fdevent_epoll_event_get_fd(fdevent *ev, size_t ndx)
 	return ev -> epoll_events[ndx].data.fd;
 }
 
-size_t fdevent_epoll_event_get_next_ndx(fdevent *ev, size_t ndx)
+int fdevent_epoll_event_get_next_ndx(fdevent *ev, int ndx)
 {
-	return ndx == 0 ? ndx : ndx + 1;
+	return ndx < 0 ? 0 : ndx + 1;
 }
 
 

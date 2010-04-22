@@ -274,12 +274,13 @@ connection * connection_get_new(server *srv)
 		return NULL;
 	}
 	
-	if (srv -> conns -> size >= srv -> max_conns)
+	if (srv -> conns -> used >= srv -> max_conns)
 	{
 		//连接数达到最大值。
 		return NULL;
 	}
 	
+	pthread_mutex_lock(&srv -> conns_lock);
 	/*
 	 * 首先检查conns数组中是否还有空间，如果有，申请一个新的connection结构体
 	 * 如果数组没有空间，则搜索数组中的connection，查看是否有连接处在close或
@@ -295,16 +296,19 @@ connection * connection_get_new(server *srv)
 		srv -> conns -> ptr[ndx] = (connection *)malloc(sizeof(connection));
 		if (NULL == srv -> conns -> ptr[ndx])
 		{
+			pthread_mutex_unlock(&srv -> conns_lock);
 			return NULL;
 		}
 		connection_init(srv, srv -> conns -> ptr[ndx]);
 		srv -> conns -> ptr[ndx] -> ndx = ndx;
 		++ srv -> conns -> used;
+		pthread_mutex_unlock(&srv -> conns_lock);
 		return srv -> conns -> ptr[ndx];
 	}
 	
 	if (srv -> conns -> used > srv -> conns -> size)
 	{
+		pthread_mutex_unlock(&srv -> conns_lock);
 		return NULL;
 	}
 	
@@ -316,6 +320,7 @@ connection * connection_get_new(server *srv)
 		{
 			connection_init(srv, srv -> conns -> ptr[i]);
 			srv -> conns -> ptr[i] -> ndx = i;
+			pthread_mutex_unlock(&srv -> conns_lock);
 			return srv -> conns -> ptr[i];
 		}
 	}
@@ -338,9 +343,11 @@ connection * connection_get_new(server *srv)
 		srv -> conns -> ptr[ndx] = (connection *)malloc(sizeof(connection));
 		connection_init(srv, srv -> conns -> ptr[ndx]);
 		srv -> conns -> ptr[ndx] -> ndx = ndx;
+		pthread_mutex_unlock(&srv -> conns_lock);
 		return srv -> conns -> ptr[ndx];
 	}
 	
+	pthread_mutex_unlock(&srv -> conns_lock);
 	return NULL;
 }
 
@@ -438,13 +445,14 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 		connection_set_state(srv, con, CON_STATE_ERROR);
 		return -1;
 	}
-	else if (len == 0)
+	
+	if (len == 0)
 	{
 		//对方关闭了链接。
 		log_error_write(srv, __FILE__, __LINE__, "s", "Client closes the connection.");
 		return -4;
 	}
-
+	
 	//数据没有读完。
 	if (len < need_to_read)
 	{
@@ -452,7 +460,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 		con -> is_readable = 1;
 	}
 	b -> used = len;
-	log_error_write(srv, __FILE__, __LINE__, "sdsb", "read data len: ", len, "the data :", b);
+	//log_error_write(srv, __FILE__, __LINE__, "sdsb", "read data len: ", len, "the data :", b);
 	
 	return 0;
 }
@@ -470,7 +478,6 @@ static int connection_handle_read(server *srv, connection *con)
 		switch(connection_network_read(srv, con, con -> read_queue))
 		{
 			case 0: 	//读取到数据。
-				con -> read_idle_ts = srv -> cur_ts;
 				break;
 			case -1: 	//出错。
 				con -> read_idle_ts = 0;
@@ -478,7 +485,6 @@ static int connection_handle_read(server *srv, connection *con)
 				break;
 			case -2: 	//非阻塞IO，但是没有数据可读。
 			case -3: 	//被信号中断。
-				con -> read_idle_ts = srv -> cur_ts;
 				con -> is_readable = 1;
 				break;
 			case -4: 	//连接关闭。
@@ -615,7 +621,6 @@ static int connection_handle_read_post(server *srv, connection *con)
 		switch(connection_network_read(srv, con, con -> request_content_queue))
 		{
 			case 0: 	//读取到数据。
-				con -> read_idle_ts = srv -> cur_ts;
 				break;
 			case -1: 	//出错。
 				con -> read_idle_ts = 0;
@@ -623,7 +628,6 @@ static int connection_handle_read_post(server *srv, connection *con)
 				break;
 			case -2: 	//非阻塞IO，但是没有数据可读。
 			case -3: 	//被信号中断。
-				con -> read_idle_ts = srv -> cur_ts;
 				con -> is_readable = 1;
 				break;
 			case -4: 	//连接关闭。
@@ -681,18 +685,14 @@ static int connection_handle_write(server *srv, connection *con)
 	{
 		case HANDLER_GO_ON:
 			log_error_write(srv, __FILE__, __LINE__, "s", "Write Going On.");
-			con -> is_writable = 0;
-			con -> write_request_ts = srv -> cur_ts;
 			return 0;
 		case HANDLER_FINISHED:
-			con -> is_writable = 0;
 			con -> write_request_ts = 0;
 			connection_set_state(srv, con, CON_STATE_RESPONSE_END);
 			log_error_write(srv, __FILE__, __LINE__, "s", "Write done. Go to Response End.");
 			return 0;
 		case HANDLER_ERROR:
 		default:
-			con -> is_writable = 0;
 			connection_set_state(srv, con, CON_STATE_ERROR);
 			return -1;
 	}
@@ -720,12 +720,14 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 	{
 		//log_error_write(srv, __FILE__, __LINE__, "sd", "readable fd:", con -> fd);
 		con -> is_readable = 1;
+		con -> read_idle_ts = srv -> cur_ts;
 	}
 	
 	if (revents & FDEVENT_OUT)
 	{
 		//log_error_write(srv, __FILE__, __LINE__, "sd", "writeable fd:", con -> fd);
 		con -> is_writable = 1;
+		con -> write_request_ts = srv -> cur_ts;
 	}
 	
 	if ((revents & FDEVENT_IN) && (revents & FDEVENT_OUT))
@@ -816,9 +818,10 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 			log_error_write(srv, __FILE__, __LINE__, "ssd", "accept failed:"
 							, strerror(errno), errno);
 		}
+		
 		return NULL;	
 	}
-	
+	log_error_write(srv, __FILE__, __LINE__, "sd", "accept a fd:", fd);
 	connection *con = connection_get_new(srv);
 	if (NULL == con)
 	{
@@ -832,7 +835,7 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 	
 	fdevent_register(srv -> ev, fd, connection_fdevent_handler, (void *)con);
 	log_error_write(srv, __FILE__, __LINE__,"sd"
-				, "Register a connection socket fd in fdevent. fd:",fd);
+						, "Register a connection socket fd in fdevent. fd:",fd);
 	
 	//设置连接socket fd为非阻塞。
 	if (-1 == fdevent_fcntl(srv -> ev, con -> fd))
@@ -895,8 +898,10 @@ static int connection_handle_close(server *srv, connection *con)
 		log_error_write(srv, __FILE__, __LINE__, "ssd", "close error."
 							, strerror(errno), con -> fd);
 	}
-	
+	pthread_mutex_lock(&srv -> conns_lock);
 	connection_set_state(srv, con, CON_STATE_CONNECT);
+	pthread_mutex_unlock(&srv -> conns_lock);
+	
 	return 0;
 }
 
@@ -926,6 +931,11 @@ int connection_state_machine(server *srv, connection *con)
 				con -> read_idle_ts = srv -> cur_ts;
 				//读取数据。
 				connection_set_state(srv, con, CON_STATE_READ);
+				
+				/*
+				 * 试着读。没有数据，就在poll中等待。
+				 */
+				con -> is_readable = 1;
 				break;
 			case CON_STATE_REQUEST_END:
 			
@@ -1002,6 +1012,12 @@ int connection_state_machine(server *srv, connection *con)
 					connection_set_state(srv, con, CON_STATE_ERROR);
 					return;
 				}
+				
+				/*
+				 * 试着直接写数据。如果无法写，那么在poll中等待。
+				 */
+				con -> is_writable = 1;
+				
 				break;
 			case CON_STATE_RESPONSE_END:
 				//对上一个请求的数据进行清空。
@@ -1041,7 +1057,6 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_CONNECT:
-				connection_reset(srv, con);
 				connection_set_state(srv, con, CON_STATE_CONNECT);
 				break;
 			case CON_STATE_CLOSE:
@@ -1051,9 +1066,11 @@ int connection_state_machine(server *srv, connection *con)
 					log_error_write(srv, __FILE__, __LINE__, "s", "close error.");
 					close(con -> fd);
 				}
+				connection_reset(srv, con);
 				//连接关闭以后，连接处于connect状态，等待下一次连接。
 				connection_set_state(srv, con, CON_STATE_CONNECT);
 				//log_error_write(srv, __FILE__, __LINE__, "s", "close done.");
+				
 				break;
 			default:
 				log_error_write(srv, __FILE__, __LINE__, "sd", "Unknown state!", con -> state);
@@ -1089,7 +1106,7 @@ int connection_state_machine(server *srv, connection *con)
 			if (!chunkqueue_is_empty(con -> write_queue))
 			{
 				log_error_write(srv, __FILE__, __LINE__, "sd", "Add in fdevent WRITE. fd:", con -> fd);
-				fdevent_event_add(srv -> ev, con -> fd, FDEVENT_OUT | FDEVENT_IN);
+				fdevent_event_add(srv -> ev, con -> fd, FDEVENT_OUT);
 			} 
 			else
 			{

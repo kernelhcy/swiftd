@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
 	
 	//检测IO事件。
 	int n, fd, revents;
-	size_t ndx = 0;
+	int ndx = -1;
 	fdevent_handler handler;
 	void *ctx;
 	job_ctx *jc;
@@ -594,7 +594,7 @@ int main(int argc, char *argv[])
 	do
 	{
 		n = fdevent_poll(srv -> ev, 1000);
-		
+		ndx = -1;
 		if (srv -> cur_ts != time(NULL))
 		{
 			//a new second
@@ -612,16 +612,18 @@ int main(int argc, char *argv[])
 		{
 			memset(fds_with_event, 0, sizeof(fds_with_event));
 		}
-		
-		ndx = 0;
+
 		while(--n >= 0)
 		{
 			ndx = fdevent_event_get_next_ndx(srv -> ev, ndx);
+			log_error_write(srv, __FILE__, __LINE__, "sd", "fdevent_get_next_ndx : ", ndx);
 			fd  = fdevent_event_get_fd(srv -> ev, ndx);
+			log_error_write(srv, __FILE__, __LINE__, "sd", "fdevent_get_fd : ", fd);
 			fds_with_event[fd] = 1; 		//标记其发生了IO事件。
 			revents = fdevent_event_get_revent(srv -> ev, ndx);
 			handler = fdevent_event_get_handler(srv -> ev, fd);
 			ctx = fdevent_event_get_context(srv -> ev, fd);			
+			
 			
 			//log_error_write(srv, __FILE__, __LINE__, "sd", "fd got IO event.", fd);
 			

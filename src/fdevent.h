@@ -87,9 +87,9 @@ typedef struct fdevent
 	void (*free)(struct fdevent *ev);
 	int (*event_add)(struct fdevent *ev, int fd, int events);
 	int (*event_del)(struct fdevent *ev, int fd);
-	int (*event_get_revent)(struct fdevent *ev, size_t ndx);
-	int (*event_get_fd)(struct fdevent *ev, size_t ndx);
-	size_t (*event_get_next_ndx)(struct fdevent *ev, size_t ndx);
+	int (*event_get_revent)(struct fdevent *ev, int ndx);
+	int (*event_get_fd)(struct fdevent *ev, int ndx);
+	int (*event_get_next_ndx)(struct fdevent *ev, int ndx);
 	int (*poll)(struct fdevent *ev, int timeout);
 	int (*fcntl)(struct fdevent *ev, int fd);
 	
@@ -106,9 +106,9 @@ void fdevent_free(fdevent *ev);
 
 int fdevent_event_add(fdevent *ev, int fd, int events);
 int fdevent_event_del(fdevent *ev, int fd);
-int fdevent_event_get_revent(fdevent *ev, size_t ndx);
-int fdevent_event_get_fd(fdevent *ev, size_t ndx);
-size_t fdevent_event_get_next_ndx(fdevent *ev, size_t ndx);
+int fdevent_event_get_revent(fdevent *ev, int ndx);
+int fdevent_event_get_fd(fdevent *ev, int ndx);
+int fdevent_event_get_next_ndx(fdevent *ev, int ndx);
 
 int fdevent_poll(fdevent *ev, int timeout);
 int fdevent_fcntl_set(fdevent *ev, int fd);
