@@ -278,6 +278,8 @@ typedef struct
 	array *split_vals; 		//用于分割headers中的value。
 
 	void *srv_sock;			/* server socket */
+	
+	int first_read; 		//标记是否是第一次进行数据读取。
 } connection;
 
 //连接数组

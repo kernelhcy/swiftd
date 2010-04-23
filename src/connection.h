@@ -24,4 +24,7 @@ void connection_set_state(server *srv, connection *con, connection_state_t state
  */
 connection* connection_accept(server *srv, server_socket *srv_sock);
 
+//获取状态对应的字符串名称。
+const char *connection_get_state_name(connection_state_t s);
+
 #endif

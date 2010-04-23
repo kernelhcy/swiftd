@@ -590,6 +590,7 @@ int main(int argc, char *argv[])
 	int fds_with_event[srv -> max_fds]; //记录当前发生了IO事件的fd。用于测试连接超时。
 	size_t i;
 	connection *con;
+	memset(fds_with_event, 0, sizeof(fds_with_event));
 	
 	do
 	{
@@ -607,11 +608,7 @@ int main(int argc, char *argv[])
 			log_error_write(srv, __FILE__, __LINE__, "ss", "fdevent_poll error."
 						, strerror(errno));
 		}
-		
-		if(n > 0)
-		{
-			memset(fds_with_event, 0, sizeof(fds_with_event));
-		}
+		memset(fds_with_event, 0, sizeof(fds_with_event));
 
 		while(--n >= 0)
 		{
@@ -652,11 +649,10 @@ int main(int argc, char *argv[])
 		/*
 		 * 轮训所有的连接。对于没有发生IO事件，且是READ， WRITE状态的连接进行超时判断。
 		 */
-		log_error_write(srv, __FILE__, __LINE__, "s", "Test Connection Time Out.");
 		for (i = 0; i < srv -> conns -> used; ++i)
 		{
 			
-			con = srv -> conns -> ptr[i];
+			con = srv -> conns -> ptr[i];			
 			if(fds_with_event[con -> fd] || CON_STATE_CONNECT == con -> state)
 			{
 				//发生了IO事件。
@@ -665,7 +661,7 @@ int main(int argc, char *argv[])
 			
 			if (CON_STATE_READ == con -> state || CON_STATE_READ_POST == con -> state)
 			{
-				if (srv -> cur_ts - con -> read_idle_ts > srv -> srvconf.max_read_idle)
+				if (srv -> cur_ts - con -> read_idle_ts >= srv -> srvconf.max_read_idle)
 				{
 					//读取数据超时。
 					log_error_write(srv, __FILE__, __LINE__, "sd", "Read TIME OUT. fd:", con -> fd);
@@ -675,7 +671,7 @@ int main(int argc, char *argv[])
 			}
 			else if(CON_STATE_WRITE == con -> state)
 			{
-				if (srv -> cur_ts - con -> write_request_ts > srv -> srvconf.max_write_idle)
+				if (srv -> cur_ts - con -> write_request_ts >= srv -> srvconf.max_write_idle)
 				{
 					//写超时。
 					log_error_write(srv, __FILE__, __LINE__, "sd", "Write TIME OUT. fd:", con -> fd);

@@ -6,7 +6,7 @@
 #include "request.h"
 #include "error_page.h"
 #include "network_write.h"
-
+#include "keyvalue.h"
 #include <errno.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -33,7 +33,7 @@ static struct connection_state_name
 };
 
 //获得状态对应的字符串名称。
-static const char *connection_get_state_name(connection_state_t s)
+const char *connection_get_state_name(connection_state_t s)
 {
 	int i = 0;
 	for (; state_names[i].state != -1; ++i)
@@ -410,8 +410,8 @@ void connection_free(server *srv, connection *con)
 static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 {
 	int need_to_read;
-	
-	con -> is_readable = 0;
+
+	con -> read_idle_ts = srv -> cur_ts;
 
 	//获取需要读取的数据长度.
 	if (-1 == ioctl(con -> fd, FIONREAD, &need_to_read))
@@ -420,9 +420,9 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 		return -1;
 	}
 	//log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
-		
+
 	buffer *b = chunkqueue_get_append_buffer(cq);
-	buffer_prepare_copy(b, need_to_read);
+	buffer_prepare_copy(b, need_to_read + 64);
 
 	int len;
 	//log_error_write(srv, __FILE__, __LINE__, "s", "read data from client.");
@@ -438,7 +438,6 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 		if (errno == EINTR)
 		{
 			//被信号中断。
-			con -> is_readable = 1;
 			return -3;
 		}
 
@@ -448,8 +447,18 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 	
 	if (len == 0)
 	{
-		//对方关闭了链接。
-		log_error_write(srv, __FILE__, __LINE__, "s", "Client closes the connection.");
+		/*
+		 * 在进入状态READ之后，立即进行了数据的读取。这个时候读取到的数据可能是0.
+		 * 但是连接没有关闭。因此要不能关闭连接。
+		 */
+		if(con -> first_read)
+		{
+			con -> first_read = 0;
+			return 0;
+		}
+		
+		//对c方关闭了链接。
+		log_error_write(srv, __FILE__, __LINE__, "sd", "Client closes the connection. fd:", con -> fd);
 		return -4;
 	}
 	
@@ -457,12 +466,61 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 	//数据没有读完。
 	if (len < need_to_read)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "s", "Read Going On.");
+		log_error_write(srv, __FILE__, __LINE__, "sd", "Read Going On. fd:", con -> fd);
 		con -> is_readable = 1;
 	}
 	
 	b -> used = len;
-	log_error_write(srv, __FILE__, __LINE__, "sdsb", "read data len: ", len, "the data :", b);
+	log_error_write(srv, __FILE__, __LINE__, "sdsbsd", "read data len: ", len, "the data :", b
+																	, "fd:", con -> fd);
+	
+	//删除read_queue中的空的chunk
+	chunk *c;
+	for (c = cq -> first; c;)
+	{
+		if (cq -> first == c && c -> mem -> used == 0)
+		{
+			/*
+			 * 第一个节点就是空的。什么数据都没读到。
+			 * 删除之。
+			 */
+			cq -> first = c -> next;
+			if (cq -> first == NULL)
+			{
+				cq -> last = NULL;
+			}
+			
+			c -> next = cq -> unused;
+			cq -> unused = c;
+			++cq -> unused_chunks;
+
+			c = cq -> first;
+		} 
+		else if (c -> next && c -> next -> mem -> used == 0)
+		{
+			chunk *fc;
+			/*
+			 * 下一个节点是最后一个节点。空的。删除。
+			 */
+			fc = c -> next;
+			c -> next = fc -> next;
+
+			fc -> next = cq -> unused;
+			cq -> unused = fc;
+			cq -> unused_chunks++;
+
+			if (c -> next == NULL)
+			{
+				cq -> last = c;
+			}
+
+			c = c -> next;
+		} 
+		else
+		{
+			c = c -> next;
+		}
+	}
 	
 	return 0;
 }
@@ -473,28 +531,35 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
  */
 static int connection_handle_read(server *srv, connection *con)
 {
+	int is_close = 0;
 
 	if (con -> is_readable)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "s", "Read the data from the client.");
+		log_error_write(srv, __FILE__, __LINE__, "sd", "Read the data from the client. fd:", con -> fd);
+		
 		switch(connection_network_read(srv, con, con -> read_queue))
 		{
 			case 0: 	//读取到数据。
+				con -> is_readable = 0;
 				break;
 			case -1: 	//出错。
 				con -> read_idle_ts = 0;
 				connection_set_state(srv, con, CON_STATE_ERROR);
 				break;
 			case -2: 	//非阻塞IO，但是没有数据可读。
+				con -> is_readable = 0;
+				break;
 			case -3: 	//被信号中断。
 				con -> is_readable = 1;
 				break;
 			case -4: 	//连接关闭。
-				connection_set_state(srv, con, CON_STATE_CLOSE);
+				con -> is_readable = 0;
+				is_close = 1;
 				break;
 			default: 
 				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown status.");
 				connection_set_state(srv, con, CON_STATE_ERROR);
+				con -> is_readable = 0;
 				break;
 		}
 	}
@@ -506,6 +571,7 @@ static int connection_handle_read(server *srv, connection *con)
 	off_t offset;
 	int found = 0; //标记是否找到了http结束标志“\r\n\r\n”
 	//log_error_write(srv, __FILE__, __LINE__, "s", "try to find the \\r\\n\\r\\n");
+	
 	for (c = con -> read_queue -> first;;)
 	{
 		if (found || NULL == c)
@@ -513,7 +579,7 @@ static int connection_handle_read(server *srv, connection *con)
 			break;
 		}
 		b = c -> mem;
-		//log_error_write(srv, __FILE__, __LINE__, "sb", "chunk mem:", b);
+		//log_error_write(srv, __FILE__, __LINE__, "sb", "---------+-chunk mem:", b);
 		for (i = c -> offset; i < b -> used; ++i)
 		{
 			if (b -> ptr[i] == '\r')
@@ -525,7 +591,7 @@ static int connection_handle_read(server *srv, connection *con)
 					{
 						found = 1;
 						lastchunk = c;
-						c -> offset = i + 4;
+						c -> offset = i + 4 + 1; //必须加1！！！！！！！！！
 						break;
 					}
 				}
@@ -541,7 +607,7 @@ static int connection_handle_read(server *srv, connection *con)
 						{
 							found = 1;
 							lastchunk = c -> next;
-							c -> next -> offset = misschars;
+							c -> next -> offset = misschars + 1;//必须加1！！！！！！！！！
 							break;
 						}
 					}
@@ -565,9 +631,9 @@ static int connection_handle_read(server *srv, connection *con)
 		{			
 			if (c == lastchunk)
 			{
-				buffer_append_memory(b, c -> mem -> ptr, c -> offset + 1);
+				buffer_append_memory(b, c -> mem -> ptr, c -> offset);
 				
-				if (c -> offset == c -> mem -> used)
+				if (c -> offset >= c -> mem -> used)
 				{
 					c -> finished = 1;
 				}
@@ -593,6 +659,13 @@ static int connection_handle_read(server *srv, connection *con)
 		//log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 		connection_set_state(srv, con, CON_STATE_REQUEST_END);
 	}
+	else if(is_close)
+	{
+		//没有得到足够的HTTP头数据，但连接已经关闭。
+		log_error_write(srv, __FILE__, __LINE__, "s"
+				, "The connection is close, but we do not get enough data. ERROR!");
+		connection_set_state(srv, con, CON_STATE_ERROR);
+	}
 	
 	return 0;
 }
@@ -607,21 +680,26 @@ static int connection_handle_read_post(server *srv, connection *con)
 		switch(connection_network_read(srv, con, con -> request_content_queue))
 		{
 			case 0: 	//读取到数据。
+				con -> is_readable = 0;
 				break;
 			case -1: 	//出错。
 				con -> read_idle_ts = 0;
 				connection_set_state(srv, con, CON_STATE_ERROR);
 				break;
 			case -2: 	//非阻塞IO，但是没有数据可读。
+				con -> is_readable = 0;
+				break;
 			case -3: 	//被信号中断。
 				con -> is_readable = 1;
 				break;
 			case -4: 	//连接关闭。
+				con -> is_readable = 0;
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			default: 
 				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown status.");
 				connection_set_state(srv, con, CON_STATE_ERROR);
+				con -> is_readable = 0;
 				break;
 		}
 	}
@@ -696,6 +774,7 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 	server *srv = (server *)serv;
 	connection *con = (connection *)context;
 	
+	
 	if (NULL == serv || NULL == context)
 	{
 		return HANDLER_ERROR;
@@ -704,24 +783,24 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 	//log_error_write(srv, __FILE__, __LINE__, "sdsd", "fd:", con -> fd, "events:", revents);
 	if (revents & FDEVENT_IN)
 	{
-		//log_error_write(srv, __FILE__, __LINE__, "sd", "readable fd:", con -> fd);
+		log_error_write(srv, __FILE__, __LINE__, "sd", "readable fd:", con -> fd);
 		con -> is_readable = 1;
-		con -> read_idle_ts = srv -> cur_ts;
 	}
 	
 	if (revents & FDEVENT_OUT)
 	{
-		//log_error_write(srv, __FILE__, __LINE__, "sd", "writeable fd:", con -> fd);
+		log_error_write(srv, __FILE__, __LINE__, "sd", "writeable fd:", con -> fd);
 		con -> is_writable = 1;
 		con -> write_request_ts = srv -> cur_ts;
 	}
 	
-	if ((revents & FDEVENT_IN) && (revents & FDEVENT_OUT))
+	if (revents & ~(FDEVENT_IN | FDEVENT_OUT))
 	{
 		/*
-		 * 同时可读可写意味着出错。。。
+		 * 同时不可读不可写意味着出错。。。
 		 */
-		 
+		con -> is_writable = 0;
+		con -> is_readable = 0;
 		if (revents & FDEVENT_ERR)
 		{
 			connection_set_state(srv, con, CON_STATE_ERROR);
@@ -921,7 +1000,8 @@ int connection_state_machine(server *srv, connection *con)
 				/*
 				 * 试着读。没有数据，就在poll中等待。
 				 */
-				//con -> is_readable = 1;
+				con -> is_readable = 1;
+				con -> first_read = 1;
 				break;
 			case CON_STATE_REQUEST_END:
 			
@@ -933,6 +1013,7 @@ int connection_state_machine(server *srv, connection *con)
 				{
 					//读取POST数据。
 					connection_set_state(srv, con, CON_STATE_READ_POST);
+					con -> is_readable = 1;
 					break;
 				}
 				
@@ -1009,10 +1090,21 @@ int connection_state_machine(server *srv, connection *con)
 				//对上一个请求的数据进行清空。
 				connection_clear(srv, con);
 				
+				if(chunkqueue_is_empty(con -> read_queue))
+				{	
+					/*
+					 * 对于HTTP/1.1，连接是保持的。
+					 * 在建立连接之后，client会将所有的请求头一次发送完毕。
+					 * 如果在处理完所有的请求之后。不在保持连接。
+					 */
+					con -> keep_alive = 0;
+					log_error_write(srv, __FILE__, __LINE__, "s", "Donot keep alive.");
+				}
+				
 				if(con -> keep_alive)
 				{
 					connection_set_state(srv, con, CON_STATE_REQUEST_START);
-					//log_error_write(srv, __FILE__, __LINE__, "s", "response end. keep alive.........");
+					log_error_write(srv, __FILE__, __LINE__, "s", "response end. keep alive.........");
 					break;
 				}
 				
@@ -1026,7 +1118,7 @@ int connection_state_machine(server *srv, connection *con)
 				joblist_append(srv, con);
 				//状态的改变视读取数据的情况而定。
 				connection_handle_read(srv, con);
-				
+				con -> first_read = 0;
 				break;
 			case CON_STATE_READ_POST:
 				joblist_append(srv, con);
@@ -1085,6 +1177,7 @@ int connection_state_machine(server *srv, connection *con)
 		case CON_STATE_READ:
 		case CON_STATE_READ_POST:
 			log_error_write(srv, __FILE__, __LINE__, "sd", "Add in fdevent READ. fd:", con -> fd);
+			con -> read_idle_ts = srv -> cur_ts;
 			fdevent_event_add(srv -> ev, con -> fd, FDEVENT_IN);
 			break;
 		case CON_STATE_WRITE:
