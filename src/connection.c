@@ -419,7 +419,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 		log_error_write(srv, __FILE__, __LINE__, "s", "ioctl error. FIONREAD.");
 		return -1;
 	}
-	//log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
+	log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
 
 	buffer *b = chunkqueue_get_append_buffer(cq);
 	buffer_prepare_copy(b, need_to_read + 64);

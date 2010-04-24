@@ -179,7 +179,19 @@ static server *server_init(void)
 	srv -> tp = NULL;
 	srv -> jc_nodes = NULL;
 	pthread_mutex_init(&srv -> jc_lock, NULL);
-
+	
+	srv -> conf_ity = (conf_inotify*)malloc(sizeof(conf_inotify));
+	if(NULL == srv -> conf_ity)
+	{
+		log_error_write(srv, __FILE__, __LINE__, "malloc conf_ity failed.");
+		return NULL;
+	}
+	srv -> conf_ity -> fd = -1;
+	srv -> conf_ity -> plugin_conf_wd = -1;
+	srv -> conf_ity -> server_conf_wd = -1;
+	srv -> conf_ity -> events = NULL;
+	srv -> conf_ity -> events_len = 0;
+	
 	return srv;
 }
 
@@ -229,6 +241,8 @@ static void server_free(server * srv)
 		jc = jc -> next;
 		free(tmp);
 	}
+	
+	free(srv -> conf_ity);
 	
 	free(srv);
 }
@@ -542,6 +556,16 @@ int main(int argc, char *argv[])
 	
 	}
 	
+	//初始化线程池
+	if (NULL == (srv -> tp = tp_init(1, 20)))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "Init the thread pool failed.");
+		network_close(srv);
+		plugin_free(srv);
+		server_free(srv);
+		return -1;
+	}
+	
 	//初始化fdevent系统。
 	log_error_write(srv, __FILE__, __LINE__, "s", "Starting fdevent system...");
 	if (NULL == (srv -> ev = fdevent_init(srv -> max_fds + 1, srv -> event_handler)))
@@ -556,8 +580,6 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	
-	//初始化文件监测系统。
-	
 	//加载插件。
 	if (-1 == plugin_load(srv))
 	{
@@ -568,10 +590,18 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	
-	//初始化线程池
-	if (NULL == (srv -> tp = tp_init(1, 20)))
+	//初始化文件监测系统。
+	if( -1 == plugin_conf_inotify_init(srv, srv -> srvconf.plugin_conf_file -> ptr))
 	{
-		log_error_write(srv, __FILE__, __LINE__, "s", "Init the thread pool failed.");
+		log_error_write(srv, __FILE__, __LINE__, "s", "Inotify init failed.");
+		network_close(srv);
+		plugin_free(srv);
+		server_free(srv);
+		return -1;
+	}
+	if( -1 == plugin_conf_inotify_register_fdevent(srv, srv -> conf_ity -> fd))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "Inotify register fdevent failed.");
 		network_close(srv);
 		plugin_free(srv);
 		server_free(srv);
@@ -621,8 +651,7 @@ int main(int argc, char *argv[])
 			handler = fdevent_event_get_handler(srv -> ev, fd);
 			ctx = fdevent_event_get_context(srv -> ev, fd);			
 			
-			
-			//log_error_write(srv, __FILE__, __LINE__, "sd", "fd got IO event.", fd);
+			log_error_write(srv, __FILE__, __LINE__, "sd", "fd got IO event.", fd);
 			
 			jc = job_ctx_get_new(srv);
 			if (NULL == jc)

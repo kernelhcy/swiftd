@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include <error.h>
 #include <errno.h>
+#include <sys/ioctl.h>
 
 /**
  * 从plugin的配置文件中读取插件的名称和路径。
@@ -23,7 +24,7 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 	if (srv -> srvconf.plugin_conf_file == NULL 
 			|| buffer_is_empty(srv -> srvconf.plugin_conf_file))
 	{
-		log_error_write(srv, __FILE__, __LINE__, "s", "No plugin configure file.");
+		log_error_write(srv, __FILE__, __LINE__, "s", "No plugin configure file is spesified.");
 		return -1;
 	}
 
@@ -31,7 +32,7 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 	{
 		log_error_write(srv, __FILE__, __LINE__, "sbs", "Open plugin configure file error."
 						, srv -> srvconf.plugin_conf_file , strerror(errno));
-		return -2;
+		return -1;
 	}
 
 	/*
@@ -213,17 +214,10 @@ int plugin_load(server *srv)
 	pthread_mutex_lock(&srv -> plugin_lock);
 	
 	//读取配置文件。
-	switch(plugin_read_name_path(srv, srv -> plugins_np))
+	if(-1 == plugin_read_name_path(srv, srv -> plugins_np))
 	{
-		case -1:
-			pthread_mutex_unlock(&srv -> plugin_lock);
-			return -1;
-		case -2:
-			/*
-			 * 插件配置文件不存在。没有插件需要加载。
-			 */
-			pthread_mutex_unlock(&srv -> plugin_lock);
-			return 0;
+		pthread_mutex_unlock(&srv -> plugin_lock);
+		return -1;
 	}
 
 	int i;
@@ -379,6 +373,7 @@ void plugin_free(server *srv)
 		plugin_plugin_free(srv -> plugins -> ptr[i]);
 	}
 	free(srv -> plugins -> ptr);
+	srv -> plugins -> size = 0;
 	
 	for (i = 0; i < srv -> plugins_np -> used; ++i)
 	{
@@ -408,6 +403,7 @@ void plugin_free(server *srv)
 			return HANDLER_GO_ON;\
 		}\
 		\
+		pthread_mutex_lock(&srv -> plugin_lock);\
 		plugin *p;\
 		size_t i;\
 		handler_t ht;\
@@ -425,13 +421,16 @@ void plugin_free(server *srv)
 					case HANDLER_WAIT_FOR_EVENT:\
 					case HANDLER_ERROR:\
 					case HANDLER_WAIT_FOR_FD:\
+						pthread_mutex_unlock(&srv -> plugin_lock);\
 						return ht;\
 					default:\
 						log_error_write(srv, __FILE__, __LINE__, "Unknown handler type.");\
+						pthread_mutex_unlock(&srv -> plugin_lock);\
 						return HANDLER_ERROR;\
 				}\
 			}\
 		}\
+		pthread_mutex_unlock(&srv -> plugin_lock);\
 		return ht;\
 	}
 	
@@ -468,6 +467,7 @@ void plugin_free(server *srv)
 			return HANDLER_GO_ON;\
 		}\
 		\
+		pthread_mutex_lock(&srv -> plugin_lock);\
 		plugin *p;\
 		size_t i;\
 		handler_t ht;\
@@ -485,13 +485,16 @@ void plugin_free(server *srv)
 					case HANDLER_WAIT_FOR_EVENT:\
 					case HANDLER_ERROR:\
 					case HANDLER_WAIT_FOR_FD:\
+						pthread_mutex_unlock(&srv -> plugin_lock);\
 						return ht;\
 					default:\
 						log_error_write(srv, __FILE__, __LINE__, "Unknown handler type.");\
+						pthread_mutex_unlock(&srv -> plugin_lock);\
 						return HANDLER_ERROR;\
 				}\
 			}\
 		}\
+		pthread_mutex_unlock(&srv -> plugin_lock);\
 		return ht;\
 	}
 	
@@ -500,5 +503,163 @@ void plugin_free(server *srv)
 	
 #undef PLUGIN_CALL_HANDLER
 
+int plugin_conf_inotify_init(server *srv, const char *conf_path)
+{
+	if(NULL == srv || NULL == conf_path)
+	{
+		return -1;
+	}
+	
+	int fd;
+	if(-1 == (fd = inotify_init()))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "ss", "inotify_init failed. ", strerror(errno));
+		return -1;
+	}
+	srv -> conf_ity -> fd = fd;
+	log_error_write(srv, __FILE__, __LINE__, "sd", "inotify_init return fd:", fd);
+	
+	int wd;
+	//监测配置文件的删除，创建和修改事件。
+	if(-1 == (wd = inotify_add_watch(fd, conf_path, IN_DELETE_SELF | IN_MODIFY | IN_CREATE)))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "sss", "inotify_add_watch failed."
+							, strerror(errno), conf_path);
+		close(fd);
+		return -1;
+	}
+	srv -> conf_ity -> plugin_conf_wd = wd;
+	log_error_write(srv, __FILE__, __LINE__, "sds", "inotify_add_watch return fd:", wd, conf_path);
+	
+	if(NULL == (srv -> conf_ity -> events = 
+						(struct inotify_event *)calloc(2, sizeof(struct inotify_event))))
+	{
+		close(fd);
+		return -1;
+	}
+	
+	return fd;
+}
 
+/*
+ * 关闭谗间配置文件监测
+ */
+int plugin_conf_inotify_free(server *srv)
+{
+	if(NULL == srv)
+	{
+		return -1;
+	}
+
+	close(srv -> conf_ity -> fd);
+	free(srv -> conf_ity -> events);
+	return 0;
+}
+
+/*
+ * inotify监测fd的IO事件处理函数。
+ */
+static handler_t plugin_conf_inotify_fdevent_handler(void *srv, void *ctx, int revents)
+{
+	if(NULL == srv || NULL == ctx || 0 == revents)
+	{
+		return HANDLER_ERROR;
+	}
+	
+	server *s = (server*)srv;
+	conf_inotify *ity = (conf_inotify*)ctx;
+	
+	/*
+	 * 对于监测fd，只可能是读事件。
+	 */
+	if(!(revents & FDEVENT_IN))
+	{
+		log_error_write(s, __FILE__, __LINE__, "s", "Bad events. We only need FDEVENT_IN!");
+		return HANDLER_ERROR;
+	}
+	log_error_write(srv, __FILE__, __LINE__, "s", "some configure file is changed.");
+	
+	int nlen;
+	if(-1 == ioctl(ity -> fd, FIONREAD, &nlen))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "ioctl failed.");
+		return HANDLER_ERROR;
+	}
+	
+	int rlen;
+	if(-1 == (rlen = read(ity -> fd, ity -> events, nlen)))
+	{
+		log_error_write(s, __FILE__, __LINE__, "ss", "read inotify event failed.", strerror(errno));
+		return HANDLER_ERROR;
+	}
+	
+	int cnt = rlen / sizeof(* ity -> events);
+	int i;
+	for(i = 0; i < cnt; ++i)
+	{
+		if(ity -> events[i].wd == ity -> plugin_conf_wd)
+		{
+			if(ity -> events[i].mask & IN_MODIFY)
+			{
+				/*
+				 * 插件配置文件被修改。加载插件。
+				 */
+				log_error_write(s, __FILE__, __LINE__, "s", "Plugin configure file is modified.");
+				plugin_load(srv);
+			}
+			else if(ity -> events[i].mask & IN_CREATE)
+			{
+				/*
+				 * 插件配置文件被创建。加载插件。
+				 */
+				log_error_write(s, __FILE__, __LINE__, "s", "Plugin configure file is created.");
+				plugin_load(srv);
+			}
+			else if(ity -> events[i].mask & IN_DELETE_SELF)
+			{
+				/*
+				 * 插件配置文件被删除。
+				 */
+				log_error_write(s, __FILE__, __LINE__, "s", "Plugin configure file is deleted.");
+				pthread_mutex_lock(&s -> plugin_lock);
+				plugin_free(s);
+				pthread_mutex_unlock(&s -> plugin_lock);
+			}
+			
+			break;
+		}
+	}
+	return HANDLER_FINISHED;
+}
+
+int plugin_conf_inotify_register_fdevent(server *srv, int fd)
+{
+	if (NULL == srv || -1 == fd)
+	{
+		return -1;
+	}
+	
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Register inotify fd in fdevent. fd:", fd);
+	
+	if(-1 == fdevent_register(srv -> ev, fd,  plugin_conf_inotify_fdevent_handler, srv -> conf_ity))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "sd", "fdevent_register inotify fd failed.", fd);
+		return -1;
+	}
+	/*
+	if(-1 == fdevent_fcntl(srv -> ev, fd))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "sd", "fcntl set inotify fd failed.", fd);
+		return -1;
+	}
+	*/
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Add inotify fd in fdevent. fd:", fd);
+	if(-1 == fdevent_event_add(srv -> ev, fd, FDEVENT_IN))
+	{
+		log_error_write(srv, __FILE__, __LINE__, "sd", "fdevent add inotify fd failed.", fd);
+		return -1;
+	}
+	
+	return 0;
+}
 

@@ -153,5 +153,28 @@ handler_t plugin_handle_connection_reeset(server *srv, connection *con);
 handler_t plugin_handle_trigger(server *srv);
 handler_t plugin_handle_cleanup(server *srv);
 
+/*
+ * 监测配置文件。
+ */
+
+#include <sys/inotify.h>
+
+
+/*
+ * 初始化插件配置文件监测系统。
+ * conf_path ： 插件配置文件的完整路径名。
+ * 成功，返回配置文件的监测的fd。出错，返回-1.
+ */
+int plugin_conf_inotify_init(server *srv, const char *conf_path);
+
+/*
+ * 关闭谗间配置文件监测
+ */
+int plugin_conf_inotify_free(server *srv);
+
+/*
+ * 将inotify的fd加入到fdevent系统中。
+ */
+int plugin_conf_inotify_register_fdevent(server *srv, int fd);
 
 #endif

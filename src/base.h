@@ -11,7 +11,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <pthread.h>
-
+#include <sys/inotify.h>
 
 #include <limits.h>
 
@@ -314,6 +314,19 @@ typedef struct
 	size_t used;
 }socket_array;
 
+//inotify监测系统监测配置文件的更改。
+//数据。
+typedef struct 
+{
+	int fd;							//inotify系统的fd
+	
+	int plugin_conf_wd;				//插件配置文件监测fd。
+	int server_conf_wd;				//服务器配置文件监测fd。
+	
+	struct inotify_event *events; 	//事件结构体数组。
+	size_t events_len; 				//数组的长度。
+}conf_inotify;
+
 /////////////////////  作业  ////////////////////////
 /*
  * 定义一个job的环境。
@@ -433,12 +446,14 @@ typedef struct server
 	connections *conns; 			//连接数组
 	pthread_mutex_t conns_lock;
 	
-	connections *joblist; 		//作业列表
+	connections *joblist; 			//作业列表
 	pthread_mutex_t joblist_lock;
 	
-	connections *fdwaitqueue; 	//描述符等待队列
+	connections *fdwaitqueue; 		//描述符等待队列
 	pthread_mutex_t fdwaitqueue_lock;
 
+	conf_inotify *conf_ity; 		//inotify系统所需要的数据。
+	
 	int (*network_backend_write) (struct server * srv, connection * con, int fd, chunkqueue * cq);
 
 }server;

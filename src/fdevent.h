@@ -111,7 +111,7 @@ int fdevent_event_get_fd(fdevent *ev, int ndx);
 int fdevent_event_get_next_ndx(fdevent *ev, int ndx);
 
 int fdevent_poll(fdevent *ev, int timeout);
-int fdevent_fcntl_set(fdevent *ev, int fd);
+int fdevent_fcntl(fdevent *ev, int fd);
 
 
 fdevent_handler fdevent_event_get_handler(fdevent *ev, int fd);
