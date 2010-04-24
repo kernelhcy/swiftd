@@ -9,75 +9,43 @@ BITSET_BITS	bitset.c	12;"	d	file:
 BITSET_MASK	bitset.c	19;"	d	file:
 BITSET_USED	bitset.c	33;"	d	file:
 BITSET_WORD	bitset.c	25;"	d	file:
-BUFFER_APPEND_SLASH	buffer.h	136;"	d
-BUFFER_APPEND_STRING_CONST	buffer.h	130;"	d
-BUFFER_COPY_STRING_CONST	buffer.h	133;"	d
+BUFFER_APPEND_SLASH	buffer.h	137;"	d
+BUFFER_APPEND_STRING_CONST	buffer.h	131;"	d
+BUFFER_COPY_STRING_CONST	buffer.h	134;"	d
 BUFFER_MAX_REUSE_SIZE	settings.h	15;"	d
 BUFFER_PIECE_SIZE	buffer.c	85;"	d	file:
 BV	settings.h	4;"	d
-COMP_HTTP_COOKIE	array.h	/^	COMP_HTTP_COOKIE,$/;"	e	enum:__anon44
-COMP_HTTP_HOST	array.h	/^	COMP_HTTP_HOST,$/;"	e	enum:__anon44
-COMP_HTTP_QUERY_STRING	array.h	/^	COMP_HTTP_QUERY_STRING,$/;"	e	enum:__anon44
-COMP_HTTP_REFERER	array.h	/^	COMP_HTTP_REFERER,$/;"	e	enum:__anon44
-COMP_HTTP_REMOTE_IP	array.h	/^	COMP_HTTP_REMOTE_IP,$/;"	e	enum:__anon44
-COMP_HTTP_REQUEST_METHOD	array.h	/^	COMP_HTTP_REQUEST_METHOD,$/;"	e	enum:__anon44
-COMP_HTTP_SCHEME	array.h	/^	COMP_HTTP_SCHEME,$/;"	e	enum:__anon44
-COMP_HTTP_URL	array.h	/^	COMP_HTTP_URL,$/;"	e	enum:__anon44
-COMP_HTTP_USER_AGENT	array.h	/^	COMP_HTTP_USER_AGENT,$/;"	e	enum:__anon44
-COMP_LAST_ELEMENT	array.h	/^	COMP_LAST_ELEMENT$/;"	e	enum:__anon44
-COMP_SERVER_SOCKET	array.h	/^	COMP_SERVER_SOCKET,$/;"	e	enum:__anon44
-COMP_UNSET	array.h	/^	COMP_UNSET,$/;"	e	enum:__anon44
-COND_RESULT_FALSE	base.h	/^	COND_RESULT_FALSE,$/;"	e	enum:__anon23
-COND_RESULT_TRUE	base.h	/^	COND_RESULT_TRUE$/;"	e	enum:__anon23
-COND_RESULT_UNSET	base.h	/^	COND_RESULT_UNSET, $/;"	e	enum:__anon23
-CONFIG_COND_EQ	array.h	/^	CONFIG_COND_EQ,		 \/** == *\/$/;"	e	enum:__anon43
-CONFIG_COND_MATCH	array.h	/^	CONFIG_COND_MATCH,			 \/** =~ *\/$/;"	e	enum:__anon43
-CONFIG_COND_NE	array.h	/^	CONFIG_COND_NE,		 \/** != *\/$/;"	e	enum:__anon43
-CONFIG_COND_NOMATCH	array.h	/^	CONFIG_COND_NOMATCH			 \/** !~ *\/$/;"	e	enum:__anon43
-CONFIG_COND_UNSET	array.h	/^	CONFIG_COND_UNSET,$/;"	e	enum:__anon43
-CONST_BUF_LEN	buffer.h	140;"	d
-CONST_STR_LEN	buffer.h	139;"	d
-CON_STATE_CLOSE	base.h	/^	CON_STATE_CLOSE 			\/\/close 连接关闭$/;"	e	enum:__anon22
-CON_STATE_CONNECT	base.h	/^	CON_STATE_CONNECT, 			\/\/connect 连接开始 $/;"	e	enum:__anon22
-CON_STATE_ERROR	base.h	/^	CON_STATE_ERROR, 			\/\/error 出错$/;"	e	enum:__anon22
-CON_STATE_HANDLE_REQUEST	base.h	/^	CON_STATE_HANDLE_REQUEST, 	\/\/handelreq 处理请求$/;"	e	enum:__anon22
-CON_STATE_READ	base.h	/^	CON_STATE_READ, 			\/\/read 读取并解析请求$/;"	e	enum:__anon22
-CON_STATE_READ_POST	base.h	/^	CON_STATE_READ_POST, 		\/\/readpost 读取post数据$/;"	e	enum:__anon22
-CON_STATE_REQUEST_END	base.h	/^	CON_STATE_REQUEST_END, 		\/\/reqend 读取请求结束$/;"	e	enum:__anon22
-CON_STATE_REQUEST_START	base.h	/^	CON_STATE_REQUEST_START, 	\/\/reqstart 开始读取请求$/;"	e	enum:__anon22
-CON_STATE_RESPONSE_END	base.h	/^	CON_STATE_RESPONSE_END, 	\/\/respend 回复结束$/;"	e	enum:__anon22
-CON_STATE_RESPONSE_START	base.h	/^	CON_STATE_RESPONSE_START, 	\/\/respstart 开始回复$/;"	e	enum:__anon22
-CON_STATE_WRITE	base.h	/^	CON_STATE_WRITE, 			\/\/write 回复写数据$/;"	e	enum:__anon22
-CRC32C	crc32.c	3;"	d	file:
-DATA_IS_STRING	array.h	18;"	d
-DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:__anon40
-DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:__anon41
-DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:__anon42
-DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:__anon45
-DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:__anon46
-DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:_data_config
+CONST_BUF_LEN	buffer.h	141;"	d
+CONST_STR_LEN	buffer.h	140;"	d
+CON_STATE_CLOSE	base.h	/^	CON_STATE_CLOSE 			\/\/close 连接关闭$/;"	e	enum:__anon16
+CON_STATE_CONNECT	base.h	/^	CON_STATE_CONNECT, 			\/\/connect 连接开始 $/;"	e	enum:__anon16
+CON_STATE_ERROR	base.h	/^	CON_STATE_ERROR, 			\/\/error 出错$/;"	e	enum:__anon16
+CON_STATE_HANDLE_REQUEST	base.h	/^	CON_STATE_HANDLE_REQUEST, 	\/\/handelreq 处理请求$/;"	e	enum:__anon16
+CON_STATE_READ	base.h	/^	CON_STATE_READ, 			\/\/read 读取并解析请求$/;"	e	enum:__anon16
+CON_STATE_READ_POST	base.h	/^	CON_STATE_READ_POST, 		\/\/readpost 读取post数据$/;"	e	enum:__anon16
+CON_STATE_REQUEST_END	base.h	/^	CON_STATE_REQUEST_END, 		\/\/reqend 读取请求结束$/;"	e	enum:__anon16
+CON_STATE_REQUEST_START	base.h	/^	CON_STATE_REQUEST_START, 	\/\/reqstart 开始读取请求$/;"	e	enum:__anon16
+CON_STATE_RESPONSE_END	base.h	/^	CON_STATE_RESPONSE_END, 	\/\/respend 回复结束$/;"	e	enum:__anon16
+CON_STATE_RESPONSE_START	base.h	/^	CON_STATE_RESPONSE_START, 	\/\/respstart 开始回复$/;"	e	enum:__anon16
+CON_STATE_WRITE	base.h	/^	CON_STATE_WRITE, 			\/\/write 回复写数据$/;"	e	enum:__anon16
+CRLF	base.h	28;"	d
+DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:__anon36
+DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:__anon37
+DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:__anon38
 DATA_UNSET	array.h	/^	DATA_UNSET;$/;"	m	struct:data_unset
-DATA_UNSET	array.h	47;"	d
-DEBUG_ARRAY	array.c	349;"	d	file:
-DIRECT	base.h	/^typedef enum { DIRECT, EXTERNAL } connection_type;$/;"	e	enum:__anon11
-Decode	md5.c	/^static void Decode(output, input, len)$/;"	f	file:
-ENCODING_HEX	buffer.h	/^	ENCODING_HEX,				\/* encode string as hex *\/$/;"	e	enum:__anon36
-ENCODING_HTML	buffer.h	/^	ENCODING_HTML,				\/* & becomes &amp; and so on *\/$/;"	e	enum:__anon36
-ENCODING_HTTP_HEADER	buffer.h	/^	ENCODING_HTTP_HEADER		\/* encode \\n with \\t\\n *\/$/;"	e	enum:__anon36
-ENCODING_MINIMAL_XML	buffer.h	/^	ENCODING_MINIMAL_XML,		\/* minimal encoding for xml *\/$/;"	e	enum:__anon36
-ENCODING_REL_URI	buffer.h	/^	ENCODING_REL_URI,			\/* for coding a rel-uri (\/with$/;"	e	enum:__anon36
-ENCODING_REL_URI_PART	buffer.h	/^	ENCODING_REL_URI_PART,		\/* same as ENC_REL_URL plus coding \/ too as %2F $/;"	e	enum:__anon36
-ENCODING_UNSET	buffer.h	/^	ENCODING_UNSET,$/;"	e	enum:__anon36
-ERRORLOG_FILE	base.h	/^	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;$/;"	e	enum:server::__anon30
-ERRORLOG_STDERR	base.h	/^	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;$/;"	e	enum:server::__anon30
-ERRORLOG_SYSLOG	base.h	/^	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;$/;"	e	enum:server::__anon30
-ETAG_H	etag.h	2;"	d
-ETAG_USE_INODE	etag.h	/^	ETAG_USE_INODE = 1,  	\/\/包含文件的i节点号。$/;"	e	enum:__anon54
-ETAG_USE_MTIME	etag.h	/^	ETAG_USE_MTIME = 2,  	\/\/包含文件最后一次修改的时间。$/;"	e	enum:__anon54
-ETAG_USE_SIZE	etag.h	/^	ETAG_USE_SIZE = 4    	\/\/包含文件的byte数。$/;"	e	enum:__anon54
-EXTERNAL	base.h	/^typedef enum { DIRECT, EXTERNAL } connection_type;$/;"	e	enum:__anon11
-Encode	md5.c	/^static void Encode(output, input, len)$/;"	f	file:
-F	md5.c	81;"	d	file:
+DATA_UNSET	array.h	30;"	d
+DIRECT	base.h	/^typedef enum { DIRECT, EXTERNAL } connection_type;$/;"	e	enum:__anon8
+ENCODING_HEX	buffer.h	/^	ENCODING_HEX,				\/* encode string as hex *\/$/;"	e	enum:__anon33
+ENCODING_HTML	buffer.h	/^	ENCODING_HTML,				\/* & becomes &amp; and so on *\/$/;"	e	enum:__anon33
+ENCODING_HTTP_HEADER	buffer.h	/^	ENCODING_HTTP_HEADER		\/* encode \\n with \\t\\n *\/$/;"	e	enum:__anon33
+ENCODING_MINIMAL_XML	buffer.h	/^	ENCODING_MINIMAL_XML,		\/* minimal encoding for xml *\/$/;"	e	enum:__anon33
+ENCODING_REL_URI	buffer.h	/^	ENCODING_REL_URI,			\/* for coding a rel-uri (\/with$/;"	e	enum:__anon33
+ENCODING_REL_URI_PART	buffer.h	/^	ENCODING_REL_URI_PART,		\/* same as ENC_REL_URL plus coding \/ too as %2F $/;"	e	enum:__anon33
+ENCODING_UNSET	buffer.h	/^	ENCODING_UNSET,$/;"	e	enum:__anon33
+ERRORLOG_FILE	base.h	/^	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;$/;"	e	enum:server::__anon25
+ERRORLOG_STDERR	base.h	/^	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;$/;"	e	enum:server::__anon25
+ERRORLOG_SYSLOG	base.h	/^	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;$/;"	e	enum:server::__anon25
+EXTERNAL	base.h	/^typedef enum { DIRECT, EXTERNAL } connection_type;$/;"	e	enum:__anon8
 FDEVENT_ERR	fdevent.h	35;"	d
 FDEVENT_HANDLER_EPOLL	fdevent.h	/^	FDEVENT_HANDLER_EPOLL$/;"	e	enum:__anon2
 FDEVENT_HANDLER_SELECT	fdevent.h	/^	FDEVENT_HANDLER_SELECT,$/;"	e	enum:__anon2
@@ -87,186 +55,148 @@ FDEVENT_IN	fdevent.h	33;"	d
 FDEVENT_NVAL	fdevent.h	38;"	d
 FDEVENT_OUT	fdevent.h	34;"	d
 FDEVENT_PRI	fdevent.h	36;"	d
-FF	md5.c	95;"	d	file:
 FILE_CACHE_MAX	settings.h	7;"	d
 FILE_CHUNK	chunk.h	/^	enum { UNUSED_CHUNK, MEM_CHUNK, FILE_CHUNK } type;$/;"	e	enum:chunk::__anon4
-G	md5.c	82;"	d	file:
-GG	md5.c	100;"	d	file:
-H	md5.c	83;"	d	file:
+FLAGS	Makefile	/^FLAGS=-g$/;"	m
 HANDLER_COMEBACK	settings.h	/^	HANDLER_COMEBACK,$/;"	e	enum:__anon1
 HANDLER_ERROR	settings.h	/^	HANDLER_ERROR,$/;"	e	enum:__anon1
 HANDLER_FINISHED	settings.h	/^	HANDLER_FINISHED,$/;"	e	enum:__anon1
 HANDLER_GO_ON	settings.h	/^	HANDLER_GO_ON,$/;"	e	enum:__anon1
 HANDLER_UNSET	settings.h	/^	HANDLER_UNSET,$/;"	e	enum:__anon1
 HANDLER_WAIT_FOR_EVENT	settings.h	/^	HANDLER_WAIT_FOR_EVENT,$/;"	e	enum:__anon1
-HANDLER_WAIT_FOR_FD	settings.h	/^	HANDLER_WAIT_FOR_FD$/;"	e	enum:__anon1
+HANDLER_WAIT_FOR_FD	settings.h	/^	HANDLER_WAIT_FOR_FD,$/;"	e	enum:__anon1
 HAVE_SYS_EPOLL_H	config.h	4;"	d
 HAVE_SYS_SELECT_H	config.h	5;"	d
-HH	md5.c	105;"	d	file:
-HTTP_AUTH_BASIC	keyvalue.h	/^typedef enum { HTTP_AUTH_BASIC, HTTP_AUTH_DIGEST } httpauth_type;$/;"	e	enum:__anon52
-HTTP_AUTH_DIGEST	keyvalue.h	/^typedef enum { HTTP_AUTH_BASIC, HTTP_AUTH_DIGEST } httpauth_type;$/;"	e	enum:__anon52
-HTTP_CONNECTION	base.h	120;"	d
-HTTP_CONTENT_LENGTH	base.h	121;"	d
-HTTP_DATE	base.h	122;"	d
-HTTP_LOCATION	base.h	123;"	d
-HTTP_METHOD_CHECKIN	keyvalue.h	/^	HTTP_METHOD_CHECKIN,$/;"	e	enum:__anon47
-HTTP_METHOD_CHECKOUT	keyvalue.h	/^	HTTP_METHOD_CHECKOUT,$/;"	e	enum:__anon47
-HTTP_METHOD_CONNECT	keyvalue.h	/^	HTTP_METHOD_CONNECT$/;"	e	enum:__anon47
-HTTP_METHOD_COPY	keyvalue.h	/^	HTTP_METHOD_COPY,$/;"	e	enum:__anon47
-HTTP_METHOD_DELETE	keyvalue.h	/^	HTTP_METHOD_DELETE,$/;"	e	enum:__anon47
-HTTP_METHOD_GET	keyvalue.h	/^	HTTP_METHOD_GET,$/;"	e	enum:__anon47
-HTTP_METHOD_HEAD	keyvalue.h	/^	HTTP_METHOD_HEAD,$/;"	e	enum:__anon47
-HTTP_METHOD_LABEL	keyvalue.h	/^	HTTP_METHOD_LABEL,$/;"	e	enum:__anon47
-HTTP_METHOD_LOCK	keyvalue.h	/^	HTTP_METHOD_LOCK,$/;"	e	enum:__anon47
-HTTP_METHOD_MERGE	keyvalue.h	/^	HTTP_METHOD_MERGE,$/;"	e	enum:__anon47
-HTTP_METHOD_MKACTIVITY	keyvalue.h	/^	HTTP_METHOD_MKACTIVITY,$/;"	e	enum:__anon47
-HTTP_METHOD_MKCOL	keyvalue.h	/^	HTTP_METHOD_MKCOL,$/;"	e	enum:__anon47
-HTTP_METHOD_MOVE	keyvalue.h	/^	HTTP_METHOD_MOVE,$/;"	e	enum:__anon47
-HTTP_METHOD_OPTIONS	keyvalue.h	/^	HTTP_METHOD_OPTIONS,$/;"	e	enum:__anon47
-HTTP_METHOD_POST	keyvalue.h	/^	HTTP_METHOD_POST,$/;"	e	enum:__anon47
-HTTP_METHOD_PROPFIND	keyvalue.h	/^	HTTP_METHOD_PROPFIND,		\/* WebDAV *\/$/;"	e	enum:__anon47
-HTTP_METHOD_PROPPATCH	keyvalue.h	/^	HTTP_METHOD_PROPPATCH,$/;"	e	enum:__anon47
-HTTP_METHOD_PUT	keyvalue.h	/^	HTTP_METHOD_PUT,$/;"	e	enum:__anon47
-HTTP_METHOD_REPORT	keyvalue.h	/^	HTTP_METHOD_REPORT,			\/* DeltaV *\/$/;"	e	enum:__anon47
-HTTP_METHOD_UNCHECKOUT	keyvalue.h	/^	HTTP_METHOD_UNCHECKOUT,$/;"	e	enum:__anon47
-HTTP_METHOD_UNLOCK	keyvalue.h	/^	HTTP_METHOD_UNLOCK,$/;"	e	enum:__anon47
-HTTP_METHOD_UNSET	keyvalue.h	/^	HTTP_METHOD_UNSET = -1,$/;"	e	enum:__anon47
-HTTP_METHOD_VERSION_CONTROL	keyvalue.h	/^	HTTP_METHOD_VERSION_CONTROL,$/;"	e	enum:__anon47
-HTTP_STATUS	base.h	119;"	d
-HTTP_TRANSFER_ENCODING_CHUNKED	base.h	/^		HTTP_TRANSFER_ENCODING_IDENTITY, HTTP_TRANSFER_ENCODING_CHUNKED$/;"	e	enum:__anon16::__anon17
-HTTP_TRANSFER_ENCODING_IDENTITY	base.h	/^		HTTP_TRANSFER_ENCODING_IDENTITY, HTTP_TRANSFER_ENCODING_CHUNKED$/;"	e	enum:__anon16::__anon17
-HTTP_VERSION_1_0	keyvalue.h	/^typedef enum { HTTP_VERSION_UNSET = -1, HTTP_VERSION_1_0, HTTP_VERSION_1_1$/;"	e	enum:__anon48
-HTTP_VERSION_1_1	keyvalue.h	/^typedef enum { HTTP_VERSION_UNSET = -1, HTTP_VERSION_1_0, HTTP_VERSION_1_1$/;"	e	enum:__anon48
-HTTP_VERSION_UNSET	keyvalue.h	/^typedef enum { HTTP_VERSION_UNSET = -1, HTTP_VERSION_1_0, HTTP_VERSION_1_1$/;"	e	enum:__anon48
-I	md5.c	84;"	d	file:
-II	md5.c	110;"	d	file:
+HTTP_AUTH_BASIC	keyvalue.h	/^	HTTP_AUTH_BASIC, $/;"	e	enum:__anon43
+HTTP_AUTH_DIGEST	keyvalue.h	/^	HTTP_AUTH_DIGEST $/;"	e	enum:__anon43
+HTTP_CONNECTION	base.h	51;"	d
+HTTP_CONTENT_LENGTH	base.h	52;"	d
+HTTP_DATE	base.h	53;"	d
+HTTP_LOCATION	base.h	54;"	d
+HTTP_METHOD_CHECKIN	keyvalue.h	/^	HTTP_METHOD_CHECKIN,$/;"	e	enum:__anon39
+HTTP_METHOD_CHECKOUT	keyvalue.h	/^	HTTP_METHOD_CHECKOUT,$/;"	e	enum:__anon39
+HTTP_METHOD_CONNECT	keyvalue.h	/^	HTTP_METHOD_CONNECT$/;"	e	enum:__anon39
+HTTP_METHOD_COPY	keyvalue.h	/^	HTTP_METHOD_COPY,$/;"	e	enum:__anon39
+HTTP_METHOD_DELETE	keyvalue.h	/^	HTTP_METHOD_DELETE,$/;"	e	enum:__anon39
+HTTP_METHOD_GET	keyvalue.h	/^	HTTP_METHOD_GET,$/;"	e	enum:__anon39
+HTTP_METHOD_HEAD	keyvalue.h	/^	HTTP_METHOD_HEAD,$/;"	e	enum:__anon39
+HTTP_METHOD_LABEL	keyvalue.h	/^	HTTP_METHOD_LABEL,$/;"	e	enum:__anon39
+HTTP_METHOD_LOCK	keyvalue.h	/^	HTTP_METHOD_LOCK,$/;"	e	enum:__anon39
+HTTP_METHOD_MERGE	keyvalue.h	/^	HTTP_METHOD_MERGE,$/;"	e	enum:__anon39
+HTTP_METHOD_MKACTIVITY	keyvalue.h	/^	HTTP_METHOD_MKACTIVITY,$/;"	e	enum:__anon39
+HTTP_METHOD_MKCOL	keyvalue.h	/^	HTTP_METHOD_MKCOL,$/;"	e	enum:__anon39
+HTTP_METHOD_MOVE	keyvalue.h	/^	HTTP_METHOD_MOVE,$/;"	e	enum:__anon39
+HTTP_METHOD_OPTIONS	keyvalue.h	/^	HTTP_METHOD_OPTIONS,$/;"	e	enum:__anon39
+HTTP_METHOD_POST	keyvalue.h	/^	HTTP_METHOD_POST,$/;"	e	enum:__anon39
+HTTP_METHOD_PROPFIND	keyvalue.h	/^	HTTP_METHOD_PROPFIND,		\/* WebDAV *\/$/;"	e	enum:__anon39
+HTTP_METHOD_PROPPATCH	keyvalue.h	/^	HTTP_METHOD_PROPPATCH,$/;"	e	enum:__anon39
+HTTP_METHOD_PUT	keyvalue.h	/^	HTTP_METHOD_PUT,$/;"	e	enum:__anon39
+HTTP_METHOD_REPORT	keyvalue.h	/^	HTTP_METHOD_REPORT,			\/* DeltaV *\/$/;"	e	enum:__anon39
+HTTP_METHOD_UNCHECKOUT	keyvalue.h	/^	HTTP_METHOD_UNCHECKOUT,$/;"	e	enum:__anon39
+HTTP_METHOD_UNLOCK	keyvalue.h	/^	HTTP_METHOD_UNLOCK,$/;"	e	enum:__anon39
+HTTP_METHOD_UNSET	keyvalue.h	/^	HTTP_METHOD_UNSET = -1,$/;"	e	enum:__anon39
+HTTP_METHOD_VERSION_CONTROL	keyvalue.h	/^	HTTP_METHOD_VERSION_CONTROL,$/;"	e	enum:__anon39
+HTTP_STATUS	base.h	50;"	d
+HTTP_VERSION_1_0	keyvalue.h	/^	HTTP_VERSION_1_0, $/;"	e	enum:__anon40
+HTTP_VERSION_1_1	keyvalue.h	/^	HTTP_VERSION_1_1$/;"	e	enum:__anon40
+HTTP_VERSION_UNSET	keyvalue.h	/^	HTTP_VERSION_UNSET = -1, $/;"	e	enum:__anon40
 INET_NTOP_CACHE_MAX	settings.h	6;"	d
-KVB	keyvalue.h	71;"	d
+KVB	keyvalue.h	64;"	d
 LI_ltostr	buffer.c	/^int LI_ltostr(char *buf, long val) $/;"	f
 MAX_HTTP_REQUEST_HEADER	settings.h	23;"	d
-MD5Transform	md5.c	/^static void MD5Transform(state, block)$/;"	f	file:
-MD5_CTX	md5.h	/^} MD5_CTX;$/;"	t	typeref:struct:__anon37
-MD5_Final	md5.c	/^void MD5_Final(digest, context)$/;"	f
-MD5_Init	md5.c	/^void MD5_Init(context)$/;"	f
-MD5_Update	md5.c	/^void MD5_Update(context, _input, inputLen)$/;"	f
-MD5_memcpy	md5.c	/^static void MD5_memcpy(output, input, len)$/;"	f	file:
-MD5_memcpy	md5.c	62;"	d	file:
-MD5_memset	md5.c	/^static void MD5_memset(output, value, len)$/;"	f	file:
-MD5_memset	md5.c	67;"	d	file:
 MEM_CHUNK	chunk.h	/^	enum { UNUSED_CHUNK, MEM_CHUNK, FILE_CHUNK } type;$/;"	e	enum:chunk::__anon4
-O_BINARY	base.h	27;"	d
-O_LARGEFILE	base.h	31;"	d
-PADDING	md5.c	/^static unsigned char PADDING[64] = {$/;"	v	file:
-POINTER	md5.h	36;"	d
-ROTATE_LEFT	md5.c	89;"	d	file:
-S11	md5.c	40;"	d	file:
-S12	md5.c	41;"	d	file:
-S13	md5.c	42;"	d	file:
-S14	md5.c	43;"	d	file:
-S21	md5.c	44;"	d	file:
-S22	md5.c	45;"	d	file:
-S23	md5.c	46;"	d	file:
-S24	md5.c	47;"	d	file:
-S31	md5.c	48;"	d	file:
-S32	md5.c	49;"	d	file:
-S33	md5.c	50;"	d	file:
-S34	md5.c	51;"	d	file:
-S41	md5.c	52;"	d	file:
-S42	md5.c	53;"	d	file:
-S43	md5.c	54;"	d	file:
-S44	md5.c	55;"	d	file:
-SEGFAULT	buffer.h	143;"	d
-SET	fde_epoll.c	143;"	d	file:
-SET	fde_epoll.c	154;"	d	file:
-SHUT_WR	base.h	51;"	d
-SIZE_MAX	base.h	36;"	d
-SIZE_MAX	base.h	38;"	d
-SSIZE_MAX	base.h	43;"	d
-TYPE_ARRAY	array.h	/^	TYPE_ARRAY, 	\/* 数组类型 *\/$/;"	e	enum:__anon38
-TYPE_CONFIG	array.h	/^	TYPE_CONFIG 	\/* CONFIG类型 *\/$/;"	e	enum:__anon38
-TYPE_COUNT	array.h	/^	TYPE_COUNT, 	\/* COUNT类型 *\/$/;"	e	enum:__anon38
-TYPE_FASTCGI	array.h	/^	TYPE_FASTCGI, 	\/* FASTCGI类型 *\/$/;"	e	enum:__anon38
-TYPE_INTEGER	array.h	/^	TYPE_INTEGER, 	\/* 整数类型 *\/$/;"	e	enum:__anon38
-TYPE_STRING	array.h	/^	TYPE_STRING, 	\/* 字符串类型 *\/$/;"	e	enum:__anon38
-TYPE_UNSET	array.h	/^	TYPE_UNSET, 	\/* 数据的类型未设置，$/;"	e	enum:__anon38
-T_CONFIG_ARRAY	base.h	/^	T_CONFIG_ARRAY,$/;"	e	enum:__anon8
-T_CONFIG_BOOLEAN	base.h	/^	T_CONFIG_BOOLEAN,$/;"	e	enum:__anon8
-T_CONFIG_DEPRECATED	base.h	/^	T_CONFIG_DEPRECATED,$/;"	e	enum:__anon8
-T_CONFIG_LOCAL	base.h	/^	T_CONFIG_LOCAL,$/;"	e	enum:__anon8
-T_CONFIG_SCOPE_CONNECTION	base.h	/^	T_CONFIG_SCOPE_CONNECTION$/;"	e	enum:__anon9
-T_CONFIG_SCOPE_SERVER	base.h	/^	T_CONFIG_SCOPE_SERVER,$/;"	e	enum:__anon9
-T_CONFIG_SCOPE_UNSET	base.h	/^	T_CONFIG_SCOPE_UNSET,$/;"	e	enum:__anon9
-T_CONFIG_SHORT	base.h	/^	T_CONFIG_SHORT,$/;"	e	enum:__anon8
-T_CONFIG_STRING	base.h	/^	T_CONFIG_STRING,$/;"	e	enum:__anon8
-T_CONFIG_UNSET	base.h	/^	T_CONFIG_UNSET,$/;"	e	enum:__anon8
-T_CONFIG_UNSUPPORTED	base.h	/^	T_CONFIG_UNSUPPORTED$/;"	e	enum:__anon8
-UINT2	md5.h	35;"	d
-UINT4	md5.h	34;"	d
-UNUSED	buffer.h	144;"	d
+OBJS	Makefile	/^OBJS=${OBJSPATH}\/buffer.o ${OBJSPATH}\/log.o  ${OBJSPATH}\/chunk.o ${OBJSPATH}\/connection.o ${OBJSPATH}\/array.o\\$/;"	m
+OBJSPATH	Makefile	/^OBJSPATH=..\/objects$/;"	m
+PLUGIN_CALL_HANDLER	plugin.c	389;"	d	file:
+PLUGIN_CALL_HANDLER	plugin.c	448;"	d	file:
+PLUGIN_CALL_HANDLER	plugin.c	453;"	d	file:
+PLUGIN_CALL_HANDLER	plugin.c	504;"	d	file:
+PLUGIN_DATA	plugin.h	/^	PLUGIN_DATA;$/;"	m	struct:plugin_data
+PLUGIN_DATA	plugin.h	23;"	d
+PLUGIN_REGISTER_SLOT	plugin.c	311;"	d	file:
+PLUGIN_REGISTER_SLOT	plugin.c	355;"	d	file:
+PLUGIN_SLOT_CLEANUP	plugin.h	/^	PLUGIN_SLOT_CLEANUP,$/;"	e	enum:__anon28
+PLUGIN_SLOT_CONNECTION_CLOSE	plugin.h	/^	PLUGIN_SLOT_CONNECTION_CLOSE,$/;"	e	enum:__anon28
+PLUGIN_SLOT_CONNECTION_RESET	plugin.h	/^	PLUGIN_SLOT_CONNECTION_RESET,$/;"	e	enum:__anon28
+PLUGIN_SLOT_DOCROOT	plugin.h	/^	PLUGIN_SLOT_DOCROOT,$/;"	e	enum:__anon28
+PLUGIN_SLOT_HANDLE_SUBREQUEST	plugin.h	/^	PLUGIN_SLOT_HANDLE_SUBREQUEST,$/;"	e	enum:__anon28
+PLUGIN_SLOT_JOBLIST	plugin.h	/^	PLUGIN_SLOT_JOBLIST,$/;"	e	enum:__anon28
+PLUGIN_SLOT_PHYSICAL	plugin.h	/^	PLUGIN_SLOT_PHYSICAL,$/;"	e	enum:__anon28
+PLUGIN_SLOT_SET_DEFAULT	plugin.h	/^	PLUGIN_SLOT_SET_DEFAULT= 0,$/;"	e	enum:__anon28
+PLUGIN_SLOT_SIGHUP	plugin.h	/^	PLUGIN_SLOT_SIGHUP,$/;"	e	enum:__anon28
+PLUGIN_SLOT_SIZE	plugin.h	/^	PLUGIN_SLOT_SIZE, 			\/\/slot的数量。$/;"	e	enum:__anon28
+PLUGIN_SLOT_SUBREQUEST_END	plugin.h	/^	PLUGIN_SLOT_SUBREQUEST_END,$/;"	e	enum:__anon28
+PLUGIN_SLOT_SUBREQUEST_START	plugin.h	/^	PLUGIN_SLOT_SUBREQUEST_START,$/;"	e	enum:__anon28
+PLUGIN_SLOT_TRIGGER	plugin.h	/^	PLUGIN_SLOT_TRIGGER,$/;"	e	enum:__anon28
+PLUGIN_SLOT_URL_CLEAN	plugin.h	/^	PLUGIN_SLOT_URL_CLEAN,$/;"	e	enum:__anon28
+PLUGIN_SLOT_URL_RAW	plugin.h	/^	PLUGIN_SLOT_URL_RAW,$/;"	e	enum:__anon28
+SET	fde_epoll.c	152;"	d	file:
+SET	fde_epoll.c	163;"	d	file:
+TYPE_ARRAY	array.h	/^	TYPE_ARRAY, 	\/* 数组类型 *\/$/;"	e	enum:__anon34
+TYPE_INTEGER	array.h	/^	TYPE_INTEGER, 	\/* 整数类型 *\/$/;"	e	enum:__anon34
+TYPE_STRING	array.h	/^	TYPE_STRING, 	\/* 字符串类型 *\/$/;"	e	enum:__anon34
+TYPE_UNSET	array.h	/^	TYPE_UNSET, 	\/* 数据的类型未设置，这几种数据类型使用了面向对象的设计思想，$/;"	e	enum:__anon34
+UNUSED	buffer.h	143;"	d
 UNUSED_CHUNK	chunk.h	/^	enum { UNUSED_CHUNK, MEM_CHUNK, FILE_CHUNK } type;$/;"	e	enum:chunk::__anon4
 USE_EPOLL	fdevent.h	10;"	d
 USE_SELECT	fdevent.h	15;"	d
-_BASE_H_	base.h	2;"	d
 _BITSET_H_	bitset.h	2;"	d
 _BUFFER_H_	buffer.h	2;"	d
 _CHUNK_H_	chunk.h	2;"	d
 _GNU_SOURCE	log.c	1;"	d	file:
 _JOB_LIST_H_	joblist.h	2;"	d
-_KEY_VALUE_H_	keyvalue.h	2;"	d
 _LOG_H_	log.h	2;"	d
-_SPLAY_TREE_H_	splaytree.h	2;"	d
 _SWIFTD_SETTINGS_H_	settings.h	2;"	d
-__CPMFIGURE_H	configure.h	2;"	d
 __FDEVENT_H	fdevent.h	2;"	d
 __MAIN_H	main.h	2;"	d
+__SWIFTD_BASE_H_	base.h	2;"	d
+__SWIFTD_CONFIGURE_H	configure.h	2;"	d
 __SWIFTD_CONFIG_H	config.h	2;"	d
+__SWIFTD_CONNECTION_H	connection.h	2;"	d
+__SWIFTD_ERROR_PAGE_H	error_page.h	2;"	d
+__SWIFTD_KEY_VALUE_H_	keyvalue.h	2;"	d
 __SWIFTD_NETWORK_H	network.h	2;"	d
+__SWIFTD_NETWORK_WRITE_H	network_write.h	2;"	d
+__SWIFTD_PLUGIN_H	plugin.h	2;"	d
+__SWIFTD_REQUEST_H	request.h	2;"	d
+__SWIFTD_RESPONSE_H	response.h	2;"	d
 __THREAD_POOL_H	threadpool.h	2;"	d
-__crc32cr_table_h__	crc32.h	2;"	d
-_data_config	array.h	/^struct _data_config {$/;"	s
-accept_encoding	base.h	/^	int accept_encoding;$/;"	m	struct:__anon15
-addr	base.h	/^	sock_addr addr;$/;"	m	struct:__anon27
-allow_http11	base.h	/^	unsigned short allow_http11;$/;"	m	struct:__anon21
-array	array.h	/^} array;$/;"	t	typeref:struct:__anon39
-array_free	array.c	/^void array_free(array *a) {$/;"	f
-array_get_element	array.c	/^data_unset *array_get_element(array *a, const char *key) {$/;"	f
-array_get_index	array.c	/^static int array_get_index(array *a, const char *key, size_t keylen, int *rndx) {$/;"	f	file:
-array_get_max_key_length	array.c	/^size_t array_get_max_key_length(array *a) {$/;"	f
+accept_encoding	base.h	/^	int accept_encoding;$/;"	m	struct:__anon10
+addr	base.h	/^	sock_addr addr;$/;"	m	struct:__anon19
+array	array.h	/^} array;$/;"	t	typeref:struct:__anon35
+array_free	array.c	/^void array_free(array *a) $/;"	f
+array_get_element	array.c	/^data_unset *array_get_element(array *a, const char *key) $/;"	f
+array_get_index	array.c	/^static int array_get_index(array *a, const char *key, size_t keylen, int *rndx) $/;"	f	file:
+array_get_max_key_length	array.c	/^size_t array_get_max_key_length(array *a) $/;"	f
 array_get_unused_element	array.c	/^data_unset *array_get_unused_element(array *a, data_type_t t) $/;"	f
-array_init	array.c	/^array *array_init(void) {$/;"	f
-array_init_array	array.c	/^array *array_init_array(array *src) {$/;"	f
+array_init	array.c	/^array *array_init(void) $/;"	f
+array_init_array	array.c	/^array *array_init_array(array *src) $/;"	f
 array_insert_unique	array.c	/^int array_insert_unique(array *a, data_unset *str) $/;"	f
-array_pop	array.c	/^data_unset *array_pop(array *a) {$/;"	f
-array_print	array.c	/^int array_print(array *a, int depth) {$/;"	f
-array_print_indent	array.c	/^void array_print_indent(int depth) {$/;"	f
-array_replace	array.c	/^data_unset *array_replace(array *a, data_unset *du) {$/;"	f
+array_pop	array.c	/^data_unset *array_pop(array *a) $/;"	f
+array_replace	array.c	/^data_unset *array_replace(array *a, data_unset *du)$/;"	f
 array_reset	array.c	/^void array_reset(array *a) $/;"	f
-authed_user	base.h	/^	buffer *authed_user;$/;"	m	struct:__anon24
-authority	base.h	/^	buffer *authority;$/;"	m	struct:__anon18
-balance	array.h	/^	size_t balance;$/;"	m	struct:__anon46
-basedir	base.h	/^	buffer *basedir;			\/* path = "(basedir)(.*)" *\/$/;"	m	struct:__anon19
-bindhost	base.h	/^	buffer *bindhost; 		\/\/绑定的地址$/;"	m	struct:__anon20
-bits	bitset.h	/^	size_t *bits;$/;"	m	struct:__anon31
-bitset	bitset.h	/^} bitset;$/;"	t	typeref:struct:__anon31
+authority	base.h	/^	buffer *authority;		\/\/user:password$/;"	m	struct:__anon12
+bindhost	base.h	/^	buffer *bindhost; 		\/\/绑定的地址$/;"	m	struct:__anon15
+bits	bitset.h	/^	size_t *bits;$/;"	m	struct:__anon26
+bitset	bitset.h	/^} bitset;$/;"	t	typeref:struct:__anon26
 bitset_clear_bit	bitset.c	/^void bitset_clear_bit(bitset * set, size_t pos)$/;"	f
 bitset_free	bitset.c	/^void bitset_free(bitset * set)$/;"	f
 bitset_init	bitset.c	/^bitset *bitset_init(size_t nbits)$/;"	f
 bitset_reset	bitset.c	/^void bitset_reset(bitset * set)$/;"	f
 bitset_set_bit	bitset.c	/^void bitset_set_bit(bitset * set, size_t pos)$/;"	f
 bitset_test_bit	bitset.c	/^int bitset_test_bit(bitset * set, size_t pos)$/;"	f
-buffer	buffer.h	/^} buffer;$/;"	t	typeref:struct:__anon33
-buffer	md5.h	/^	unsigned char buffer[64];	\/* input buffer *\/$/;"	m	struct:__anon37
+buffer	buffer.h	/^} buffer;$/;"	t	typeref:struct:__anon30
 buffer_append_long	buffer.c	/^int buffer_append_long(buffer *b, long val) $/;"	f
 buffer_append_long_hex	buffer.c	/^int buffer_append_long_hex(buffer *b, unsigned long value) $/;"	f
 buffer_append_memory	buffer.c	/^int buffer_append_memory(buffer *b, const char *s, size_t s_len) $/;"	f
 buffer_append_off_t	buffer.c	/^int buffer_append_off_t(buffer *b, off_t val) $/;"	f
-buffer_append_off_t	buffer.h	81;"	d
 buffer_append_string	buffer.c	/^int buffer_append_string(buffer *b, const char *s)$/;"	f
 buffer_append_string_buffer	buffer.c	/^int buffer_append_string_buffer(buffer *b, const buffer *src) $/;"	f
+buffer_append_string_buffer_len	buffer.c	/^int buffer_append_string_buffer_len(buffer *b, const buffer *src, size_t len) $/;"	f
 buffer_append_string_encoded	buffer.c	/^int buffer_append_string_encoded(buffer *b, const char *s, size_t s_len, buffer_encoding_t encoding) $/;"	f
 buffer_append_string_len	buffer.c	/^int buffer_append_string_len(buffer *b, const char *s, size_t s_len) $/;"	f
 buffer_append_string_rfill	buffer.c	/^int buffer_append_string_rfill(buffer *b, const char *s, size_t maxlen) $/;"	f
-buffer_array	buffer.h	/^} buffer_array;$/;"	t	typeref:struct:__anon34
+buffer_array	buffer.h	/^} buffer_array;$/;"	t	typeref:struct:__anon31
 buffer_array_append_get_buffer	buffer.c	/^buffer *buffer_array_append_get_buffer(buffer_array *b) $/;"	f
 buffer_array_free	buffer.c	/^void buffer_array_free(buffer_array *b) $/;"	f
 buffer_array_init	buffer.c	/^buffer_array* buffer_array_init(void) $/;"	f
@@ -275,12 +205,12 @@ buffer_caseless_compare	buffer.c	/^int buffer_caseless_compare(const char *a, si
 buffer_copy_long	buffer.c	/^int buffer_copy_long(buffer *b, long val) $/;"	f
 buffer_copy_memory	buffer.c	/^int buffer_copy_memory(buffer *b, const char *s, size_t s_len) $/;"	f
 buffer_copy_off_t	buffer.c	/^int buffer_copy_off_t(buffer *b, off_t val) {$/;"	f
-buffer_copy_off_t	buffer.h	80;"	d
 buffer_copy_string	buffer.c	/^int buffer_copy_string(buffer *b, const char *s) {$/;"	f
 buffer_copy_string_buffer	buffer.c	/^int buffer_copy_string_buffer(buffer *b, const buffer *src) $/;"	f
+buffer_copy_string_buffer_len	buffer.c	/^int buffer_copy_string_buffer_len(buffer *b, const buffer *src, size_t len) $/;"	f
 buffer_copy_string_hex	buffer.c	/^int buffer_copy_string_hex(buffer *b, const char *in, size_t in_len) $/;"	f
 buffer_copy_string_len	buffer.c	/^int buffer_copy_string_len(buffer *b, const char *s, size_t s_len) $/;"	f
-buffer_encoding_t	buffer.h	/^} buffer_encoding_t;$/;"	t	typeref:enum:__anon36
+buffer_encoding_t	buffer.h	/^} buffer_encoding_t;$/;"	t	typeref:enum:__anon33
 buffer_free	buffer.c	/^void buffer_free(buffer *b) $/;"	f
 buffer_init	buffer.c	/^buffer* buffer_init(void) $/;"	f
 buffer_init_buffer	buffer.c	/^buffer *buffer_init_buffer(buffer *src) $/;"	f
@@ -290,7 +220,6 @@ buffer_is_equal	buffer.c	/^int buffer_is_equal(buffer *a, buffer *b) $/;"	f
 buffer_is_equal_right_len	buffer.c	/^int buffer_is_equal_right_len(buffer *b1, buffer *b2, size_t len) $/;"	f
 buffer_is_equal_string	buffer.c	/^int buffer_is_equal_string(buffer *a, const char *s, size_t b_len) $/;"	f
 buffer_path_simplify	buffer.c	/^int buffer_path_simplify(buffer *dest, buffer *src)$/;"	f
-buffer_plugin	base.h	/^} buffer_plugin;$/;"	t	typeref:struct:__anon26
 buffer_prepare_append	buffer.c	/^int buffer_prepare_append(buffer *b, size_t size) $/;"	f
 buffer_prepare_copy	buffer.c	/^int buffer_prepare_copy(buffer *b, size_t size) $/;"	f
 buffer_reset	buffer.c	/^void buffer_reset(buffer *b) $/;"	f
@@ -300,14 +229,8 @@ buffer_to_upper	buffer.c	/^int buffer_to_upper(buffer *b) $/;"	f
 buffer_urldecode_internal	buffer.c	/^static int buffer_urldecode_internal(buffer *url, int is_query) $/;"	f	file:
 buffer_urldecode_path	buffer.c	/^int buffer_urldecode_path(buffer *url) $/;"	f
 buffer_urldecode_query	buffer.c	/^int buffer_urldecode_query(buffer *url) $/;"	f
-bytes_header	base.h	/^	off_t bytes_header;$/;"	m	struct:__anon24
-bytes_in	chunk.h	/^	off_t bytes_in, bytes_out;$/;"	m	struct:__anon7
-bytes_out	chunk.h	/^	off_t bytes_in, bytes_out;$/;"	m	struct:__anon7
-bytes_read	base.h	/^	off_t bytes_read;			\/* used by mod_accesslog, mod_rrd *\/$/;"	m	struct:__anon24
-bytes_written	base.h	/^	off_t bytes_written;		\/* used by mod_accesslog, mod_rrd *\/$/;"	m	struct:__anon24
-bytes_written_cur_second	base.h	/^	off_t bytes_written_cur_second;	\/* used by mod_accesslog,$/;"	m	struct:__anon24
-changeroot	base.h	/^	buffer *changeroot; 				\/\/运行时，根目录的位置			$/;"	m	struct:__anon20
-childs	array.h	/^	array *childs;$/;"	m	struct:_data_config
+c_t_map	base.h	/^	content_type_map *c_t_map; $/;"	m	struct:__anon15
+changeroot	base.h	/^	buffer *changeroot; 				\/\/运行时，根目录的位置		$/;"	m	struct:__anon15
 chunk	chunk.h	/^typedef struct chunk $/;"	s
 chunk	chunk.h	/^} chunk;$/;"	t	typeref:struct:chunk
 chunk_free	chunk.c	/^static void chunk_free(chunk * c)$/;"	f	file:
@@ -317,7 +240,7 @@ chunkqueue	chunk.h	/^} chunkqueue;$/;"	t	typeref:struct:__anon7
 chunkqueue_append_buffer	chunk.c	/^int chunkqueue_append_buffer(chunkqueue * cq, buffer * mem)$/;"	f
 chunkqueue_append_buffer_weak	chunk.c	/^int chunkqueue_append_buffer_weak(chunkqueue * cq, buffer * mem)$/;"	f
 chunkqueue_append_chunk	chunk.c	/^static int chunkqueue_append_chunk(chunkqueue * cq, chunk * c)$/;"	f	file:
-chunkqueue_append_file	chunk.c	/^int chunkqueue_append_file(chunkqueue * cq, buffer * fn, off_t offset, off_t len)$/;"	f
+chunkqueue_append_file	chunk.c	/^chunk * chunkqueue_append_file(chunkqueue * cq, buffer * fn, off_t offset, off_t len)$/;"	f
 chunkqueue_append_mem	chunk.c	/^int chunkqueue_append_mem(chunkqueue * cq, const char *mem, size_t len)$/;"	f
 chunkqueue_free	chunk.c	/^void chunkqueue_free(chunkqueue * cq)$/;"	f
 chunkqueue_get_append_buffer	chunk.c	/^buffer *chunkqueue_get_append_buffer(chunkqueue * cq)$/;"	f
@@ -333,174 +256,141 @@ chunkqueue_remove_finished_chunks	chunk.c	/^int chunkqueue_remove_finished_chunk
 chunkqueue_reset	chunk.c	/^void chunkqueue_reset(chunkqueue * cq)$/;"	f
 chunkqueue_set_tempdirs	chunk.c	/^int chunkqueue_set_tempdirs(chunkqueue * cq, array * tempdirs)$/;"	f
 chunkqueue_written	chunk.c	/^off_t chunkqueue_written(chunkqueue * cq)$/;"	f
-close_timeout_ts	base.h	/^	time_t close_timeout_ts; 			\/\/$/;"	m	struct:__anon24
-comp	array.h	/^	comp_key_t comp;$/;"	m	struct:_data_config
-comp_key	array.h	/^	buffer *comp_key;$/;"	m	struct:_data_config
-comp_key_t	array.h	/^} comp_key_t;$/;"	t	typeref:enum:__anon44
-compare	splaytree.c	70;"	d	file:
-con	base.h	/^	connection *con;$/;"	m	struct:__anon29
+cleanup	plugin.h	/^	handler_t (*cleanup)(server* srv, void *p_d);$/;"	m	struct:__anon29
+close_timeout_ts	base.h	/^	time_t close_timeout_ts; 			\/\/关闭连接超时。$/;"	m	struct:__anon17
 con_closed	base.h	/^	int con_closed; 	\/\/关闭的连接$/;"	m	struct:server
-con_config	base.h	/^} con_config;$/;"	t	typeref:struct:__anon21
-con_list_append	joblist.c	/^static int con_list_append(server *srv, con_list_node *list, connection *con)$/;"	f	file:
-con_list_del	joblist.c	/^static int con_list_del(server *srv, con_list_node *list, connection *con)$/;"	f	file:
-con_list_free	joblist.c	/^static void con_list_free(con_list_node *list)$/;"	f	file:
-con_list_node	base.h	/^}con_list_node;$/;"	t	typeref:struct:__anon29
-con_list_pop	joblist.c	/^static int con_list_pop(server *srv, con_list_node *list)$/;"	f	file:
+con_list_append	joblist.c	/^static int con_list_append(server *srv, connections *list, connection *con)$/;"	f	file:
+con_list_del	joblist.c	/^static int con_list_del(server *srv, connections *list, connection *con)$/;"	f	file:
+con_list_free	joblist.c	/^static void con_list_free(connections *list)$/;"	f	file:
+con_list_pop	joblist.c	/^static connection * con_list_pop(server *srv, connections *list)$/;"	f	file:
+con_lock	base.h	/^	pthread_mutex_t con_lock;$/;"	m	struct:server
 con_opened	base.h	/^	int con_opened; 	\/\/打开的连接$/;"	m	struct:server
 con_read	base.h	/^	int con_read; 		\/\/正在读的连接$/;"	m	struct:server
 con_written	base.h	/^	int con_written; 	\/\/正在写的连接$/;"	m	struct:server
-cond	array.h	/^	config_cond_t cond;$/;"	m	struct:_data_config
-cond	threadpool.h	/^	pthread_cond_t  cond; 			\/\/条件变量。用于等待作业分配。$/;"	m	struct:__anon32
-cond_cache	base.h	/^	cond_cache_t *cond_cache;$/;"	m	struct:__anon24
-cond_check_buf	base.h	/^	buffer *cond_check_buf;$/;"	m	struct:server
-cond_result_t	base.h	/^} cond_result_t;$/;"	t	typeref:enum:__anon23
-conf	base.h	/^	specific_config conf;		\/* global connection specific config *\/$/;"	m	struct:__anon24
-config_cond_t	array.h	/^} config_cond_t;$/;"	t	typeref:enum:__anon43
-config_scope_type_t	base.h	/^} config_scope_type_t;$/;"	t	typeref:enum:__anon9
+cond	threadpool.h	/^	pthread_cond_t  cond; 			\/\/条件变量。用于等待作业分配。$/;"	m	struct:__anon27
+cond_check_buf	base.h	/^	buffer *cond_check_buf;$/;"	m	struct:__anon17
+conf_inotify	base.h	/^}conf_inotify;$/;"	t	typeref:struct:__anon21
+conf_ity	base.h	/^	conf_inotify *conf_ity; 		\/\/inotify系统所需要的数据。$/;"	m	struct:server
 config_setdefaults	configure.c	/^int config_setdefaults(server *srv)$/;"	f
-config_values_t	base.h	/^} config_values_t;$/;"	t	typeref:struct:__anon10
-config_values_type_t	base.h	/^} config_values_type_t;$/;"	t	typeref:enum:__anon8
-connection	base.h	/^} connection;$/;"	t	typeref:struct:__anon24
-connection_start	base.h	/^	time_t connection_start; 			\/\/连接建立开始的时间$/;"	m	struct:__anon24
-connection_state_t	base.h	/^} connection_state_t;$/;"	t	typeref:enum:__anon22
-connection_type	base.h	/^typedef enum { DIRECT, EXTERNAL } connection_type;$/;"	t	typeref:enum:__anon11
-connections	base.h	/^} connections;$/;"	t	typeref:struct:__anon25
+connection	base.h	/^} connection;$/;"	t	typeref:struct:__anon17
+connection_accept	connection.c	/^connection* connection_accept(server *srv, server_socket *srv_sock)$/;"	f
+connection_clear	connection.c	/^static void connection_clear(server *srv, connection *con)$/;"	f	file:
+connection_fdevent_handler	connection.c	/^static handler_t connection_fdevent_handler(void *serv, void *context, int revents)$/;"	f	file:
+connection_free	connection.c	/^void connection_free(server *srv, connection *con)$/;"	f
+connection_get_new	connection.c	/^connection * connection_get_new(server *srv)$/;"	f
+connection_get_state_name	connection.c	/^const char *connection_get_state_name(connection_state_t s)$/;"	f
+connection_handle_close	connection.c	/^static int connection_handle_close(server *srv, connection *con)$/;"	f	file:
+connection_handle_read	connection.c	/^static int connection_handle_read(server *srv, connection *con)$/;"	f	file:
+connection_handle_read_post	connection.c	/^static int connection_handle_read_post(server *srv, connection *con)$/;"	f	file:
+connection_handle_write	connection.c	/^static int connection_handle_write(server *srv, connection *con)$/;"	f	file:
+connection_init	connection.c	/^static void connection_init(server *srv, connection *con)$/;"	f	file:
+connection_network_read	connection.c	/^static int connection_network_read(server *srv, connection *con, chunkqueue *cq)$/;"	f	file:
+connection_reset	connection.c	/^static void connection_reset(server *srv, connection *con)$/;"	f	file:
+connection_set_state	connection.c	/^void connection_set_state(server *srv, connection *con, connection_state_t state)$/;"	f
+connection_start	base.h	/^	time_t connection_start; 			\/\/连接建立开始的时间$/;"	m	struct:__anon17
+connection_state_machine	connection.c	/^int connection_state_machine(server *srv, connection *con)$/;"	f
+connection_state_name	connection.c	/^static struct connection_state_name$/;"	s	file:
+connection_state_t	base.h	/^} connection_state_t;$/;"	t	typeref:enum:__anon16
+connection_type	base.h	/^typedef enum { DIRECT, EXTERNAL } connection_type;$/;"	t	typeref:enum:__anon8
+connections	base.h	/^} connections;$/;"	t	typeref:struct:__anon18
 conns	base.h	/^	connections *conns; 			\/\/连接数组$/;"	m	struct:server
-content_length	base.h	/^	off_t content_length;$/;"	m	struct:__anon16
-content_length	base.h	/^	size_t content_length;		\/* returned by strtoul() *\/$/;"	m	struct:__anon15
-context_ndx	array.h	/^	int context_ndx;			\/* more or less like an id *\/$/;"	m	struct:_data_config
-count	array.h	/^	int count;$/;"	m	struct:__anon40
-count	md5.h	/^	UINT4 count[2];				\/* number of bits, modulo 2^64 (lsb first) *\/$/;"	m	struct:__anon37
-crc_c	crc32.c	/^static const unsigned int crc_c[256] = {$/;"	v	file:
+conns_lock	base.h	/^	pthread_mutex_t conns_lock;$/;"	m	struct:server
+content_length	base.h	/^	off_t content_length;	\/\/回复数据的长度$/;"	m	struct:__anon11
+content_length	base.h	/^	unsigned long content_length;	$/;"	m	struct:__anon10
+content_type	base.h	/^	const char *content_type; 	\/\/$/;"	m	struct:__anon14
+content_type_map	base.h	/^}content_type_map;$/;"	t	typeref:struct:__anon14
+ctm	configure.c	/^static content_type_map ctm[] = $/;"	v	file:
+ctx	base.h	/^	void *ctx; 					\/\/参数二$/;"	m	struct:s_job_ctx
 ctx	fdevent.h	/^	void *ctx;$/;"	m	struct:__anon3
-ctx	threadpool.h	/^	void *ctx; 	 					\/\/执行作业需要的数据.$/;"	m	struct:__anon32
+ctx	threadpool.h	/^	void *ctx; 	 					\/\/执行作业需要的数据.$/;"	m	struct:__anon27
 cur_fds	base.h	/^	int cur_fds;				\/* currently used fds 当前所使用的文件描述符*\/$/;"	m	struct:server
 cur_num	threadpool.h	/^	int cur_num; 					\/\/池中当前线程数。$/;"	m	struct:s_thread_pool
 cur_ts	base.h	/^	time_t cur_ts; 					\/\/当前时间戳$/;"	m	struct:server
 daemonize	main.c	/^static void daemonize(void)$/;"	f	file:
-data	array.h	/^	data_unset **data;$/;"	m	struct:__anon39
-data	splaytree.h	/^	void *data; 	\/\/节点存储的数据。$/;"	m	struct:tree_node
-data_array	array.h	/^} data_array;$/;"	t	typeref:struct:__anon42
+data	array.h	/^	data_unset **data;$/;"	m	struct:__anon35
+data	plugin.h	/^	void *data;$/;"	m	struct:__anon29
+data_array	array.h	/^} data_array;$/;"	t	typeref:struct:__anon37
 data_array_copy	data_array.c	/^static data_unset *data_array_copy(const data_unset * s)$/;"	f	file:
 data_array_free	data_array.c	/^static void data_array_free(data_unset * d)$/;"	f	file:
 data_array_init	data_array.c	/^data_array *data_array_init(void)$/;"	f
 data_array_insert_dup	data_array.c	/^static int data_array_insert_dup(data_unset * dst, data_unset * src)$/;"	f	file:
-data_array_print	data_array.c	/^static void data_array_print(const data_unset * d, int depth)$/;"	f	file:
 data_array_reset	data_array.c	/^static void data_array_reset(data_unset * d)$/;"	f	file:
-data_config	array.h	/^typedef struct _data_config data_config;$/;"	t	typeref:struct:_data_config
-data_config_copy	data_config.c	/^static data_unset *data_config_copy(const data_unset * s)$/;"	f	file:
-data_config_free	data_config.c	/^static void data_config_free(data_unset * d)$/;"	f	file:
-data_config_init	data_config.c	/^data_config *data_config_init(void)$/;"	f
-data_config_insert_dup	data_config.c	/^static int data_config_insert_dup(data_unset * dst, data_unset * src)$/;"	f	file:
-data_config_print	data_config.c	/^static void data_config_print(const data_unset * d, int depth)$/;"	f	file:
-data_config_reset	data_config.c	/^static void data_config_reset(data_unset * d)$/;"	f	file:
-data_count	array.h	/^} data_count;$/;"	t	typeref:struct:__anon40
-data_count_copy	data_count.c	/^static data_unset *data_count_copy(const data_unset * s)$/;"	f	file:
-data_count_free	data_count.c	/^static void data_count_free(data_unset * d)$/;"	f	file:
-data_count_init	data_count.c	/^data_count *data_count_init(void)$/;"	f
-data_count_insert_dup	data_count.c	/^static int data_count_insert_dup(data_unset * dst, data_unset * src)$/;"	f	file:
-data_count_print	data_count.c	/^static void data_count_print(const data_unset * d, int depth)$/;"	f	file:
-data_count_reset	data_count.c	/^static void data_count_reset(data_unset * d)$/;"	f	file:
-data_fastcgi	array.h	/^} data_fastcgi;$/;"	t	typeref:struct:__anon46
-data_fastcgi_copy	data_fastcgi.c	/^static data_unset *data_fastcgi_copy(const data_unset * s)$/;"	f	file:
-data_fastcgi_free	data_fastcgi.c	/^static void data_fastcgi_free(data_unset * d)$/;"	f	file:
-data_fastcgi_init	data_fastcgi.c	/^data_fastcgi *data_fastcgi_init(void)$/;"	f
-data_fastcgi_insert_dup	data_fastcgi.c	/^static int data_fastcgi_insert_dup(data_unset * dst, data_unset * src)$/;"	f	file:
-data_fastcgi_print	data_fastcgi.c	/^static void data_fastcgi_print(const data_unset * d, int depth)$/;"	f	file:
-data_fastcgi_reset	data_fastcgi.c	/^static void data_fastcgi_reset(data_unset * d)$/;"	f	file:
-data_integer	array.h	/^} data_integer;$/;"	t	typeref:struct:__anon45
+data_integer	array.h	/^} data_integer;$/;"	t	typeref:struct:__anon38
 data_integer_copy	data_integer.c	/^static data_unset *data_integer_copy(const data_unset * s)$/;"	f	file:
 data_integer_free	data_integer.c	/^static void data_integer_free(data_unset * d)$/;"	f	file:
 data_integer_init	data_integer.c	/^data_integer *data_integer_init(void)$/;"	f
 data_integer_insert_dup	data_integer.c	/^static int data_integer_insert_dup(data_unset * dst, data_unset * src)$/;"	f	file:
-data_integer_print	data_integer.c	/^static void data_integer_print(const data_unset * d, int depth)$/;"	f	file:
 data_integer_reset	data_integer.c	/^static void data_integer_reset(data_unset * d)$/;"	f	file:
-data_response_init	data_string.c	/^data_string *data_response_init(void)$/;"	f
-data_response_insert_dup	data_string.c	/^static int data_response_insert_dup(data_unset * dst, data_unset * src)$/;"	f	file:
-data_string	array.h	/^} data_string;$/;"	t	typeref:struct:__anon41
+data_string	array.h	/^} data_string;$/;"	t	typeref:struct:__anon36
 data_string_copy	data_string.c	/^static data_unset *data_string_copy(const data_unset * s)$/;"	f	file:
 data_string_free	data_string.c	/^static void data_string_free(data_unset * d)$/;"	f	file:
 data_string_init	data_string.c	/^data_string *data_string_init(void)$/;"	f
 data_string_insert_dup	data_string.c	/^static int data_string_insert_dup(data_unset * dst, data_unset * src)$/;"	f	file:
-data_string_print	data_string.c	/^static void data_string_print(const data_unset * d, int depth)$/;"	f	file:
 data_string_reset	data_string.c	/^static void data_string_reset(data_unset * d)$/;"	f	file:
-data_type_t	array.h	/^} data_type_t;$/;"	t	typeref:enum:__anon38
+data_type_t	array.h	/^} data_type_t;$/;"	t	typeref:enum:__anon34
 data_unset	array.h	/^typedef struct data_unset $/;"	s
 data_unset	array.h	/^} data_unset;$/;"	t	typeref:struct:data_unset
 debug_info	threadpool.c	/^void debug_info(const char *fmt, ...)$/;"	f
 debug_lock	threadpool.c	/^static pthread_mutex_t debug_lock = PTHREAD_MUTEX_INITIALIZER;$/;"	v	file:
-destination	base.h	/^	void *destination;$/;"	m	struct:__anon10
-dirlist_encoding	base.h	/^	buffer *dirlist_encoding;$/;"	m	struct:__anon21
-disable_ts	array.h	/^	time_t disable_ts;$/;"	m	struct:__anon46
-doc_root	base.h	/^	buffer *doc_root;			\/* path = doc_root + rel_path *\/$/;"	m	struct:__anon19
-document_root	base.h	/^	buffer *document_root;$/;"	m	struct:__anon21
-dont_daemonize	base.h	/^	unsigned short dont_daemonize; 		\/\/是否作为守护进程运行$/;"	m	struct:__anon20
-dst_addr	base.h	/^	sock_addr dst_addr;$/;"	m	struct:__anon24
-dst_addr_buf	base.h	/^	buffer *dst_addr_buf;$/;"	m	struct:__anon24
+doc_root	base.h	/^	buffer *doc_root;		\/\/根目录$/;"	m	struct:__anon13
+docroot	base.h	/^	buffer *docroot; 					\/\/数据的根目录。$/;"	m	struct:__anon15
+dont_daemonize	base.h	/^	unsigned short dont_daemonize; 		\/\/是否作为守护进程运行$/;"	m	struct:__anon15
+dst_addr	base.h	/^	sock_addr dst_addr; 				\/\/请求端的地址。$/;"	m	struct:__anon17
 encoded_chars_hex	buffer.c	/^const char encoded_chars_hex[] = $/;"	v
 encoded_chars_html	buffer.c	/^const char encoded_chars_html[] = $/;"	v
 encoded_chars_http_header	buffer.c	/^const char encoded_chars_http_header[] = $/;"	v
 encoded_chars_minimal_xml	buffer.c	/^const char encoded_chars_minimal_xml[] = $/;"	v
 encoded_chars_rel_uri	buffer.c	/^const char encoded_chars_rel_uri[] = $/;"	v
 encoded_chars_rel_uri_part	buffer.c	/^const char encoded_chars_rel_uri_part[] = $/;"	v
-environment	base.h	/^	array *environment;			\/* used to pass lighttpd internal stuff to$/;"	m	struct:__anon24
 epoll_events	fdevent.h	/^	struct epoll_event *epoll_events;$/;"	m	struct:fdevent	typeref:struct:fdevent::epoll_event
 epoll_fd	fdevent.h	/^	int epoll_fd;$/;"	m	struct:fdevent
-error_handler	base.h	/^	buffer *error_handler;$/;"	m	struct:__anon21
-error_handler	base.h	/^	buffer *error_handler;$/;"	m	struct:__anon24
-error_handler_saved_status	base.h	/^	int error_handler_saved_status;$/;"	m	struct:__anon24
-errorfile_prefix	base.h	/^	buffer *errorfile_prefix;$/;"	m	struct:__anon21
+error_handler	base.h	/^	buffer *error_handler;$/;"	m	struct:__anon17
+error_handler_saved_status	base.h	/^	int error_handler_saved_status;$/;"	m	struct:__anon17
+error_page_get_new	error_page.c	/^int error_page_get_new(server *srv, connection *con, buffer *errorpage)$/;"	f
 errorlog_buf	base.h	/^	buffer *errorlog_buf;$/;"	m	struct:server
 errorlog_fd	base.h	/^	int errorlog_fd;$/;"	m	struct:server
-errorlog_file	base.h	/^	buffer *errorlog_file; 	\/\/错误日志文件$/;"	m	struct:__anon20
-errorlog_mode	base.h	/^	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;$/;"	m	struct:server	typeref:enum:server::__anon30
-errorlog_use_syslog	base.h	/^	unsigned short errorlog_use_syslog; \/\/是否使用系统日志$/;"	m	struct:__anon20
-etag	base.h	/^	buffer *etag;$/;"	m	struct:__anon19
-etag_create	etag.c	/^int etag_create(buffer * etag, struct stat *st, etag_flags_t flags)$/;"	f
-etag_flags_t	etag.h	/^} etag_flags_t;$/;"	t	typeref:enum:__anon54
-etag_is_equal	etag.c	/^int etag_is_equal(buffer * etag, const char *matches)$/;"	f
-etag_mutate	etag.c	/^int etag_mutate(buffer * mut, buffer * etag)$/;"	f
-etag_use_inode	base.h	/^	unsigned short etag_use_inode;$/;"	m	struct:__anon21
-etag_use_mtime	base.h	/^	unsigned short etag_use_mtime;$/;"	m	struct:__anon21
-etag_use_size	base.h	/^	unsigned short etag_use_size;$/;"	m	struct:__anon21
+errorlog_file	base.h	/^	buffer *errorlog_file; 	\/\/错误日志文件$/;"	m	struct:__anon15
+errorlog_mode	base.h	/^	enum { ERRORLOG_STDERR, ERRORLOG_FILE, ERRORLOG_SYSLOG } errorlog_mode;$/;"	m	struct:server	typeref:enum:server::__anon25
+errorlog_use_syslog	base.h	/^	unsigned short errorlog_use_syslog; \/\/是否使用系统日志$/;"	m	struct:__anon15
+etag	base.h	/^	buffer *etag; 			\/\/etag$/;"	m	struct:__anon13
 ev	base.h	/^	fdevent *ev; 	\/\/fdevent系统$/;"	m	struct:server
 event_add	fdevent.h	/^	int (*event_add)(struct fdevent *ev, int fd, int events);$/;"	m	struct:fdevent
 event_del	fdevent.h	/^	int (*event_del)(struct fdevent *ev, int fd);$/;"	m	struct:fdevent
-event_get_fd	fdevent.h	/^	int (*event_get_fd)(struct fdevent *ev, size_t ndx);$/;"	m	struct:fdevent
-event_get_next_ndx	fdevent.h	/^	size_t (*event_get_next_ndx)(struct fdevent *ev, size_t ndx);$/;"	m	struct:fdevent
-event_get_revent	fdevent.h	/^	int (*event_get_revent)(struct fdevent *ev, size_t ndx);$/;"	m	struct:fdevent
-event_handler	base.h	/^	buffer *event_handler; 				\/\/多路IO系统的名称。$/;"	m	struct:__anon20
+event_get_fd	fdevent.h	/^	int (*event_get_fd)(struct fdevent *ev, int ndx);$/;"	m	struct:fdevent
+event_get_next_ndx	fdevent.h	/^	int (*event_get_next_ndx)(struct fdevent *ev, int ndx);$/;"	m	struct:fdevent
+event_get_revent	fdevent.h	/^	int (*event_get_revent)(struct fdevent *ev, int ndx);$/;"	m	struct:fdevent
+event_handler	base.h	/^	buffer *event_handler; 				\/\/多路IO系统的名称。$/;"	m	struct:__anon15
 event_handler	base.h	/^	fdevent_handler_t event_handler;$/;"	m	struct:server
-factor	base.h	/^	short factor;$/;"	m	struct:__anon13
-fcgi_connections	base.h	/^} fcgi_connections;$/;"	t	typeref:struct:__anon13
+events	base.h	/^	struct inotify_event *events; 	\/\/事件结构体数组。$/;"	m	struct:__anon21	typeref:struct:__anon21::inotify_event
+events_len	base.h	/^	size_t events_len; 				\/\/数组的长度。$/;"	m	struct:__anon21
 fcntl	fdevent.h	/^	int (*fcntl)(struct fdevent *ev, int fd);$/;"	m	struct:fdevent
-fd	base.h	/^	int fd;						\/* the FD for this connection 连接的描述符*\/$/;"	m	struct:__anon24
-fd	base.h	/^	int fd;$/;"	m	struct:__anon27
-fd	chunk.h	/^		int fd;$/;"	m	struct:chunk::__anon5
+fd	base.h	/^	int fd;							\/\/inotify系统的fd$/;"	m	struct:__anon21
+fd	base.h	/^	int fd;						\/* 连接的描述符*\/$/;"	m	struct:__anon17
+fd	base.h	/^	int fd;$/;"	m	struct:__anon19
+fd	chunk.h	/^		int fd; 				\/\/文件描述符。$/;"	m	struct:chunk::__anon5
 fd	fdevent.h	/^	int fd;$/;"	m	struct:__anon3
-fdarray	fdevent.h	/^	fdnode **fdarray;$/;"	m	struct:fdevent
-fde_ndx	base.h	/^	int fde_ndx;				\/* index for the fdevent-handler  *\/$/;"	m	struct:__anon24
-fde_ndx	base.h	/^	int fde_ndx;$/;"	m	struct:__anon27
+fdarray	fdevent.h	/^	fdnode *fdarray;$/;"	m	struct:fdevent
+fde_ndx	base.h	/^	int fde_ndx;$/;"	m	struct:__anon19
 fdevent	fdevent.h	/^typedef struct fdevent$/;"	s
 fdevent	fdevent.h	/^}fdevent;$/;"	t	typeref:struct:fdevent
 fdevent_epoll_event_add	fde_epoll.c	/^int fdevent_epoll_event_add(fdevent *ev, int fd, int events)$/;"	f
 fdevent_epoll_event_del	fde_epoll.c	/^int fdevent_epoll_event_del(fdevent *ev, int fd)$/;"	f
-fdevent_epoll_event_get_fd	fde_epoll.c	/^int fdevent_epoll_event_get_fd(fdevent *ev, size_t ndx)$/;"	f
-fdevent_epoll_event_get_next_ndx	fde_epoll.c	/^size_t fdevent_epoll_event_get_next_ndx(fdevent *ev, size_t ndx)$/;"	f
-fdevent_epoll_event_get_revent	fde_epoll.c	/^int fdevent_epoll_event_get_revent(fdevent *ev, size_t ndx)$/;"	f
+fdevent_epoll_event_get_fd	fde_epoll.c	/^int fdevent_epoll_event_get_fd(fdevent *ev, int ndx)$/;"	f
+fdevent_epoll_event_get_next_ndx	fde_epoll.c	/^int fdevent_epoll_event_get_next_ndx(fdevent *ev, int ndx)$/;"	f
+fdevent_epoll_event_get_revent	fde_epoll.c	/^int fdevent_epoll_event_get_revent(fdevent *ev, int ndx)$/;"	f
 fdevent_epoll_free	fde_epoll.c	/^void fdevent_epoll_free(fdevent *ev)$/;"	f
 fdevent_epoll_init	fde_epoll.c	/^int fdevent_epoll_init(fdevent *ev)$/;"	f
 fdevent_epoll_poll	fde_epoll.c	/^int fdevent_epoll_poll(fdevent *ev, int timeout)$/;"	f
 fdevent_event_add	fdevent.c	/^int fdevent_event_add(fdevent *ev, int fd, int events)$/;"	f
 fdevent_event_del	fdevent.c	/^int fdevent_event_del(fdevent *ev, int fd)$/;"	f
 fdevent_event_get_context	fdevent.c	/^void* fdevent_event_get_context(fdevent *ev, int fd)$/;"	f
-fdevent_event_get_fd	fdevent.c	/^int fdevent_event_get_fd(fdevent *ev, size_t ndx)$/;"	f
+fdevent_event_get_fd	fdevent.c	/^int fdevent_event_get_fd(fdevent *ev, int ndx)$/;"	f
 fdevent_event_get_handler	fdevent.c	/^fdevent_handler fdevent_event_get_handler(fdevent *ev, int fd)$/;"	f
-fdevent_event_get_next_ndx	fdevent.c	/^size_t fdevent_event_get_next_ndx(fdevent *ev, size_t ndx)$/;"	f
-fdevent_event_get_revent	fdevent.c	/^int fdevent_event_get_revent(fdevent *ev, size_t ndx)$/;"	f
+fdevent_event_get_next_ndx	fdevent.c	/^int fdevent_event_get_next_ndx(fdevent *ev, int ndx)$/;"	f
+fdevent_event_get_revent	fdevent.c	/^int fdevent_event_get_revent(fdevent *ev, int ndx)$/;"	f
 fdevent_fcntl	fdevent.c	/^int fdevent_fcntl(fdevent *ev, int fd)$/;"	f
 fdevent_free	fdevent.c	/^void fdevent_free(fdevent *ev)$/;"	f
-fdevent_handler	fdevent.h	/^typedef handler_t (*fdevent_handler)(void *wkr, void *ctx, int revents);$/;"	t
+fdevent_handler	fdevent.h	/^typedef handler_t (*fdevent_handler)(void *srv, void *ctx, int revents);$/;"	t
 fdevent_handler_t	fdevent.h	/^}fdevent_handler_t;$/;"	t	typeref:enum:__anon2
 fdevent_init	fdevent.c	/^fdevent* fdevent_init(size_t maxfds, fdevent_handler_t type)$/;"	f
 fdevent_poll	fdevent.c	/^int fdevent_poll(fdevent *ev, int timeout)$/;"	f
@@ -508,22 +398,19 @@ fdevent_register	fdevent.c	/^int fdevent_register(fdevent *ev, int fd, fdevent_h
 fdevent_reset	fdevent.c	/^int fdevent_reset(fdevent *ev)$/;"	f
 fdevent_unregister	fdevent.c	/^int fdevent_unregister(fdevent *ev, int fd)$/;"	f
 fdnode	fdevent.h	/^}fdnode;$/;"	t	typeref:struct:__anon3
-fdnode_free	fdevent.c	/^static void fdnode_free(fdnode *n)$/;"	f	file:
-fdnode_init	fdevent.c	/^static fdnode* fdnode_init()$/;"	f	file:
-fdwaitqueue	base.h	/^	con_list_node *fdwaitqueue; 	\/\/描述符等待队列$/;"	m	struct:server
+fdnode_init	fdevent.c	/^static void fdnode_init(fdnode *n)$/;"	f	file:
+fdwaitqueue	base.h	/^	connections *fdwaitqueue; 		\/\/描述符等待队列$/;"	m	struct:server
 fdwaitqueue_append	joblist.c	/^int fdwaitqueue_append(server * srv, connection * con)$/;"	f
 fdwaitqueue_free	joblist.c	/^void fdwaitqueue_free(server * srv, connections * fdwaitqueue)$/;"	f
+fdwaitqueue_lock	base.h	/^	pthread_mutex_t fdwaitqueue_lock;$/;"	m	struct:server
 fdwaitqueue_pop	joblist.c	/^connection *fdwaitqueue_pop(server *srv)$/;"	f
 file	chunk.h	/^	} file;$/;"	m	struct:chunk	typeref:struct:chunk::__anon5
-file_finished	base.h	/^	int file_finished;$/;"	m	struct:__anon24
-file_started	base.h	/^	int file_started;$/;"	m	struct:__anon24
-find_rank	splaytree.c	/^splay_tree *find_rank(int r, splay_tree * t)$/;"	f
+file_ext	base.h	/^	const char *file_ext;  		\/\/文件扩展名。$/;"	m	struct:__anon14
+finished	chunk.h	/^	int finished; 				\/\/标记存储的数据是否已经处理完毕。$/;"	m	struct:chunk
 first	chunk.h	/^	chunk *first;$/;"	m	struct:__anon7
-follow_symlink	base.h	/^	unsigned short follow_symlink;$/;"	m	struct:__anon21
-force_lowercase_filenames	base.h	/^	unsigned short force_lowercase_filenames;	\/* if the FS is$/;"	m	struct:__anon21
+first_read	base.h	/^	int first_read; 		\/\/标记是否是第一次进行数据读取。$/;"	m	struct:__anon17
 free	fdevent.h	/^	void (*free)(struct fdevent *ev);$/;"	m	struct:fdevent
 func	test_tp.c	/^void * func(void *arg)$/;"	f
-generate_crc32c	crc32.c	/^uint32_t generate_crc32c(char *buffer, size_t length)$/;"	f
 get_http_method_key	keyvalue.c	/^http_method_t get_http_method_key(const char *s)$/;"	f
 get_http_method_name	keyvalue.c	/^const char *get_http_method_name(http_method_t i)$/;"	f
 get_http_status_body_name	keyvalue.c	/^const char *get_http_status_body_name(int i)$/;"	f
@@ -531,223 +418,242 @@ get_http_status_name	keyvalue.c	/^const char *get_http_status_name(int i)$/;"	f
 get_http_version_key	keyvalue.c	/^int get_http_version_key(const char *s)$/;"	f
 get_http_version_name	keyvalue.c	/^const char *get_http_version_name(int i)$/;"	f
 gid	base.h	/^	gid_t gid;$/;"	m	struct:server
-global_bytes_per_second_cnt	base.h	/^	off_t global_bytes_per_second_cnt;$/;"	m	struct:__anon21
-global_bytes_per_second_cnt_ptr	base.h	/^	off_t *global_bytes_per_second_cnt_ptr;	\/* *\/$/;"	m	struct:__anon21
-global_kbytes_per_second	base.h	/^	unsigned short global_kbytes_per_second;	\/* *\/$/;"	m	struct:__anon21
-got_response	base.h	/^	int got_response;$/;"	m	struct:__anon24
-groupname	base.h	/^	buffer *groupname; 					\/\/组名$/;"	m	struct:__anon20
+got_response	base.h	/^	int got_response;$/;"	m	struct:__anon17
+groupname	base.h	/^	buffer *groupname; 					\/\/组名$/;"	m	struct:__anon15
+handle_connection_close	plugin.h	/^	handler_t (*handle_connection_close)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handle_connection_reset	plugin.h	/^	handler_t (*handle_connection_reset)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handle_docroot	plugin.h	/^	handler_t (*handle_docroot)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handle_handle_subrequest	plugin.h	/^	handler_t (*handle_handle_subrequest)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handle_joblist	plugin.h	/^	handler_t (*handle_joblist)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handle_physical	plugin.h	/^	handler_t (*handle_physical)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handle_sighup	plugin.h	/^	handler_t (*handle_sighup)(server* srv, void *p_d);$/;"	m	struct:__anon29
+handle_subrequest_end	plugin.h	/^	handler_t (*handle_subrequest_end)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handle_subrequest_start	plugin.h	/^	handler_t (*handle_subrequest_start)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handle_trigger	plugin.h	/^	handler_t (*handle_trigger)(server* srv, void *p_d);$/;"	m	struct:__anon29
+handle_url_clean	plugin.h	/^	handler_t (*handle_url_clean)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handle_url_raw	plugin.h	/^	handler_t (*handle_url_raw)(server *srv, connection *con, void *p_d);$/;"	m	struct:__anon29
+handler	base.h	/^	fdevent_handler handler; 	\/\/IO事件处理函数指针。$/;"	m	struct:s_job_ctx
 handler	fdevent.h	/^	fdevent_handler handler;$/;"	m	struct:__anon3
-handler_t	base.h	/^	fdevent_handler_t handler_t;$/;"	m	struct:__anon20
+handler_t	base.h	/^	fdevent_handler_t handler_t;$/;"	m	struct:__anon15
 handler_t	settings.h	/^} handler_t;$/;"	t	typeref:enum:__anon1
-header_len	base.h	/^	size_t header_len;$/;"	m	struct:__anon24
-headers	base.h	/^	array *headers;$/;"	m	struct:__anon15
-headers	base.h	/^	array *headers;$/;"	m	struct:__anon16
+header_len	base.h	/^	size_t header_len; 					\/\/http头的长度$/;"	m	struct:__anon17
+headers	base.h	/^	array *headers;  		\/\/回复的头$/;"	m	struct:__anon11
+headers	base.h	/^	array *headers;$/;"	m	struct:__anon10
 hex2int	buffer.c	/^char hex2int(unsigned char hex) $/;"	f
 hex_chars	buffer.c	/^static const char hex_chars[] = "0123456789abcdef";$/;"	v	file:
-host	array.h	/^	buffer *host;$/;"	m	struct:__anon46
-host	base.h	/^	char *host;$/;"	m	struct:__anon13
-http_content_type	base.h	/^	const char *http_content_type;$/;"	m	struct:__anon15
-http_host	base.h	/^	buffer *http_host;			\/* not alloced *\/$/;"	m	struct:__anon15
-http_if_modified_since	base.h	/^	const char *http_if_modified_since;$/;"	m	struct:__anon15
-http_if_none_match	base.h	/^	const char *http_if_none_match;$/;"	m	struct:__anon15
-http_method	base.h	/^	http_method_t http_method;$/;"	m	struct:__anon15
-http_method_t	keyvalue.h	/^} http_method_t;$/;"	t	typeref:enum:__anon47
-http_methods	keyvalue.c	/^static keyvalue http_methods[] = {$/;"	v	file:
-http_range	base.h	/^	const char *http_range;$/;"	m	struct:__anon15
-http_status	base.h	/^	int http_status;$/;"	m	struct:__anon24
-http_status	keyvalue.c	/^static keyvalue http_status[] = {$/;"	v	file:
-http_status_body	keyvalue.c	/^static keyvalue http_status_body[] = {$/;"	v	file:
-http_version	base.h	/^	http_version_t http_version;$/;"	m	struct:__anon15
-http_version_t	keyvalue.h	/^} http_version_t;$/;"	t	typeref:enum:__anon48
-http_versions	keyvalue.c	/^static keyvalue http_versions[] = {$/;"	v	file:
+http_content_type	base.h	/^	const char *http_content_type;$/;"	m	struct:__anon10
+http_host	base.h	/^	const char *http_host;$/;"	m	struct:__anon10
+http_if_modified_since	base.h	/^	const char *http_if_modified_since;$/;"	m	struct:__anon10
+http_if_none_match	base.h	/^	const char *http_if_none_match;$/;"	m	struct:__anon10
+http_if_range	base.h	/^	const char *http_if_range;$/;"	m	struct:__anon10
+http_method	base.h	/^	http_method_t http_method;$/;"	m	struct:__anon10
+http_method_t	keyvalue.h	/^} http_method_t;$/;"	t	typeref:enum:__anon39
+http_methods	keyvalue.c	/^static keyvalue http_methods[] = $/;"	v	file:
+http_parse_request	request.c	/^int http_parse_request(server *srv, connection *con)$/;"	f
+http_prepare_response	response.c	/^handler_t http_prepare_response(server *srv, connection *con)$/;"	f
+http_request_split_value	request.c	/^int http_request_split_value(array * vals, buffer * b)$/;"	f
+http_response_finish_header	response.c	/^int http_response_finish_header(server *srv, connection *con)$/;"	f
+http_response_insert_header	response.c	/^int http_response_insert_header(server *srv, connection *con, const char *key, size_t key_len$/;"	f
+http_status	base.h	/^	int http_status; 					\/\/当前请求的状态。200, 404 etc.$/;"	m	struct:__anon17
+http_status	keyvalue.c	/^static keyvalue http_status[] = $/;"	v	file:
+http_status_body	keyvalue.c	/^static keyvalue http_status_body[] = $/;"	v	file:
+http_version	base.h	/^	http_version_t http_version;$/;"	m	struct:__anon10
+http_version_t	keyvalue.h	/^} http_version_t;$/;"	t	typeref:enum:__anon40
+http_versions	keyvalue.c	/^static keyvalue http_versions[] = $/;"	v	file:
 httpauth_keyvalue	keyvalue.h	/^KVB(httpauth_keyvalue);$/;"	v
-httpauth_keyvalue	keyvalue.h	/^} httpauth_keyvalue;$/;"	t	typeref:struct:__anon53
+httpauth_keyvalue	keyvalue.h	/^} httpauth_keyvalue;$/;"	t	typeref:struct:__anon44
 httpauth_keyvalue_buffer_append	keyvalue.c	/^httpauth_keyvalue_buffer_append(httpauth_keyvalue_buffer * kvb,$/;"	f
 httpauth_keyvalue_buffer_free	keyvalue.c	/^void httpauth_keyvalue_buffer_free(httpauth_keyvalue_buffer * kvb)$/;"	f
 httpauth_keyvalue_buffer_init	keyvalue.c	/^httpauth_keyvalue_buffer *httpauth_keyvalue_buffer_init(void)$/;"	f
-httpauth_type	keyvalue.h	/^typedef enum { HTTP_AUTH_BASIC, HTTP_AUTH_DIGEST } httpauth_type;$/;"	t	typeref:enum:__anon52
+httpauth_type	keyvalue.h	/^} httpauth_type;$/;"	t	typeref:enum:__anon43
+id	base.h	/^	int id;$/;"	m	struct:s_index_node
 id	threadpool.h	/^	int id;$/;"	m	struct:s_int_node
-id	threadpool.h	/^	pthread_t id; 					\/\/线程id$/;"	m	struct:__anon32
+id	threadpool.h	/^	pthread_t id; 					\/\/线程id$/;"	m	struct:__anon27
 idle_threads	threadpool.h	/^	int_node *idle_threads;  		\/\/记录空闲的线程的下标，也就是线程的空闲队列$/;"	m	struct:s_thread_pool
-in_error_handler	base.h	/^	int in_error_handler;$/;"	m	struct:__anon24
-in_joblist	base.h	/^	int in_joblist;$/;"	m	struct:__anon24
+in_error_handler	base.h	/^	int in_error_handler;$/;"	m	struct:__anon17
+in_joblist	base.h	/^	int in_joblist;$/;"	m	struct:__anon17
+index_node	base.h	/^}index_node;$/;"	t	typeref:struct:s_index_node
+init	plugin.h	/^	void* (*init)();$/;"	m	struct:__anon29
 int2hex	buffer.c	/^char int2hex(char c) $/;"	f
 int_node	threadpool.h	/^}int_node;$/;"	t	typeref:struct:s_int_node
-ipv4	base.h	/^	struct sockaddr_in ipv4;$/;"	m	union:__anon14	typeref:struct:__anon14::sockaddr_in
-ipv6	base.h	/^	struct sockaddr_in6 ipv6;$/;"	m	union:__anon14	typeref:struct:__anon14::sockaddr_in6
-is_busy	threadpool.h	/^	int is_busy;$/;"	m	struct:__anon32
+ipv4	base.h	/^	struct sockaddr_in ipv4;$/;"	m	union:__anon9	typeref:struct:__anon9::sockaddr_in
+ipv6	base.h	/^	struct sockaddr_in6 ipv6;$/;"	m	union:__anon9	typeref:struct:__anon9::sockaddr_in6
+is_busy	threadpool.h	/^	int is_busy;$/;"	m	struct:__anon27
 is_daemon	base.h	/^	int is_daemon; 				\/\/是否守护进程$/;"	m	struct:server
-is_disabled	array.h	/^	int is_disabled;$/;"	m	struct:__anon46
+is_key_valid	request.c	/^static int is_key_valid(const char *key, int key_len)$/;"	f	file:
 is_listened	fdevent.h	/^	int is_listened; 	\/\/标记是否已经被监听。$/;"	m	struct:__anon3
-is_readable	base.h	/^	int is_readable;$/;"	m	struct:__anon24
-is_ssl	base.h	/^	unsigned short is_ssl;$/;"	m	struct:__anon21
-is_temp	chunk.h	/^		int is_temp;			\/* file is temporary and will be deleted if on cleanup *\/$/;"	m	struct:chunk::__anon5
-is_weakref	array.h	/^	int is_weakref;				\/* data is weakref, don't bother the data *\/$/;"	m	struct:__anon39
-is_writable	base.h	/^	int is_writable;$/;"	m	struct:__anon24
-job	threadpool.h	/^	job_func job; 					\/\/线程需要执行的作业$/;"	m	struct:__anon32
+is_readable	base.h	/^	int is_readable;$/;"	m	struct:__anon17
+is_registered	fdevent.h	/^	int is_registered; 	\/\/是否已经被注册。$/;"	m	struct:__anon3
+is_temp	chunk.h	/^		int is_temp;			\/\/表示是否是临时文件。临时文件使用完后自动清理。$/;"	m	struct:chunk::__anon5
+is_value_valid	request.c	/^static int is_value_valid(const char *value, int v_len)$/;"	f	file:
+is_writable	base.h	/^	int is_writable;$/;"	m	struct:__anon17
+issetugid	main.c	/^static int issetugid()$/;"	f	file:
+jc_lock	base.h	/^	pthread_mutex_t jc_lock;$/;"	m	struct:server
+jc_nodes	base.h	/^	job_ctx *jc_nodes; 	\/\/存储未使用的job环境。$/;"	m	struct:server
+job	threadpool.h	/^	job_func job; 					\/\/线程需要执行的作业$/;"	m	struct:__anon27
+job_ctx	base.h	/^}job_ctx;$/;"	t	typeref:struct:s_job_ctx
+job_ctx_free	base.c	/^void job_ctx_free(server *srv, job_ctx *jc)$/;"	f
+job_ctx_get_new	base.c	/^job_ctx* job_ctx_get_new(server *srv)$/;"	f
+job_entry	base.c	/^void *job_entry(void *ctx)$/;"	f
 job_func	threadpool.h	/^typedef void *(*job_func)(void *ctx); 	$/;"	t
-joblist	base.h	/^	con_list_node *joblist; 		\/\/作业列表$/;"	m	struct:server
+joblist	base.h	/^	connections *joblist; 			\/\/作业列表$/;"	m	struct:server
 joblist_append	joblist.c	/^int joblist_append(server * srv, connection * con)$/;"	f
-joblist_del	joblist.c	/^int joblist_del(server *srv, connection *con)$/;"	f
-joblist_free	joblist.c	/^void joblist_free(server * srv, con_list_node * joblist)$/;"	f
+joblist_find_del	joblist.c	/^int joblist_find_del(server *srv, connection *con)$/;"	f
+joblist_free	joblist.c	/^void joblist_free(server * srv, connections * joblist)$/;"	f
+joblist_lock	base.h	/^	pthread_mutex_t joblist_lock;$/;"	m	struct:server
 joblist_pop	joblist.c	/^connection * joblist_pop(server *srv)$/;"	f
-kbytes_per_second	base.h	/^	unsigned short kbytes_per_second;	\/* connection kb\/s limit *\/$/;"	m	struct:__anon21
-keep_alive	base.h	/^	int keep_alive;				\/* only request.c can enable it, all other just $/;"	m	struct:__anon24
-keep_alive	base.h	/^	int keep_alive;				\/* used by the subrequests in proxy, cgi and$/;"	m	struct:__anon16
-key	base.h	/^	char *key;$/;"	m	struct:__anon12
-key	base.h	/^	char *key;$/;"	m	struct:__anon13
-key	base.h	/^	const char *key;$/;"	m	struct:__anon10
-key	keyvalue.h	/^	char *key;$/;"	m	struct:__anon50
-key	keyvalue.h	/^	char *key;$/;"	m	struct:__anon53
-key	keyvalue.h	/^	int key;$/;"	m	struct:__anon49
-key	keyvalue.h	/^	pcre *key;$/;"	m	struct:__anon51
-key	splaytree.h	/^	int key; 							\/\/用于节点比较的key值。$/;"	m	struct:tree_node
-key_extra	keyvalue.h	/^	pcre_extra *key_extra;$/;"	m	struct:__anon51
+keep_alive	base.h	/^	int keep_alive;				$/;"	m	struct:__anon17
+keep_alive	base.h	/^	int keep_alive;	 		\/\/是否保持连接。$/;"	m	struct:__anon11
+key	keyvalue.h	/^	char *key;$/;"	m	struct:__anon42
+key	keyvalue.h	/^	char *key;$/;"	m	struct:__anon44
+key	keyvalue.h	/^	int key;$/;"	m	struct:__anon41
 keyvalue	keyvalue.h	/^KVB(keyvalue);$/;"	v
-keyvalue	keyvalue.h	/^} keyvalue;$/;"	t	typeref:struct:__anon49
+keyvalue	keyvalue.h	/^} keyvalue;$/;"	t	typeref:struct:__anon41
 keyvalue_buffer_append	keyvalue.c	/^int keyvalue_buffer_append(keyvalue_buffer * kvb, int key, const char *value)$/;"	f
 keyvalue_buffer_free	keyvalue.c	/^void keyvalue_buffer_free(keyvalue_buffer * kvb)$/;"	f
 keyvalue_buffer_init	keyvalue.c	/^keyvalue_buffer *keyvalue_buffer_init(void)$/;"	f
 keyvalue_get_key	keyvalue.c	/^int keyvalue_get_key(keyvalue * kv, const char *s)$/;"	f
 keyvalue_get_value	keyvalue.c	/^const char *keyvalue_get_value(keyvalue * kv, int k)$/;"	f
 last	chunk.h	/^	chunk *last;$/;"	m	struct:__anon7
-last_generated_date_ts	base.h	/^	time_t last_generated_date_ts; 	\/\/前一个日期的时间戳$/;"	m	struct:server
-last_generated_debug_ts	base.h	/^	time_t last_generated_debug_ts; \/\/前一个调试时间戳$/;"	m	struct:server
-last_sighup_info	main.c	/^static volatile siginfo_t last_sighup_info;$/;"	v	file:
-last_sigterm_info	main.c	/^static volatile siginfo_t last_sigterm_info;$/;"	v	file:
-last_used_ndx	array.h	/^	int last_used_ndx;			\/* round robin *\/$/;"	m	struct:__anon46
-left	splaytree.h	/^	struct tree_node *left, *right; 	\/\/指向左右子结点$/;"	m	struct:tree_node	typeref:struct:tree_node::tree_node
-length	chunk.h	/^			size_t length;		\/* size of the mmap'ed area *\/$/;"	m	struct:chunk::__anon5::__anon6
-length	chunk.h	/^		off_t length;			\/* octets to send from the starting offset *\/$/;"	m	struct:chunk::__anon5
+last_generated_debug_ts	base.h	/^	time_t last_generated_debug_ts; \/\/用于日志系统记录时间$/;"	m	struct:server
+length	chunk.h	/^			size_t length;		\/\/映射区域的长度$/;"	m	struct:chunk::__anon5::__anon6
+length	chunk.h	/^		off_t length;			\/\/数据的长度$/;"	m	struct:chunk::__anon5
+lib	plugin.h	/^	void *lib;$/;"	m	struct:__anon29
 light_isalnum	buffer.c	/^int light_isalnum(int c) $/;"	f
 light_isalpha	buffer.c	/^int light_isalpha(int c) $/;"	f
 light_isdigit	buffer.c	/^int light_isdigit(int c) $/;"	f
 light_isxdigit	buffer.c	/^int light_isxdigit(int c) $/;"	f
 lock	fdevent.h	/^	pthread_mutex_t lock; \/\/锁$/;"	m	struct:fdevent
-lock	threadpool.h	/^	pthread_mutex_t lock; 			\/\/用于锁住整个结构体。也用于配合条件变量使用。$/;"	m	struct:__anon32
+lock	threadpool.h	/^	pthread_mutex_t lock; 			\/\/用于锁住整个结构体。也用于配合条件变量使用。$/;"	m	struct:__anon27
 lock	threadpool.h	/^	pthread_mutex_t lock; 			\/\/锁。$/;"	m	struct:s_thread_pool
-log_condition_handling	base.h	/^	unsigned short log_condition_handling;$/;"	m	struct:__anon21
 log_error_close	log.c	/^int log_error_close(server * srv)$/;"	f
 log_error_cycle	log.c	/^int log_error_cycle(server * srv)$/;"	f
 log_error_open	log.c	/^int log_error_open(server *srv)$/;"	f
 log_error_write	log.c	/^int log_error_write(server * srv, const char *filename, unsigned int line,$/;"	f
-log_file_not_found	base.h	/^	unsigned short log_file_not_found;$/;"	m	struct:__anon21
-log_request_handling	base.h	/^	unsigned short log_request_handling;$/;"	m	struct:__anon21
-log_request_header	base.h	/^	unsigned short log_request_header;$/;"	m	struct:__anon21
-log_request_header_on_error	base.h	/^	unsigned short log_request_header_on_error;$/;"	m	struct:__anon20
-log_response_header	base.h	/^	unsigned short log_response_header;$/;"	m	struct:__anon21
-log_ssl_noise	base.h	/^	unsigned short log_ssl_noise;$/;"	m	struct:__anon21
-log_state_handling	base.h	/^	unsigned short log_state_handling;$/;"	m	struct:__anon20
-loops_per_request	base.h	/^	size_t loops_per_request;	\/* to catch endless loops in a single$/;"	m	struct:__anon24
-main	array.c	/^int main (int argc, char **argv) {$/;"	f
+log_lock	base.h	/^	pthread_mutex_t log_lock;$/;"	m	struct:server
+log_request_header_on_error	base.h	/^	unsigned short log_request_header_on_error;$/;"	m	struct:__anon15
+log_state_handling	base.h	/^	unsigned short log_state_handling;$/;"	m	struct:__anon15
 main	main.c	/^int main(int argc, char *argv[])$/;"	f
 main	test_fde.c	/^int main(int argc, char *argv[])$/;"	f
 main	test_tp.c	/^int main(int argc , char *argv[])$/;"	f
 manage_thread	threadpool.c	/^static void * manage_thread(void *arg)$/;"	f	file:
 manage_thread_id	threadpool.h	/^	pthread_t manage_thread_id;		\/\/管理线程的id$/;"	m	struct:s_thread_pool
-max_conns	base.h	/^	size_t max_conns; 			\/\/允许的最大连接数$/;"	m	struct:server
+max_close_idle	base.h	/^	int max_close_idle;$/;"	m	struct:__anon15
+max_conns	base.h	/^	int max_conns; 				\/\/允许的最大连接数$/;"	m	struct:server
 max_fds	base.h	/^	int max_fds;				\/* max possible fds 可以使用的最大文件描述符*\/$/;"	m	struct:server
-max_keep_alive_idle	base.h	/^	unsigned short max_keep_alive_idle;$/;"	m	struct:__anon21
-max_keep_alive_requests	base.h	/^	unsigned short max_keep_alive_requests;$/;"	m	struct:__anon21
 max_num	threadpool.h	/^	int max_num; 					\/\/最大线程数，允许的最大线程数。$/;"	m	struct:s_thread_pool
-max_read_idle	base.h	/^	unsigned short max_read_idle;$/;"	m	struct:__anon21
-max_request_size	base.h	/^	unsigned short max_request_size; 	\/\/request的最大大小$/;"	m	struct:__anon20
-max_request_size	base.h	/^	unsigned short max_request_size;$/;"	m	struct:__anon21
-max_worker	base.h	/^	unsigned short max_worker; 			\/\/worker进程的最大数量$/;"	m	struct:__anon20
-max_write_idle	base.h	/^	unsigned short max_write_idle;$/;"	m	struct:__anon21
+max_read_idle	base.h	/^	int max_read_idle;$/;"	m	struct:__anon15
+max_request_size	base.h	/^	unsigned int max_request_size; 	\/\/request的最大大小$/;"	m	struct:__anon15
+max_worker	base.h	/^	unsigned short max_worker; 			\/\/worker进程的最大数量$/;"	m	struct:__anon15
+max_write_idle	base.h	/^	int max_write_idle;$/;"	m	struct:__anon15
 maxfds	fdevent.h	/^	size_t maxfds;$/;"	m	struct:fdevent
-mem	chunk.h	/^	buffer *mem;				\/* either the storage of the mem-chunk or the read-ahead buffer *\/$/;"	m	struct:chunk
-mimetypes	base.h	/^	array *mimetypes;$/;"	m	struct:__anon21
+mem	chunk.h	/^	buffer *mem;				\/\/内存中的存储块或预读缓存$/;"	m	struct:chunk
 min_num	threadpool.h	/^	int min_num; 					\/\/最小线程数，也就是在没有作业要处理时，池中的线程数。$/;"	m	struct:s_thread_pool
 mmap	chunk.h	/^		} mmap;$/;"	m	struct:chunk::__anon5	typeref:struct:chunk::__anon5::__anon6
-mode	base.h	/^	connection_type mode;$/;"	m	struct:__anon24
-modules	base.h	/^	array *modules; 					\/\/模块名$/;"	m	struct:__anon20
-modules_dir	base.h	/^	buffer *modules_dir; 				\/\/模块的目录，保存插件模块的动态链接库$/;"	m	struct:__anon20
-name	chunk.h	/^		buffer *name;			\/* name of the file *\/$/;"	m	struct:chunk::__anon5
-nbits	bitset.h	/^	size_t nbits;$/;"	m	struct:__anon31
-ndx	base.h	/^	int ndx;					\/* reverse mapping to server->connection[ndx] *\/$/;"	m	struct:__anon24
-ndx	threadpool.h	/^	int ndx; 						\/\/在数组threads中的位置。$/;"	m	struct:__anon32
-network_backend	base.h	/^	buffer *network_backend; 			\/\/$/;"	m	struct:__anon20
-network_backend_read	base.h	/^	int (*network_backend_read) (struct server * srv, connection * con, int fd, chunkqueue * cq);$/;"	m	struct:server
+modules	base.h	/^	array *modules; 					\/\/模块名$/;"	m	struct:__anon15
+modules_dir	base.h	/^	buffer *modules_dir; 				\/\/模块的目录，保存插件模块的动态链接库$/;"	m	struct:__anon15
+name	base.h	/^	buffer **name;$/;"	m	struct:__anon22
+name	chunk.h	/^		buffer *name;			\/\/文件名$/;"	m	struct:chunk::__anon5
+name	connection.c	/^	const char *name;$/;"	m	struct:connection_state_name	file:
+nbits	bitset.h	/^	size_t nbits;$/;"	m	struct:__anon26
+ndx	base.h	/^	int ndx;					$/;"	m	struct:__anon17
+ndx	plugin.h	/^	int ndx;$/;"	m	struct:__anon29
+ndx	threadpool.h	/^	int ndx; 						\/\/在数组threads中的位置。$/;"	m	struct:__anon27
+network_backend	base.h	/^	buffer *network_backend; 			\/\/$/;"	m	struct:__anon15
 network_backend_write	base.h	/^	int (*network_backend_write) (struct server * srv, connection * con, int fd, chunkqueue * cq);$/;"	m	struct:server
+network_close	network.c	/^void network_close(server *srv)$/;"	f
 network_init	network.c	/^int network_init(server *srv)$/;"	f
-next	array.h	/^	data_config *next;$/;"	m	struct:_data_config
-next	base.h	/^	struct con_list_node *next;$/;"	m	struct:__anon29	typeref:struct:__anon29::con_list_node
+network_register_fdevent	network.c	/^int network_register_fdevent(server *srv)$/;"	f
+network_write	network_write.c	/^handler_t network_write(server *srv, connection *con)$/;"	f
+network_write_file	network_write.c	/^static int network_write_file(server *srv, connection *con, chunk *c)$/;"	f	file:
+network_write_mem	network_write.c	/^static int network_write_mem(server *srv, connection *con, chunk *c)$/;"	f	file:
+next	base.h	/^	struct s_index_node *next;$/;"	m	struct:s_index_node	typeref:struct:s_index_node::s_index_node
+next	base.h	/^	struct s_job_ctx *next;$/;"	m	struct:s_job_ctx	typeref:struct:s_job_ctx::s_job_ctx
 next	chunk.h	/^	struct chunk *next;$/;"	m	struct:chunk	typeref:struct:chunk::chunk
 next	threadpool.h	/^	struct s_int_node *next;$/;"	m	struct:s_int_node	typeref:struct:s_int_node::s_int_node
-next_power_of_2	array.h	/^	size_t next_power_of_2;$/;"	m	struct:__anon39
-node_size	splaytree.c	78;"	d	file:
-offset	buffer.h	/^	size_t offset;				\/* input-pointer *\/$/;"	m	struct:__anon35
-offset	chunk.h	/^			off_t offset;		\/* start is <n> octet away from the start of the file *\/$/;"	m	struct:chunk::__anon5::__anon6
-offset	chunk.h	/^	off_t offset;				\/* octets sent from this chunk the size of the$/;"	m	struct:chunk
-op	array.h	/^	buffer *op;$/;"	m	struct:_data_config
+next_power_of_2	array.h	/^	size_t next_power_of_2;$/;"	m	struct:__anon35
+offset	buffer.h	/^	size_t offset;				\/* input-pointer *\/$/;"	m	struct:__anon32
+offset	chunk.h	/^			off_t offset;		\/\/数据偏移量$/;"	m	struct:chunk::__anon5::__anon6
+offset	chunk.h	/^	off_t offset;				\/\/块中数据的偏移位置$/;"	m	struct:chunk
 openDevNull	log.c	/^int openDevNull(int fd)$/;"	f
-orig_uri	base.h	/^	buffer *orig_uri;$/;"	m	struct:__anon15
-parent	array.h	/^	data_config *parent;$/;"	m	struct:_data_config
-parse_full_path	base.h	/^	buffer *parse_full_path;$/;"	m	struct:server
-parse_request	base.h	/^	buffer *parse_request;$/;"	m	struct:__anon24
-parsed_response	base.h	/^	unsigned int parsed_response;	\/* bitfield which contains the$/;"	m	struct:__anon24
-path	base.h	/^	buffer *path;$/;"	m	struct:__anon18
-path	base.h	/^	buffer *path;$/;"	m	struct:__anon19
-path_raw	base.h	/^	buffer *path_raw;$/;"	m	struct:__anon18
-pathinfo	base.h	/^	buffer *pathinfo;$/;"	m	struct:__anon15
-pcre_keyvalue	keyvalue.h	/^KVB(pcre_keyvalue);$/;"	v
-pcre_keyvalue	keyvalue.h	/^} pcre_keyvalue;$/;"	t	typeref:struct:__anon51
-pcre_keyvalue_buffer_append	keyvalue.c	/^pcre_keyvalue_buffer_append(pcre_keyvalue_buffer * kvb, const char *key,$/;"	f
-pcre_keyvalue_buffer_free	keyvalue.c	/^void pcre_keyvalue_buffer_free(pcre_keyvalue_buffer * kvb)$/;"	f
-pcre_keyvalue_buffer_init	keyvalue.c	/^pcre_keyvalue_buffer *pcre_keyvalue_buffer_init(void)$/;"	f
-physical	base.h	/^	physical physical;$/;"	m	struct:__anon24
-physical	base.h	/^} physical;$/;"	t	typeref:struct:__anon19
-pid_file	base.h	/^	buffer *pid_file; 					\/\/进程ID文件名，保证只有一个服务器实例$/;"	m	struct:__anon20
-plain	base.h	/^	struct sockaddr plain;$/;"	m	union:__anon14	typeref:struct:__anon14::sockaddr
-plugin_ctx	base.h	/^	void **plugin_ctx;			\/* plugin connection specific config *\/$/;"	m	struct:__anon24
-plugin_slots	base.h	/^	void *plugin_slots;$/;"	m	struct:server
-plugins	base.h	/^	buffer_plugin plugins;$/;"	m	struct:server
+orig_uri	base.h	/^	buffer *orig_uri;$/;"	m	struct:__anon10
+parse_full_path	base.h	/^	buffer *parse_full_path;$/;"	m	struct:__anon17
+parse_request	base.h	/^	buffer *parse_request; 				\/\/存储读取到的请求。$/;"	m	struct:__anon17
+path	base.h	/^	buffer **path;$/;"	m	struct:__anon22
+path	base.h	/^	buffer *path;			\/\/不包含query的url地址。$/;"	m	struct:__anon12
+path	base.h	/^	buffer *path; 			\/\/request请求中的地址。$/;"	m	struct:__anon13
+path_raw	base.h	/^	buffer *path_raw; 		\/\/没有解码的url地址。$/;"	m	struct:__anon12
+pathinfo	base.h	/^	buffer *pathinfo;$/;"	m	struct:__anon10
+physical	base.h	/^	physical physical;$/;"	m	struct:__anon17
+physical	base.h	/^} physical;$/;"	t	typeref:struct:__anon13
+pid_file	base.h	/^	buffer *pid_file; 					\/\/进程ID文件名，保证只有一个服务器实例$/;"	m	struct:__anon15
+plain	base.h	/^	struct sockaddr plain; 		\/\/通用地址格式。$/;"	m	union:__anon9	typeref:struct:__anon9::sockaddr
+plugin	plugin.h	/^}plugin;$/;"	t	typeref:struct:__anon29
+plugin_array	base.h	/^}plugin_array;$/;"	t	typeref:struct:__anon23
+plugin_conf_file	base.h	/^	buffer *plugin_conf_file;			\/\/plugin的配置文件。$/;"	m	struct:__anon15
+plugin_conf_inotify_fdevent_handler	plugin.c	/^static handler_t plugin_conf_inotify_fdevent_handler(void *srv, void *ctx, int revents)$/;"	f	file:
+plugin_conf_inotify_free	plugin.c	/^int plugin_conf_inotify_free(server *srv)$/;"	f
+plugin_conf_inotify_init	plugin.c	/^int plugin_conf_inotify_init(server *srv, const char *conf_path)$/;"	f
+plugin_conf_inotify_register_fdevent	plugin.c	/^int plugin_conf_inotify_register_fdevent(server *srv, int fd)$/;"	f
+plugin_conf_wd	base.h	/^	int plugin_conf_wd;				\/\/插件配置文件监测fd。$/;"	m	struct:__anon21
+plugin_ctx	base.h	/^	void **plugin_ctx;			\/* plugin connection specific config *\/$/;"	m	struct:__anon17
+plugin_data	plugin.h	/^struct plugin_data$/;"	s
+plugin_free	plugin.c	/^void plugin_free(server *srv)$/;"	f
+plugin_load	plugin.c	/^int plugin_load(server *srv)$/;"	f
+plugin_lock	base.h	/^	pthread_mutex_t plugin_lock;$/;"	m	struct:server
+plugin_name_path	base.h	/^} plugin_name_path;$/;"	t	typeref:struct:__anon22
+plugin_plugin_free	plugin.c	/^static void plugin_plugin_free(plugin *p)$/;"	f	file:
+plugin_plugin_init	plugin.c	/^static plugin * plugin_plugin_init()$/;"	f	file:
+plugin_read_name_path	plugin.c	/^static int plugin_read_name_path(server *srv, plugin_name_path * pnp)$/;"	f	file:
+plugin_slot	base.h	/^}plugin_slot;$/;"	t	typeref:struct:__anon24
+plugin_slot_t	plugin.h	/^}plugin_slot_t;$/;"	t	typeref:enum:__anon28
+plugins	base.h	/^	plugin_array *plugins;$/;"	m	struct:server
+plugins_np	base.h	/^	plugin_name_path *plugins_np;$/;"	m	struct:server
 poll	fdevent.h	/^	int (*poll)(struct fdevent *ev, int timeout);$/;"	m	struct:fdevent
-port	array.h	/^	unsigned short port;$/;"	m	struct:__anon46
-port	base.h	/^	unsigned short port; 	\/\/端口号$/;"	m	struct:__anon20
-port	base.h	/^	unsigned short port;$/;"	m	struct:__anon13
-prev	array.h	/^	data_config *prev;$/;"	m	struct:_data_config
-pthread_mutex_t	log.c	/^static pthread_mutex_t = PTHREAD_MUTEX_INITIALIZER;$/;"	v	file:
-ptr	base.h	/^	connection **ptr;$/;"	m	struct:__anon25
-ptr	base.h	/^	server_socket **ptr;$/;"	m	struct:__anon28
-ptr	base.h	/^	void *ptr;$/;"	m	struct:__anon26
-ptr	buffer.h	/^	buffer **ptr; 	\/\/buffer指针数组$/;"	m	struct:__anon34
-ptr	buffer.h	/^	char *ptr; 		\/\/指向存储空间$/;"	m	struct:__anon33
-ptr	buffer.h	/^	char *ptr;$/;"	m	struct:__anon35
-query	base.h	/^	buffer *query;$/;"	m	struct:__anon18
-range_requests	base.h	/^	unsigned short range_requests;$/;"	m	struct:__anon21
-read_buffer	buffer.h	/^} read_buffer;$/;"	t	typeref:struct:__anon35
-read_idle_ts	base.h	/^	time_t read_idle_ts; 				\/\/读操作的发呆时间$/;"	m	struct:__anon24
-read_queue	base.h	/^	chunkqueue *read_queue;		\/* a small queue for low-level read ( HTTP$/;"	m	struct:__anon24
-realm	keyvalue.h	/^	char *realm;$/;"	m	struct:__anon53
-regex	array.h	/^	pcre *regex;$/;"	m	struct:_data_config
-regex_study	array.h	/^	pcre_extra *regex_study;$/;"	m	struct:_data_config
-rel_path	base.h	/^	buffer *rel_path;$/;"	m	struct:__anon19
-request	base.h	/^	buffer *request;$/;"	m	struct:__anon15
-request	base.h	/^	request request;$/;"	m	struct:__anon24
-request	base.h	/^} request;$/;"	t	typeref:struct:__anon15
-request_content_queue	base.h	/^	chunkqueue *request_content_queue;	\/* takes request-content into$/;"	m	struct:__anon24
-request_count	base.h	/^	size_t request_count;		\/* number of requests handled in this$/;"	m	struct:__anon24
-request_handler	base.h	/^} request_handler;$/;"	t	typeref:struct:__anon12
-request_line	base.h	/^	buffer *request_line;$/;"	m	struct:__anon15
-request_start	base.h	/^	time_t request_start;  				\/\/请求开始的时间$/;"	m	struct:__anon24
-request_uri	base.h	/^} request_uri;$/;"	t	typeref:struct:__anon18
+port	base.h	/^	unsigned short port; 	\/\/端口号$/;"	m	struct:__anon15
+ptr	base.h	/^	connection **ptr;$/;"	m	struct:__anon18
+ptr	base.h	/^	server_socket **ptr;$/;"	m	struct:__anon20
+ptr	base.h	/^	void ***ptr;$/;"	m	struct:__anon24
+ptr	base.h	/^	void **ptr;$/;"	m	struct:__anon23
+ptr	buffer.h	/^	buffer **ptr; 	\/\/buffer指针数组$/;"	m	struct:__anon31
+ptr	buffer.h	/^	char *ptr; 		\/\/指向存储空间$/;"	m	struct:__anon30
+ptr	buffer.h	/^	char *ptr;$/;"	m	struct:__anon32
+query	base.h	/^	buffer *query; 			\/\/查询数据。key1=data&key2=data2$/;"	m	struct:__anon12
+r_val	base.h	/^	handler_t r_val; 			\/\/返回值$/;"	m	struct:s_job_ctx
+read_buffer	buffer.h	/^} read_buffer;$/;"	t	typeref:struct:__anon32
+read_idle_ts	base.h	/^	time_t read_idle_ts; 				\/\/读操作的发呆时间$/;"	m	struct:__anon17
+read_queue	base.h	/^	chunkqueue *read_queue;				\/\/ 存储读取的数据。主要是http头 $/;"	m	struct:__anon17
+real_path	base.h	/^	buffer *real_path; 		\/\/完整的物理地址$/;"	m	struct:__anon13
+realm	keyvalue.h	/^	char *realm;$/;"	m	struct:__anon44
+request	base.h	/^	buffer *request;$/;"	m	struct:__anon10
+request	base.h	/^	request request;$/;"	m	struct:__anon17
+request	base.h	/^} request;$/;"	t	typeref:struct:__anon10
+request_check_hostname	request.c	/^static int request_check_hostname(buffer * host)$/;"	f	file:
+request_content_queue	base.h	/^	chunkqueue *request_content_queue;	\/\/ 存储POST数据。 $/;"	m	struct:__anon17
+request_count	base.h	/^	size_t request_count;		\/* 这个连接所处理的请求的数量*\/$/;"	m	struct:__anon17
+request_line	base.h	/^	buffer *request_line;$/;"	m	struct:__anon10
+request_start	base.h	/^	time_t request_start;  				\/\/请求开始的时间$/;"	m	struct:__anon17
+request_uri	base.h	/^} request_uri;$/;"	t	typeref:struct:__anon12
+request_uri_is_valid_char	request.c	/^static int request_uri_is_valid_char(unsigned char c)$/;"	f	file:
 reset	fdevent.h	/^	int (*reset)(struct fdevent *ev);$/;"	m	struct:fdevent
-response	base.h	/^	response response;$/;"	m	struct:__anon24
-response	base.h	/^} response;$/;"	t	typeref:struct:__anon16
-response_header	base.h	/^	buffer *response_header;$/;"	m	struct:server
-response_range	base.h	/^	buffer *response_range;$/;"	m	struct:server
-right	splaytree.h	/^	struct tree_node *left, *right; 	\/\/指向左右子结点$/;"	m	struct:tree_node	typeref:struct:tree_node::
+response	base.h	/^	response response;$/;"	m	struct:__anon17
+response	base.h	/^} response;$/;"	t	typeref:struct:__anon11
+response_handle_static_file	response.c	/^static handler_t response_handle_static_file(server *srv, connection *con)$/;"	f	file:
+response_header	base.h	/^	buffer *response_header;$/;"	m	struct:__anon17
+response_physical_exist	response.c	/^static int response_physical_exist(server *srv, connection *con, const buffer *p)$/;"	f	file:
+response_range	base.h	/^	buffer *response_range;$/;"	m	struct:__anon17
+response_redirect_to_directory	response.c	/^static int response_redirect_to_directory(server *srv, connection *con)$/;"	f	file:
+revents	base.h	/^	int revents; 				\/\/参数三$/;"	m	struct:s_job_ctx
+s_index_node	base.h	/^typedef struct s_index_node$/;"	s
 s_int_node	threadpool.h	/^typedef struct s_int_node$/;"	s
+s_job_ctx	base.h	/^typedef struct s_job_ctx$/;"	s
 s_keyvalue	keyvalue.h	/^KVB(s_keyvalue);$/;"	v
-s_keyvalue	keyvalue.h	/^} s_keyvalue;$/;"	t	typeref:struct:__anon50
+s_keyvalue	keyvalue.h	/^} s_keyvalue;$/;"	t	typeref:struct:__anon42
 s_keyvalue_buffer_append	keyvalue.c	/^s_keyvalue_buffer_append(s_keyvalue_buffer * kvb, const char *key,$/;"	f
 s_keyvalue_buffer_free	keyvalue.c	/^void s_keyvalue_buffer_free(s_keyvalue_buffer * kvb)$/;"	f
 s_keyvalue_buffer_init	keyvalue.c	/^s_keyvalue_buffer *s_keyvalue_buffer_init(void)$/;"	f
 s_thread_pool	threadpool.h	/^struct s_thread_pool$/;"	s
-scheme	base.h	/^	buffer *scheme;$/;"	m	struct:__anon18
-scope	base.h	/^	config_scope_type_t scope;$/;"	m	struct:__anon10
+scheme	base.h	/^	buffer *scheme; 		\/\/http or https$/;"	m	struct:__anon12
 select_error	fdevent.h	/^	fd_set select_error;$/;"	m	struct:fdevent
 select_max_fd	fdevent.h	/^	int select_max_fd;$/;"	m	struct:fdevent
 select_read	fdevent.h	/^	fd_set select_read;$/;"	m	struct:fdevent
@@ -757,108 +663,90 @@ select_set_write	fdevent.h	/^	fd_set select_set_write;$/;"	m	struct:fdevent
 select_write	fdevent.h	/^	fd_set select_write;$/;"	m	struct:fdevent
 server	base.h	/^typedef struct server$/;"	s
 server	base.h	/^}server;$/;"	t	typeref:struct:server
-server_config	base.h	/^} server_config;$/;"	t	typeref:struct:__anon20
+server_conf_wd	base.h	/^	int server_conf_wd;				\/\/服务器配置文件监测fd。$/;"	m	struct:__anon21
+server_config	base.h	/^} server_config;$/;"	t	typeref:struct:__anon15
 server_free	main.c	/^static void server_free(server * srv)$/;"	f	file:
-server_free	main.c	/^static void server_free(server* srv)$/;"	f	file:
 server_init	main.c	/^static server *server_init(void)$/;"	f	file:
-server_init	main.c	/^static server* server_init()$/;"	f	file:
-server_name	base.h	/^	buffer *server_name;$/;"	m	struct:__anon21
-server_name	base.h	/^	buffer *server_name;$/;"	m	struct:__anon24
-server_socket	base.h	/^} server_socket;$/;"	t	typeref:struct:__anon27
-server_tag	base.h	/^	buffer *server_tag;$/;"	m	struct:__anon21
-show_featrues	main.c	/^void show_featrues()$/;"	f
-show_help	main.c	/^void show_help()$/;"	f
+server_name	base.h	/^	buffer *server_name;$/;"	m	struct:__anon17
+server_socket	base.h	/^} server_socket;$/;"	t	typeref:struct:__anon19
+server_socket_fdevent_handler	network.c	/^static handler_t server_socket_fdevent_handler(void *srv, void *ctx, int revents)$/;"	f	file:
+set_default	plugin.h	/^	handler_t (*set_default)(server* srv, void *p_d);$/;"	m	struct:__anon29
+show_features	main.c	/^static void show_features()$/;"	f	file:
+show_help	main.c	/^static void show_help()$/;"	f	file:
 show_version	main.c	/^static void show_version(void)$/;"	f	file:
-sigaction_handler	main.c	/^static void sigaction_handler(int sig, siginfo_t * si, void *context)$/;"	f	file:
+shutdown_server	main.c	/^static volatile int shutdown_server = 0;$/;"	v	file:
 signal_handler	main.c	/^static void signal_handler(int sig)$/;"	f	file:
-size	array.h	/^	size_t size;$/;"	m	struct:__anon39
-size	base.h	/^	size_t size;$/;"	m	struct:__anon25
-size	base.h	/^	size_t size;$/;"	m	struct:__anon26
-size	base.h	/^	size_t size;$/;"	m	struct:__anon28
-size	buffer.h	/^	size_t size; 	\/\/buffer数组的大小$/;"	m	struct:__anon34
-size	buffer.h	/^	size_t size; 	\/\/buffer的长度$/;"	m	struct:__anon33
-size	buffer.h	/^	size_t size;$/;"	m	struct:__anon35
-size	splaytree.h	/^	int size;$/;"	m	struct:tree_node
-sock_addr	base.h	/^} sock_addr;$/;"	t	typeref:union:__anon14
-socket_array	base.h	/^}socket_array;$/;"	t	typeref:struct:__anon28
-sockets	base.h	/^	socket_array sockets; \/\/保存socket$/;"	m	struct:server
+size	array.h	/^	size_t size;$/;"	m	struct:__anon35
+size	base.h	/^	size_t *size;$/;"	m	struct:__anon24
+size	base.h	/^	size_t size; 				\/\/ptr数组的长度$/;"	m	struct:__anon18
+size	base.h	/^	size_t size;$/;"	m	struct:__anon20
+size	base.h	/^	size_t size;$/;"	m	struct:__anon22
+size	base.h	/^	size_t size;$/;"	m	struct:__anon23
+size	buffer.h	/^	size_t size; 	\/\/buffer数组的大小$/;"	m	struct:__anon31
+size	buffer.h	/^	size_t size; 	\/\/buffer的长度$/;"	m	struct:__anon30
+size	buffer.h	/^	size_t size;$/;"	m	struct:__anon32
+slots	base.h	/^	plugin_slot *slots; 		$/;"	m	struct:server
+sock_addr	base.h	/^} sock_addr;$/;"	t	typeref:union:__anon9
+socket_array	base.h	/^}socket_array;$/;"	t	typeref:struct:__anon20
+sockets	base.h	/^	socket_array *sockets; \/\/保存socket$/;"	m	struct:server
 sockets_disabled	base.h	/^	int sockets_disabled; 		\/* socket连接失效 *\/$/;"	m	struct:server
-sorted	array.h	/^	size_t *sorted;$/;"	m	struct:__anon39
-splay_tree	splaytree.h	/^} splay_tree;$/;"	t	typeref:struct:tree_node
-splaytree_delete	splaytree.c	/^splay_tree *splaytree_delete(splay_tree * t, int i)$/;"	f
-splaytree_insert	splaytree.c	/^splay_tree *splaytree_insert(splay_tree * t, int i, void *data)$/;"	f
-splaytree_size	splaytree.h	42;"	d
-splaytree_splay	splaytree.c	/^splay_tree *splaytree_splay(splay_tree * t, int i)$/;"	f
-srv_socket	base.h	/^	void *srv_socket;			\/* reference to the server-socket (typecast to$/;"	m	struct:__anon24
-srv_token	base.h	/^	buffer *srv_token;$/;"	m	struct:__anon27
+sockets_lock	base.h	/^	pthread_mutex_t sockets_lock;$/;"	m	struct:server
+sorted	array.h	/^	size_t *sorted;$/;"	m	struct:__anon35
+split_vals	base.h	/^	array *split_vals; 		\/\/用于分割headers中的value。$/;"	m	struct:__anon17
+srv	base.h	/^	void *srv; 					\/\/参数一$/;"	m	struct:s_job_ctx
+srv_sock	base.h	/^	void *srv_sock;			\/* server socket *\/$/;"	m	struct:__anon17
+srv_token	base.h	/^	buffer *srv_token;$/;"	m	struct:__anon19
 srvconf	base.h	/^	server_config srvconf;$/;"	m	struct:server
-ssl_ca_file	base.h	/^	buffer *ssl_ca_file;$/;"	m	struct:__anon21
-ssl_cipher_list	base.h	/^	buffer *ssl_cipher_list;$/;"	m	struct:__anon21
-ssl_pemfile	base.h	/^	buffer *ssl_pemfile;$/;"	m	struct:__anon21
-ssl_use_sslv2	base.h	/^	unsigned short ssl_use_sslv2;$/;"	m	struct:__anon21
-start	chunk.h	/^			char *start;		\/* the start pointer of the mmap'ed area *\/$/;"	m	struct:chunk::__anon5::__anon6
-start	chunk.h	/^		off_t start;			\/* starting offset in the file *\/$/;"	m	struct:chunk::__anon5
-start_tv	base.h	/^	struct timeval start_tv;$/;"	m	struct:__anon24	typeref:struct:__anon24::timeval
+start	chunk.h	/^			char *start;		\/\/文件映射的开始地址。$/;"	m	struct:chunk::__anon5::__anon6
+start	chunk.h	/^		off_t start;			\/\/文件数据开始的偏移量。$/;"	m	struct:chunk::__anon5
 startup_ts	base.h	/^	time_t startup_ts; 				\/\/服务器启动的时间戳$/;"	m	struct:server
-state	base.h	/^	connection_state_t state; 			\/\/连接的状态$/;"	m	struct:__anon24
-state	md5.h	/^	UINT4 state[4];				\/* state (ABCD) *\/$/;"	m	struct:__anon37
-stop	threadpool.h	/^	int stop; 						\/\/标记线程结束。$/;"	m	struct:__anon32
-string	array.h	/^	buffer *string;$/;"	m	struct:_data_config
-tempdirs	chunk.h	/^	array *tempdirs;$/;"	m	struct:__anon7
+state	base.h	/^	connection_state_t state; 			\/\/连接的状态$/;"	m	struct:__anon17
+state	connection.c	/^	connection_state_t state;$/;"	m	struct:connection_state_name	file:
+state_names	connection.c	/^}state_names[]=$/;"	v	typeref:struct:connection_state_name	file:
+stop	threadpool.h	/^	int stop; 						\/\/标记线程结束。$/;"	m	struct:__anon27
+tempdirs	chunk.h	/^	array *tempdirs; 			\/\/临时文件目录$/;"	m	struct:__anon7
 thread_cnt_sem	threadpool.h	/^	sem_t thread_cnt_sem;			\/\/用于达到线程最大值且还有作业时，等待线程空闲。$/;"	m	struct:s_thread_pool
-thread_info	threadpool.h	/^}thread_info;$/;"	t	typeref:struct:__anon32
+thread_info	threadpool.h	/^}thread_info;$/;"	t	typeref:struct:__anon27
 thread_main	threadpool.c	/^static void * thread_main(void *arg)$/;"	f	file:
 thread_pool	threadpool.h	/^typedef struct s_thread_pool thread_pool;$/;"	t	typeref:struct:s_thread_pool
 threads	threadpool.h	/^	thread_info *threads; 			\/\/线程数组。$/;"	m	struct:s_thread_pool
-tmp_buf	base.h	/^	buffer *tmp_buf;$/;"	m	struct:server
-tmp_chunk_len	base.h	/^	buffer *tmp_chunk_len;$/;"	m	struct:server
-tp	threadpool.h	/^	thread_pool *tp; 				\/\/指向线程池。$/;"	m	struct:__anon32
+tmp_buf	base.h	/^	buffer *tmp_buf;$/;"	m	struct:__anon17
+tmp_chunk_len	base.h	/^	buffer *tmp_chunk_len;$/;"	m	struct:__anon17
+tp	base.h	/^	thread_pool *tp;$/;"	m	struct:server
+tp	threadpool.h	/^	thread_pool *tp; 				\/\/指向线程池。$/;"	m	struct:__anon27
 tp_free	threadpool.c	/^void tp_free(thread_pool *tp)$/;"	f
 tp_init	threadpool.c	/^thread_pool* tp_init(int minnum, int maxnum)$/;"	f
 tp_run_job	threadpool.c	/^int tp_run_job(thread_pool *tp, job_func job, void *ctx)$/;"	f
-traffic_limit_reached	base.h	/^	int traffic_limit_reached;$/;"	m	struct:__anon24
-transfer_encoding	base.h	/^	} transfer_encoding;$/;"	m	struct:__anon16	typeref:enum:__anon16::__anon17
-tree_node	splaytree.h	/^typedef struct tree_node $/;"	s
-ts_date_str	base.h	/^	buffer *ts_date_str;$/;"	m	struct:server
-ts_debug_str	base.h	/^	buffer *ts_debug_str;$/;"	m	struct:server
-type	base.h	/^	config_values_type_t type;$/;"	m	struct:__anon10
-type	base.h	/^	connection_type type;$/;"	m	struct:__anon12
+ts_debug_str	base.h	/^	buffer *ts_debug_str;			\/\/日志系统存储空间。$/;"	m	struct:server
 type	chunk.h	/^	enum { UNUSED_CHUNK, MEM_CHUNK, FILE_CHUNK } type;$/;"	m	struct:chunk	typeref:enum:chunk::__anon4
 type	fdevent.h	/^	fdevent_handler_t type;$/;"	m	struct:fdevent
-type	keyvalue.h	/^	httpauth_type type;$/;"	m	struct:__anon53
+type	keyvalue.h	/^	httpauth_type type;$/;"	m	struct:__anon44
 uid	base.h	/^	uid_t uid;$/;"	m	struct:server
-un	base.h	/^	struct sockaddr_un un;$/;"	m	union:__anon14	typeref:struct:__anon14::sockaddr_un
-unique_ndx	array.h	/^	size_t unique_ndx;$/;"	m	struct:__anon39
+unique_ndx	array.h	/^	size_t unique_ndx; 			\/\/用于产生key。始终是小的未使用的key值。$/;"	m	struct:__anon35
 unused	chunk.h	/^	chunk *unused;$/;"	m	struct:__anon7
 unused	threadpool.h	/^	int_node *unused; 				\/\/保存未使用的int_node$/;"	m	struct:s_thread_pool
 unused_chunks	chunk.h	/^	size_t unused_chunks;$/;"	m	struct:__anon7
 unused_ndx	threadpool.h	/^	int_node *unused_ndx; 			\/\/threads数组中未使用的位置。$/;"	m	struct:s_thread_pool
-unused_nodes	base.h	/^	con_list_node *unused_nodes;	\/\/空闲的链表节点。$/;"	m	struct:server
-upload_tempdirs	base.h	/^	array *upload_tempdirs; 			\/\/上传的临时目录$/;"	m	struct:__anon20
-uri	base.h	/^	buffer *uri;$/;"	m	struct:__anon15
-uri	base.h	/^	request_uri uri;$/;"	m	struct:__anon24
-usage	array.h	/^	int usage;					\/* fair-balancing needs the no. of connections$/;"	m	struct:__anon46
-use_ipv6	base.h	/^	unsigned short use_ipv6;$/;"	m	struct:__anon21
-use_ipv6	base.h	/^	unsigned short use_ipv6;$/;"	m	struct:__anon27
-use_xattr	base.h	/^	unsigned short use_xattr;$/;"	m	struct:__anon21
-used	array.h	/^	size_t used;$/;"	m	struct:__anon39
-used	base.h	/^	int used;$/;"	m	struct:__anon13
-used	base.h	/^	size_t used;$/;"	m	struct:__anon25
-used	base.h	/^	size_t used;$/;"	m	struct:__anon26
-used	base.h	/^	size_t used;$/;"	m	struct:__anon28
-used	buffer.h	/^	size_t used;				\/* output-pointer *\/$/;"	m	struct:__anon35
-used	buffer.h	/^	size_t used; 	\/\/buffer中数据的长度$/;"	m	struct:__anon33
-used	buffer.h	/^	size_t used; 	\/\/buffer数组中数据的个数$/;"	m	struct:__anon34
-username	base.h	/^	buffer *username; 					\/\/用户名$/;"	m	struct:__anon20
-value	array.h	/^	array *value;$/;"	m	struct:__anon42
-value	array.h	/^	array *value;$/;"	m	struct:_data_config
-value	array.h	/^	buffer *value;$/;"	m	struct:__anon41
-value	array.h	/^	int value;$/;"	m	struct:__anon45
-value	base.h	/^	char *value;$/;"	m	struct:__anon12
-value	keyvalue.h	/^	buffer *value;$/;"	m	struct:__anon51
-value	keyvalue.h	/^	char *value;$/;"	m	struct:__anon49
-value	keyvalue.h	/^	char *value;$/;"	m	struct:__anon50
+upload_tempdirs	base.h	/^	array *upload_tempdirs; 			\/\/上传的临时目录$/;"	m	struct:__anon15
+uri	base.h	/^	buffer *uri;$/;"	m	struct:__anon10
+uri	base.h	/^	request_uri uri;$/;"	m	struct:__anon17
+use_ipv6	base.h	/^	unsigned short use_ipv6;$/;"	m	struct:__anon19
+used	array.h	/^	size_t used;$/;"	m	struct:__anon35
+used	base.h	/^	size_t *used;$/;"	m	struct:__anon24
+used	base.h	/^	size_t used; 				\/\/ptr已使用的数量。$/;"	m	struct:__anon18
+used	base.h	/^	size_t used;$/;"	m	struct:__anon20
+used	base.h	/^	size_t used;$/;"	m	struct:__anon22
+used	base.h	/^	size_t used;$/;"	m	struct:__anon23
+used	buffer.h	/^	size_t used;				\/* output-pointer *\/$/;"	m	struct:__anon32
+used	buffer.h	/^	size_t used; 	\/\/buffer中数据的长度$/;"	m	struct:__anon30
+used	buffer.h	/^	size_t used; 	\/\/buffer数组中数据的个数$/;"	m	struct:__anon31
+username	base.h	/^	buffer *username; 					\/\/用户名$/;"	m	struct:__anon15
+value	array.h	/^	array *value;$/;"	m	struct:__anon37
+value	array.h	/^	buffer *value;$/;"	m	struct:__anon36
+value	array.h	/^	int value;$/;"	m	struct:__anon38
+value	keyvalue.h	/^	char *value;$/;"	m	struct:__anon41
+value	keyvalue.h	/^	char *value;$/;"	m	struct:__anon42
+version	plugin.h	/^	size_t version;$/;"	m	struct:__anon29
 want_fds	base.h	/^	int want_fds;				\/* waiting fds 等待使用的文件描述符*\/$/;"	m	struct:server
-wkrconf	base.h	/^	server_config wkrconf;$/;"	m	struct:server
-write_queue	base.h	/^	chunkqueue *write_queue;	\/* a large queue for low-level write ( HTTP $/;"	m	struct:__anon24
-write_request_ts	base.h	/^	time_t write_request_ts; 			\/\/写请求的时间$/;"	m	struct:__anon24
+write_queue	base.h	/^	chunkqueue *write_queue;			\/\/ 存储需要发送给客户端的数据，内存中数据或文件。$/;"	m	struct:__anon17
+write_request_ts	base.h	/^	time_t write_request_ts; 			\/\/写请求的时间$/;"	m	struct:__anon17
