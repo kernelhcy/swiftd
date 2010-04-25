@@ -189,8 +189,8 @@ static server *server_init(void)
 	srv -> conf_ity -> fd = -1;
 	srv -> conf_ity -> plugin_conf_wd = -1;
 	srv -> conf_ity -> server_conf_wd = -1;
-	srv -> conf_ity -> events = NULL;
-	srv -> conf_ity -> events_len = 0;
+	srv -> conf_ity -> buf = NULL;
+	srv -> conf_ity -> buf_len = 0;
 	
 	return srv;
 }
@@ -630,6 +630,23 @@ int main(int argc, char *argv[])
 		{
 			//a new second
 			srv -> cur_ts = time(NULL);
+			//触发插件计时器。
+			switch(plugin_handle_trigger(srv))
+			{
+				case HANDLER_FINISHED:
+				case HANDLER_GO_ON:
+				case HANDLER_COMEBACK:
+				case HANDLER_WAIT_FOR_EVENT:
+				case HANDLER_WAIT_FOR_FD:
+					break;
+				case HANDLER_ERROR:
+					log_error_write(srv, __FILE__, __LINE__, "s", "plugin_handle_trigger error.");
+					break;
+				default:
+					log_error_write(srv, __FILE__, __LINE__, "s"
+										, "plugin_handle_trigger error. Unknown hander_t");
+					break;	
+			}
 		}
 		
 		if (-1 == n)
@@ -711,6 +728,24 @@ int main(int argc, char *argv[])
 			
 		}
 	}while(!shutdown_server);
+	
+	//触发插件。
+	switch(plugin_handle_cleanup(srv))
+	{
+		case HANDLER_FINISHED:
+		case HANDLER_GO_ON:
+		case HANDLER_COMEBACK:
+		case HANDLER_WAIT_FOR_EVENT:
+		case HANDLER_WAIT_FOR_FD:
+			break;
+		case HANDLER_ERROR:
+			log_error_write(srv, __FILE__, __LINE__, "s", "plugin_handle_cleanup error.");
+			break;
+		default:
+			log_error_write(srv, __FILE__, __LINE__, "s"
+								, "plugin_handle_cleanup error. Unknown hander_t");
+			break;	
+	}
 	
 	fprintf(stderr, "free the thread pool.\n");
 	tp_free(srv -> tp);

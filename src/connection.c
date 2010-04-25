@@ -415,6 +415,10 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 	int rlen, rval;
 	
 	//获取需要读取的数据长度.
+	/*
+	 * ioctl必须放在循环之外。否则，每次read之前ioctl，会造成
+	 * read在没有数据可读的情况下返回0,而不是EAGAIN。这就造成死循环。
+	 */
 	if (-1 == ioctl(con -> fd, FIONREAD, &need_to_read))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "s", "ioctl error. FIONREAD.");
@@ -450,7 +454,8 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 					/*
 					 * 没有数据可读。此时con -> fd的就绪状态已经清除。可以继续epoll。
 					 */
-					log_error_write(srv, __FILE__, __LINE__, "s", "Read done. fd is not ready now.");
+					log_error_write(srv, __FILE__, __LINE__, "sd", "Read done. fd is not ready now. fd:"
+												, con -> fd);
 					read_done = 1;
 					break;
 				case EINTR:
@@ -474,7 +479,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 			}
 			rlen += rval;
 			b -> used = rval;
-			log_error_write(srv, __FILE__, __LINE__, "sdsb", "the read length ", rval, "data: ", b); 
+			//log_error_write(srv, __FILE__, __LINE__, "sdsb", "the read length ", rval, "data: ", b); 
 		}
 	}
 	
@@ -999,11 +1004,6 @@ int connection_state_machine(server *srv, connection *con)
 				//读取数据。
 				connection_set_state(srv, con, CON_STATE_READ);
 				
-				/*
-				 * 试着读。没有数据，就在poll中等待。
-				 */
-				//con -> is_readable = 1;
-				//con -> first_read = 1;
 				break;
 			case CON_STATE_REQUEST_END:
 			
@@ -1015,7 +1015,6 @@ int connection_state_machine(server *srv, connection *con)
 				{
 					//读取POST数据。
 					connection_set_state(srv, con, CON_STATE_READ_POST);
-					//con -> is_readable = 1;
 					break;
 				}
 				
@@ -1089,7 +1088,7 @@ int connection_state_machine(server *srv, connection *con)
 				 * 试着直接写数据。如果无法写，那么在poll中等待。
 				 */
 				con -> is_writable = 1;
-				log_error_write(srv, __FILE__, __LINE__, "sd", "write_queue len: ", chunkqueue_length(con -> write_queue));
+
 				break;
 			case CON_STATE_RESPONSE_END:
 				//对上一个请求的数据进行清空。
@@ -1125,7 +1124,6 @@ int connection_state_machine(server *srv, connection *con)
 					default:
 						break;
 				}
-				con -> first_read = 0;
 				break;
 			case CON_STATE_READ_POST:
 				joblist_append(srv, con);
@@ -1156,6 +1154,30 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_CONNECT);
 				//log_error_write(srv, __FILE__, __LINE__, "s", "close done.");
 				
+				//触发插件。
+				switch(plugin_handle_connection_close(srv))
+				{
+					case HANDLER_FINISHED:
+					case HANDLER_GO_ON:
+					case HANDLER_COMEBACK:
+						break;
+					case HANDLER_WAIT_FOR_EVENT:
+						log_error_write(srv, __FILE__, __LINE__, "s"
+											, "connection close waits for event.");
+						connection_set_state(srv, con, CON_STATE_CLOSE);
+						break;
+					case HANDLER_WAIT_FOR_FD:
+						break;
+					case HANDLER_ERROR:
+						log_error_write(srv, __FILE__, __LINE__, "s"
+											, "plugin_handle_connection_close error.");
+						break;
+					default:
+						log_error_write(srv, __FILE__, __LINE__, "s"
+								, "plugin_handle_connection_close error. Unknown hander_t");
+						break;
+					
+				}
 				break;
 			default:
 				log_error_write(srv, __FILE__, __LINE__, "sd", "Unknown state!", con -> state);

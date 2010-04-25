@@ -20,11 +20,7 @@
  */
 
 //这个宏定义了插件所使用的数据的公共部分。
-#define PLUGIN_DATA  size_t index
-struct plugin_data
-{
-	PLUGIN_DATA;
-};
+#define PLUGIN_DATA  size_t ndx
 
 /*
  * 定义slot的类型。
@@ -55,8 +51,9 @@ typedef enum
 typedef struct 
 {
 	size_t version;
-	int ndx;
-
+	buffer *name;
+	size_t ndx;
+	
 	void *data;
 	void *lib;
 	
@@ -69,7 +66,7 @@ typedef struct
 	 * 这三个函数在插件的整个生命周期中只执行一次。
 	 * 其中，前两个会在初始化插件的时候调用。cleanup会在销毁插件时调用。
 	 */
-	void* (*init)();
+	void (*init)();
 	handler_t (*set_default)(server* srv, void *p_d);
 	handler_t (*cleanup)(server* srv, void *p_d);
 	
@@ -148,7 +145,7 @@ handler_t plugin_handle_joblist(server *srv, connection *con);
 handler_t plugin_handle_subrequest_start(server *srv, connection *con);
 handler_t plugin_handle_handle_subrequest(server *srv, connection *con);
 handler_t plugin_handle_request_end(server *srv, connection *con);
-handler_t plugin_handle_connection_reeset(server *srv, connection *con);
+handler_t plugin_handle_connection_reset(server *srv, connection *con);
 
 handler_t plugin_handle_trigger(server *srv);
 handler_t plugin_handle_cleanup(server *srv);

@@ -89,7 +89,6 @@ int main(void)
 				break;
 			}
 			printf("Event mask: %08X\n", event->mask);
-			/*
 			for (i=0; i<EVENT_NUM; i++) 
 			{
 				if (event_array[i][0] == '\0') continue;
@@ -97,11 +96,6 @@ int main(void)
 				{
 					printf("Event: %s\n", event_array[i]);
 				}
-			}
-			*/
-			if(event -> mask & IN_MODIFY)
-			{
-				printf("File was modified.\n");
 			}
 			tmp_len = sizeof(struct inotify_event) + event->len;
 			event = (struct inotify_event *)(offset + tmp_len); 

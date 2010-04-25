@@ -279,7 +279,6 @@ typedef struct
 
 	void *srv_sock;			/* server socket */
 	
-	int first_read; 		//标记是否是第一次进行数据读取。
 } connection;
 
 //连接数组
@@ -323,8 +322,8 @@ typedef struct
 	int plugin_conf_wd;				//插件配置文件监测fd。
 	int server_conf_wd;				//服务器配置文件监测fd。
 	
-	struct inotify_event *events; 	//事件结构体数组。
-	size_t events_len; 				//数组的长度。
+	char *buf;				 		//存储事件结构体。
+	int buf_len;					//
 }conf_inotify;
 
 /////////////////////  作业  ////////////////////////

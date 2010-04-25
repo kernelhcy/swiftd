@@ -9,6 +9,12 @@
 #include <error.h>
 #include <errno.h>
 #include <sys/ioctl.h>
+#include <dlfcn.h>
+
+struct plugin_data
+{
+	PLUGIN_DATA;
+};
 
 /**
  * 从plugin的配置文件中读取插件的名称和路径。
@@ -236,7 +242,7 @@ int plugin_load(server *srv)
 	buffer *libname = buffer_init(); 		//插件的完整路径，包括插件名。
 	buffer *ini_func = buffer_init(); 		//插件的初始化函数名称。
 	plugin *p;
-	
+	void (*init_f)(plugin*);
 	/*
 	 * 加载插件的动态连接库。初始化plugin结构体。
 	 */
@@ -265,7 +271,38 @@ int plugin_load(server *srv)
 		//通过dlopen打开动态连接库
 		//调用连接库中的XXXXXXX_init()函数。其中，XXXXXXXX是连接库的名称。
 		//上面的函数调用初始化p中的数据。
-			
+		if(NULL == (p -> lib = dlopen(libname -> ptr, RTLD_NOW | RTLD_GLOBAL)))
+		{
+			log_error_write(srv, __FILE__, __LINE__, "ss", "dlopen failed.", dlerror());
+			plugin_plugin_free(p);
+			continue;
+		}
+		if(NULL == (init_f = (void(*)(plugin*))dlsym(p -> lib, ini_func -> ptr)))
+		{	
+			log_error_write(srv, __FILE__, __LINE__, "ss", "dlsym failed. ", dlerror());
+			dlclose(p -> lib);
+			plugin_plugin_free(p);
+			continue;
+		}
+		
+		//初始化插件。
+		init_f(p);
+		//检查版本以及是否加载成功。
+		if(p -> version < SWIFTD_VERSION)
+		{
+			log_error_write(srv, __FILE__, __LINE__, "sd", "Version not supported. ", p -> version);
+			dlclose(p -> lib);
+			plugin_plugin_free(p);
+			continue;
+		}
+		if(NULL == p -> name)
+		{
+			log_error_write(srv, __FILE__, __LINE__, "sb", "plugin load failed:", libname);
+			dlclose(p -> lib);
+			plugin_plugin_free(p);
+			continue;
+		}
+		
 		//注册插件。
 		if (srv -> plugins -> size = 0)
 		{
@@ -278,6 +315,7 @@ int plugin_load(server *srv)
 			srv -> plugins -> ptr = malloc(srv -> plugins -> size * sizeof(plugin*));
 		}
 		srv -> plugins -> ptr[srv -> plugins -> used] = p;
+		p -> ndx = srv -> plugins -> used;
 		++ srv -> plugins -> used;
 
 		buffer_reset(libname);
@@ -314,6 +352,7 @@ int plugin_load(server *srv)
 		plugin *p = srv -> plugins -> ptr[i];\
 		if(p -> y)\
 		{\
+			log_error_write(srv, __FILE__, __LINE__, "sb", "slot: ", p -> name);\
 			if(NULL == srv -> slots -> size)\
 			{\
 				srv -> slots -> used = (size_t *)calloc(PLUGIN_SLOT_SIZE, sizeof(size_t *));\
@@ -503,6 +542,53 @@ void plugin_free(server *srv)
 	
 #undef PLUGIN_CALL_HANDLER
 
+handler_t plugin_handle_cleanup(server *srv)
+{
+	if (NULL == srv)
+	{
+		return HANDLER_ERROR;
+	}
+	
+	if (!srv -> slots -> ptr)
+	{
+		return HANDLER_GO_ON;
+	}
+	if (!srv -> slots -> ptr[PLUGIN_SLOT_CLEANUP])
+	{
+		return HANDLER_GO_ON;
+	}
+	
+	pthread_mutex_lock(&srv -> plugin_lock);
+	plugin *p;
+	size_t i;
+	handler_t ht;
+	for (i = 0; i < srv -> slots -> used[PLUGIN_SLOT_CLEANUP]; ++i)
+	{
+		if (srv -> slots -> ptr[PLUGIN_SLOT_CLEANUP][i])
+		{
+			p = (plugin*)srv -> slots -> ptr[PLUGIN_SLOT_CLEANUP][i];
+			switch(ht = p -> cleanup(srv, p -> data))
+			{
+				case HANDLER_GO_ON:
+					break;
+				case HANDLER_FINISHED:
+				case HANDLER_COMEBACK:
+				case HANDLER_WAIT_FOR_EVENT:
+				case HANDLER_ERROR:
+				case HANDLER_WAIT_FOR_FD:
+					pthread_mutex_unlock(&srv -> plugin_lock);
+					return ht;
+				default:
+					log_error_write(srv, __FILE__, __LINE__, "Unknown handler type.");
+					pthread_mutex_unlock(&srv -> plugin_lock);
+					return HANDLER_ERROR;
+			}
+		}
+	}
+	pthread_mutex_unlock(&srv -> plugin_lock);
+	return ht;
+}
+
 int plugin_conf_inotify_init(server *srv, const char *conf_path)
 {
 	if(NULL == srv || NULL == conf_path)
@@ -510,34 +596,56 @@ int plugin_conf_inotify_init(server *srv, const char *conf_path)
 		return -1;
 	}
 	
-	int fd;
+	int fd, wd;
+	buffer *dir_path = buffer_init();
 	if(-1 == (fd = inotify_init()))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "ss", "inotify_init failed. ", strerror(errno));
+		buffer_free(dir_path);
 		return -1;
 	}
 	srv -> conf_ity -> fd = fd;
 	log_error_write(srv, __FILE__, __LINE__, "sd", "inotify_init return fd:", fd);
 	
-	int wd;
-	//监测配置文件的删除，创建和修改事件。
-	if(-1 == (wd = inotify_add_watch(fd, conf_path, IN_DELETE_SELF | IN_MODIFY | IN_CREATE)))
+	/*
+	 * 由于vim，gedit等编辑器在编辑文件时，首先将文件复制到一个临时文件，编辑完成之后，在复制覆盖原来的文件。
+	 * 如果直接监测对应的文件，那么，在进行文件覆盖时，监测到文件被删除，inotify将停止对文件的监测，也就是
+	 * 相当于inotify_rm_watch文件了。
+	 * 这样，就只能监测到一次IN_DELETE_SELF事件。随后什么也监测不到。
+	 * 为了能够对文件进行正常的监测，这里不直接监测文件，而监测包含文件的文件夹。
+	 * 一旦文件被覆盖，将触发文件夹IN_CLOSE_WIRTE事件。这样即可得到文件的修改事件。
+	 */
+	buffer_copy_string(dir_path, conf_path);
+	int i = strlen(dir_path -> ptr);
+	for (; dir_path -> ptr[i] != '/' && i >=0 ; --i)
+	{
+		;
+	}
+	dir_path -> ptr[i] = '\0';
+	dir_path -> used = i + 1;
+	log_error_write(srv, __FILE__, __LINE__, "sb", "Plugin configure dir path:", dir_path);
+	
+	//监测文件夹中文件的关闭写。。
+	if(-1 == (wd = inotify_add_watch(fd, dir_path -> ptr, IN_CLOSE_WRITE)))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "sss", "inotify_add_watch failed."
 							, strerror(errno), conf_path);
 		close(fd);
+		buffer_free(dir_path);
 		return -1;
 	}
 	srv -> conf_ity -> plugin_conf_wd = wd;
 	log_error_write(srv, __FILE__, __LINE__, "sds", "inotify_add_watch return fd:", wd, conf_path);
 	
-	if(NULL == (srv -> conf_ity -> events = 
-						(struct inotify_event *)calloc(2, sizeof(struct inotify_event))))
+	srv -> conf_ity -> buf_len = 2048;
+	if(NULL == (srv -> conf_ity -> buf = (char *)malloc(srv -> conf_ity -> buf_len * sizeof(char))))
 	{
 		close(fd);
+		buffer_free(dir_path);
 		return -1;
 	}
 	
+	buffer_free(dir_path);
 	return fd;
 }
 
@@ -552,7 +660,7 @@ int plugin_conf_inotify_free(server *srv)
 	}
 
 	close(srv -> conf_ity -> fd);
-	free(srv -> conf_ity -> events);
+	free(srv -> conf_ity -> buf);
 	return 0;
 }
 
@@ -577,7 +685,6 @@ static handler_t plugin_conf_inotify_fdevent_handler(void *srv, void *ctx, int r
 		log_error_write(s, __FILE__, __LINE__, "s", "Bad events. We only need FDEVENT_IN!");
 		return HANDLER_ERROR;
 	}
-	log_error_write(srv, __FILE__, __LINE__, "s", "some configure file is changed.");
 	
 	int nlen;
 	if(-1 == ioctl(ity -> fd, FIONREAD, &nlen))
@@ -586,49 +693,72 @@ static handler_t plugin_conf_inotify_fdevent_handler(void *srv, void *ctx, int r
 		return HANDLER_ERROR;
 	}
 	
-	int rlen;
-	if(-1 == (rlen = read(ity -> fd, ity -> events, nlen)))
+	if(nlen > ity -> buf_len || NULL == ity -> buf)
 	{
-		log_error_write(s, __FILE__, __LINE__, "ss", "read inotify event failed.", strerror(errno));
-		return HANDLER_ERROR;
+		free(ity -> buf);
+		ity -> buf_len = nlen + 16;
+		ity -> buf = (char *)malloc(ity -> buf_len * sizeof(char));
+		if(NULL == ity -> buf)
+		{
+			log_error_write(s, __FILE__, __LINE__, "s", "malloc memory for ity -> buf failed.");
+			return HANDLER_ERROR;
+		}
 	}
 	
-	int cnt = rlen / sizeof(* ity -> events);
-	int i;
-	for(i = 0; i < cnt; ++i)
+	int rlen, offset = 0;
+	int read_done = 0;
+	while(!read_done)
 	{
-		if(ity -> events[i].wd == ity -> plugin_conf_wd)
+		if(-1 == (rlen = read(ity -> fd, ity -> buf + offset, ity -> buf_len - offset)))
 		{
-			if(ity -> events[i].mask & IN_MODIFY)
+			switch(errno)
+			{
+				case EAGAIN:
+					/*
+					 * 没有数据可读。此时ity -> fd的就绪状态已经清除。可以继续epoll。
+					 */
+					log_error_write(srv, __FILE__, __LINE__, "sd", "Read done. fd is not ready now."
+																, ity -> fd);
+					read_done = 1;
+					break;
+				case EINTR:
+					/*
+					 * 被信号中断。可能还有数据，继续读数据。直道读完。
+					 */
+					break;
+				default:
+					return HANDLER_ERROR;
+			}
+		}
+		else
+		{
+			offset += rlen;
+		}
+	}
+		
+	int tmp_len;
+	struct inotify_event *e;
+	for(tmp_len = 0; tmp_len < offset; )
+	{
+		e = (struct inotify_event *)(ity -> buf + tmp_len);
+		if(e -> wd == ity -> plugin_conf_wd)
+		{
+			if(e -> mask & IN_CLOSE_WRITE)
 			{
 				/*
 				 * 插件配置文件被修改。加载插件。
+				 * 由于编辑器的不同设计，可能造成在一次编辑中，多次触发这个事件。
 				 */
 				log_error_write(s, __FILE__, __LINE__, "s", "Plugin configure file is modified.");
 				plugin_load(srv);
 			}
-			else if(ity -> events[i].mask & IN_CREATE)
-			{
-				/*
-				 * 插件配置文件被创建。加载插件。
-				 */
-				log_error_write(s, __FILE__, __LINE__, "s", "Plugin configure file is created.");
-				plugin_load(srv);
-			}
-			else if(ity -> events[i].mask & IN_DELETE_SELF)
-			{
-				/*
-				 * 插件配置文件被删除。
-				 */
-				log_error_write(s, __FILE__, __LINE__, "s", "Plugin configure file is deleted.");
-				pthread_mutex_lock(&s -> plugin_lock);
-				plugin_free(s);
-				pthread_mutex_unlock(&s -> plugin_lock);
-			}
-			
 			break;
 		}
+		tmp_len += sizeof(int); 			//wd
+		tmp_len += 3 * sizeof(uint32_t);	//mask, cookie,len
+		tmp_len += e -> len;
 	}
+	
 	return HANDLER_FINISHED;
 }
 
@@ -646,13 +776,13 @@ int plugin_conf_inotify_register_fdevent(server *srv, int fd)
 		log_error_write(srv, __FILE__, __LINE__, "sd", "fdevent_register inotify fd failed.", fd);
 		return -1;
 	}
-	/*
+	
 	if(-1 == fdevent_fcntl(srv -> ev, fd))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "sd", "fcntl set inotify fd failed.", fd);
 		return -1;
 	}
-	*/
+	
 	log_error_write(srv, __FILE__, __LINE__, "sd", "Add inotify fd in fdevent. fd:", fd);
 	if(-1 == fdevent_event_add(srv -> ev, fd, FDEVENT_IN))
 	{

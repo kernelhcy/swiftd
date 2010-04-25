@@ -7,8 +7,8 @@ FLAGS=-g
 OBJSPATH=../objects
 
 
-swiftd: ${OBJS}
-	gcc  ${FLAGS} ${OBJS} -o swiftd -lpthread
+swiftd: ${OBJS} ${OBJSPATH}/mod_dir_index.o dir_index.so
+	gcc  ${FLAGS} ${OBJS} -o swiftd -lpthread -ldl
 
 ${OBJSPATH}/buffer.o: buffer.c
 	gcc -c ${FLAGS} buffer.c -o ${OBJSPATH}/buffer.o
@@ -31,7 +31,7 @@ ${OBJSPATH}/configure.o:configure.c
 ${OBJSPATH}/fdevent.o:fdevent.c
 	gcc -c ${FLAGS} fdevent.c  -o ${OBJSPATH}/fdevent.o
 ${OBJSPATH}/threadpool.o:threadpool.c
-	gcc -c ${FLAGS} threadpool.c -o ${OBJSPATH}/threadpool.o -lphtread 
+	gcc -c ${FLAGS} threadpool.c -o ${OBJSPATH}/threadpool.o 
 ${OBJSPATH}/fde_epoll.o:fde_epoll.c
 	gcc -c ${FLAGS} fde_epoll.c -o  ${OBJSPATH}/fde_epoll.o
 ${OBJSPATH}/joblist.o:joblist.c
@@ -54,6 +54,12 @@ ${OBJSPATH}/error_page.o:error_page.c
 	gcc -c ${FLAGS} error_page.c  -o  ${OBJSPATH}/error_page.o
 ${OBJSPATH}/network_write.o:network_write.c
 	gcc -c ${FLAGS} network_write.c  -o  ${OBJSPATH}/network_write.o
+${OBJSPATH}/mod_dir_index.o:mod_dir_index.c
+	gcc -c ${FLAGS} mod_dir_index.c  -o  ${OBJSPATH}/mod_dir_index.o
+
+dir_index.so: ${OBJS} ${OBJSPATH}/mod_dir_index.o
+	gcc -fPIC -shared ${OBJS} ${OBJSPATH}/mod_dir_index.o -o dir_index.so
+	mv dir_index.so /home/hcy/swiftd
 
 clean:
 	rm ${OBJSPATH}/*.o
