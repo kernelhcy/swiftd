@@ -130,8 +130,7 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 					return -1;
 			}
 		}
-		
-		if (w_len < c -> file.mmap.length)
+		else if (w_len < c -> file.mmap.length)
 		{
 			//数据没有写完。
 			c -> file.mmap.offset += w_len;
