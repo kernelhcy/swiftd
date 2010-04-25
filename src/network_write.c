@@ -25,6 +25,7 @@ static int network_write_mem(server *srv, connection *con, chunk *c)
 	}
 	int write_done;
 	int w_len;
+	int done = 0;
 	log_error_write(srv, __FILE__, __LINE__, "sd", "Write chunk MEM need len :"
 								, c -> mem -> used - c -> offset);
 	write_done = 0;
@@ -43,6 +44,7 @@ static int network_write_mem(server *srv, connection *con, chunk *c)
 					log_error_write(srv, __FILE__, __LINE__, "sd", "write done. the fd is not ready. fd:"
 																		, con -> fd);
 					write_done = 1;
+					done = 0;
 					break;
 				case EINTR:
 					//被信号中断，继续写。
@@ -55,13 +57,21 @@ static int network_write_mem(server *srv, connection *con, chunk *c)
 		{
 			//数据没有写完。
 			c -> offset += w_len;
+			done = 0;
 		}
 		else 
 		{
+			done  = 1;
 			c -> finished = 1;
 			write_done = 1;
 		}
 	}
+	
+	if(!done)
+	{
+		return -2;
+	}
+	
 	return 0;
 }
 
@@ -103,6 +113,7 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 	
 	int w_len;
 	int write_done;
+	int done = 0;
 	write_done = 0;
 	while(!write_done)
 	{
@@ -118,6 +129,7 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 					log_error_write(srv, __FILE__, __LINE__, "sd", "write done. the fd is not ready. fd:"
 																		, con -> fd);
 					write_done = 1;
+					done = 0;
 					break;
 				case EINTR:
 					//被信号中断。
@@ -133,6 +145,7 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 		else if (w_len < c -> file.mmap.length)
 		{
 			//数据没有写完。
+			done = 0;
 			c -> file.mmap.offset += w_len;
 			c -> file.mmap.length -= w_len;
 			log_error_write(srv, __FILE__, __LINE__, "sdsdsd", "Need write more data. Has write:",
@@ -141,6 +154,7 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 		}
 		else 
 		{
+			done = 1;
 			log_error_write(srv, __FILE__, __LINE__, "sd", "Has write: ", w_len);
 			c -> finished = 1;
 			write_done = 1;
@@ -152,7 +166,10 @@ static int network_write_file(server *srv, connection *con, chunk *c)
 	close(fd);
 	c -> file.fd = -1;
 	
-	
+	if(!done)
+	{
+		return -2;
+	}
 	return 0;
 }
 
