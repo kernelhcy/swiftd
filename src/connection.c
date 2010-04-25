@@ -410,9 +410,10 @@ void connection_free(server *srv, connection *con)
 static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 {
 	int need_to_read;
-
+	int read_done;
 	con -> read_idle_ts = srv -> cur_ts;
-
+	int rlen, rval;
+	
 	//获取需要读取的数据长度.
 	if (-1 == ioctl(con -> fd, FIONREAD, &need_to_read))
 	{
@@ -420,59 +421,62 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 		return -1;
 	}
 	log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
-
-	buffer *b = chunkqueue_get_append_buffer(cq);
-	buffer_prepare_copy(b, need_to_read + 64);
-
-	int len;
-	//log_error_write(srv, __FILE__, __LINE__, "s", "read data from client.");
-	if (-1 == (len = read(con -> fd, b -> ptr, need_to_read)))
-	{
-		if (errno == EAGAIN)
-		{
-			//非阻塞IO，但是没有数据可读
-			log_error_write(srv, __FILE__, __LINE__, "s", "NO data to read.");
-			return -2;
-		}
-
-		if (errno == EINTR)
-		{
-			//被信号中断。
-			return -3;
-		}
-
-		connection_set_state(srv, con, CON_STATE_ERROR);
-		return -1;
-	}
-	
-	if (len == 0)
-	{
-		/*
-		 * 在进入状态READ之后，立即进行了数据的读取。这个时候读取到的数据可能是0.
-		 * 但是连接没有关闭。因此要不能关闭连接。
-		 */
-		if(con -> first_read)
-		{
-			con -> first_read = 0;
-			return 0;
-		}
 		
-		//对c方关闭了链接。
-		log_error_write(srv, __FILE__, __LINE__, "sd", "Client closes the connection. fd:", con -> fd);
-		return -4;
-	}
-	
-	
-	//数据没有读完。
-	if (len < need_to_read)
+	if(0 == need_to_read)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "sd", "Read Going On. fd:", con -> fd);
-		con -> is_readable = 1;
+		need_to_read + 64;
 	}
 	
-	b -> used = len;
-	log_error_write(srv, __FILE__, __LINE__, "sdsbsd", "read data len: ", len, "the data :", b
-																	, "fd:", con -> fd);
+	/*
+	 * 由于epoll使用ET模式。因此，在一次读取时，必须将数据全部读完，
+	 * 直到read返回EAGAIN错误（没有数据可读。）
+	 * 否则，epoll将认为fd一直就绪，不在触发IO事件。
+	 */
+	read_done = 0;
+	rlen = 0;
+	rval = 0;
+	while(!read_done)
+	{		
+		buffer *b = chunkqueue_get_append_buffer(cq);
+		buffer_prepare_copy(b, need_to_read + 1);
+
+		
+		//log_error_write(srv, __FILE__, __LINE__, "s", "read data from client.");
+		if (-1 == (rval = read(con -> fd, b -> ptr, b -> size - 1)))
+		{
+			switch(errno)
+			{ 
+				case EAGAIN:
+					/*
+					 * 没有数据可读。此时con -> fd的就绪状态已经清除。可以继续epoll。
+					 */
+					log_error_write(srv, __FILE__, __LINE__, "s", "Read done. fd is not ready now.");
+					read_done = 1;
+					break;
+				case EINTR:
+					/*
+					 * 被信号中断。可能还有数据，继续读数据。直道读完。
+					 */
+					break;
+				default:
+					//其他错误直接将连接设置为错误。
+					connection_set_state(srv, con, CON_STATE_ERROR);
+					return -1;
+			}
+		}
+		else
+		{
+			if (rval == 0)
+			{	
+				log_error_write(srv, __FILE__, __LINE__, "sd", "Client closes the connection. fd:"
+															, con -> fd);
+				return -2;
+			}
+			rlen += rval;
+			b -> used = rval;
+			log_error_write(srv, __FILE__, __LINE__, "sdsb", "the read length ", rval, "data: ", b); 
+		}
+	}
 	
 	//删除read_queue中的空的chunk
 	chunk *c;
@@ -531,7 +535,6 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
  */
 static int connection_handle_read(server *srv, connection *con)
 {
-	int is_close = 0;
 
 	if (con -> is_readable)
 	{
@@ -545,22 +548,16 @@ static int connection_handle_read(server *srv, connection *con)
 			case -1: 	//出错。
 				con -> read_idle_ts = 0;
 				connection_set_state(srv, con, CON_STATE_ERROR);
-				break;
-			case -2: 	//非阻塞IO，但是没有数据可读。
+				return -1;
+			case -2: 	//连接关闭。
 				con -> is_readable = 0;
-				break;
-			case -3: 	//被信号中断。
-				con -> is_readable = 1;
-				break;
-			case -4: 	//连接关闭。
-				con -> is_readable = 0;
-				is_close = 1;
-				break;
+				connection_set_state(srv, con, CON_STATE_CLOSE);
+				return -2;
 			default: 
 				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown status.");
 				connection_set_state(srv, con, CON_STATE_ERROR);
 				con -> is_readable = 0;
-				break;
+				return -1;
 		}
 	}
 
@@ -659,13 +656,6 @@ static int connection_handle_read(server *srv, connection *con)
 		//log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 		connection_set_state(srv, con, CON_STATE_REQUEST_END);
 	}
-	else if(is_close)
-	{
-		//没有得到足够的HTTP头数据，但连接已经关闭。
-		log_error_write(srv, __FILE__, __LINE__, "s"
-				, "The connection is close, but we do not get enough data. ERROR!");
-		connection_set_state(srv, con, CON_STATE_ERROR);
-	}
 	
 	return 0;
 }
@@ -745,18 +735,27 @@ static int connection_handle_write(server *srv, connection *con)
 	
 	con -> is_writable = 0;
 	log_error_write(srv, __FILE__, __LINE__, "s", "write data to client.");
+		
+	//设置socket为TCP_CORK
+	int val = 1;
+	setsockopt(con -> fd, IPPROTO_TCP, TCP_CORK, &val, sizeof(val));
+	val = 0;
+	
 	switch(network_write(srv, con))
 	{
 		case HANDLER_GO_ON:
 			log_error_write(srv, __FILE__, __LINE__, "s", "Write Going On.");
+			setsockopt(con -> fd, IPPROTO_TCP, TCP_CORK, &val, sizeof(val));
 			return 0;
 		case HANDLER_FINISHED:
 			con -> write_request_ts = 0;
 			connection_set_state(srv, con, CON_STATE_RESPONSE_END);
 			log_error_write(srv, __FILE__, __LINE__, "s", "Write done. Go to Response End.");
+			setsockopt(con -> fd, IPPROTO_TCP, TCP_CORK, &val, sizeof(val));
 			return 0;
 		case HANDLER_ERROR:
 		default:
+			setsockopt(con -> fd, IPPROTO_TCP, TCP_CORK, &val, sizeof(val));
 			connection_set_state(srv, con, CON_STATE_ERROR);
 			return -1;
 	}
@@ -932,6 +931,7 @@ static int connection_handle_close(server *srv, connection *con)
 	
 	if (len > 0)
 	{
+		log_error_write(srv, __FILE__, __LINE__, "sd", "the closing fd's buffer has data. len: ", len);
 		char buf[len + 1];
 		int r;
 		if ( -1 == (r = read(con -> fd, buf, len)))
@@ -945,9 +945,9 @@ static int connection_handle_close(server *srv, connection *con)
 	fdevent_event_del(srv -> ev, con -> fd);
 	fdevent_unregister(srv -> ev, con -> fd);
 	
-	log_error_write(srv, __FILE__, __LINE__, "sd", "close fd:", con -> fd);
 	//关闭连接。
 	//直接关闭两个方向。
+	log_error_write(srv, __FILE__, __LINE__, "sd", "shutdown fd:", con -> fd);
 	if (-1 == shutdown(con -> fd, SHUT_RDWR))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "ssd", "shutdown error."
@@ -958,6 +958,7 @@ static int connection_handle_close(server *srv, connection *con)
 	 * 这必须再调用一次关闭。
 	 * shutdown仅仅是关闭了连接，没有关闭socket。
 	 */
+	log_error_write(srv, __FILE__, __LINE__, "sd", "close fd: ", con -> fd);
 	if ( -1 == close(con -> fd))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "ssd", "close error."
@@ -1000,8 +1001,8 @@ int connection_state_machine(server *srv, connection *con)
 				/*
 				 * 试着读。没有数据，就在poll中等待。
 				 */
-				con -> is_readable = 1;
-				con -> first_read = 1;
+				//con -> is_readable = 1;
+				//con -> first_read = 1;
 				break;
 			case CON_STATE_REQUEST_END:
 			
@@ -1013,7 +1014,7 @@ int connection_state_machine(server *srv, connection *con)
 				{
 					//读取POST数据。
 					connection_set_state(srv, con, CON_STATE_READ_POST);
-					con -> is_readable = 1;
+					//con -> is_readable = 1;
 					break;
 				}
 				
@@ -1068,6 +1069,7 @@ int connection_state_machine(server *srv, connection *con)
 				{
 					//一切正常。
 					con -> http_status = 200;
+					
 				}
 				
 				/*
@@ -1117,7 +1119,20 @@ int connection_state_machine(server *srv, connection *con)
 				 */
 				joblist_append(srv, con);
 				//状态的改变视读取数据的情况而定。
-				connection_handle_read(srv, con);
+				switch(connection_handle_read(srv, con))
+				{
+					case 0:
+						log_error_write(srv, __FILE__, __LINE__, "s", "handle read done.");
+						break;
+					case -1:
+						log_error_write(srv, __FILE__, __LINE__, "s", "handle read error.");
+						break;
+					case -2:
+						log_error_write(srv, __FILE__, __LINE__, "s", "handle read close.");
+						break;
+					default:
+						break;
+				}
 				con -> first_read = 0;
 				break;
 			case CON_STATE_READ_POST:

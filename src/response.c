@@ -94,7 +94,7 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 		int done = 0;
 		for (c = srv -> srvconf.c_t_map; c -> file_ext; ++c)
 		{
-			if(0 == strncmp(ext, c -> file_ext, strlen(c -> file_ext)))
+			if(0 == strncasecmp(ext + 1 , c -> file_ext + 1, strlen(c -> file_ext) - 1))
 			{
 				log_error_write(srv, __FILE__, __LINE__, "ssss", "File ext:", ext, "Content_t:", c -> content_type);
 				http_response_insert_header(srv, con, CONST_STR_LEN("Content-Type")
@@ -314,6 +314,10 @@ handler_t http_prepare_response(server *srv, connection *con)
 	{
 		buffer_copy_string_len(con -> uri.path_raw, CONST_STR_LEN("*"));
 		buffer_copy_string_len(con -> uri.path, CONST_STR_LEN("*"));
+		http_response_insert_header(srv, con, CONST_STR_LEN("Allow")
+											, CONST_STR_LEN("GET, POST, OPTIONS, HEAD"));
+		con -> http_status = 200;
+		return HANDLER_FINISHED;
 	}
 	else
 	{
@@ -597,6 +601,17 @@ int http_response_finish_header(server *srv, connection *con)
 	buffer_append_string(b, get_http_status_name(con -> http_status));
 	buffer_append_string_len(b, CONST_STR_LEN(CRLF)); 	//CRLF = '\r\n' defined in base.h
 	
+	if(con -> keep_alive)
+	{
+		http_response_insert_header(srv, con, CONST_STR_LEN("Connection")
+											, CONST_STR_LEN("keep-alive"));
+	}
+	else
+	{
+		http_response_insert_header(srv, con, CONST_STR_LEN("Connection")
+											, CONST_STR_LEN("close"));
+	}
+	
 	/*
 	 * Headers:
 	 *		Key:Value CRLF
@@ -612,7 +627,7 @@ int http_response_finish_header(server *srv, connection *con)
 			continue;
 		}
 		buffer_append_string_buffer(b, ds -> key);
-		buffer_append_string_len(b, CONST_STR_LEN(":"));
+		buffer_append_string_len(b, CONST_STR_LEN(": "));
 		buffer_append_string_buffer(b, ds -> value);
 		buffer_append_string_len(b, CONST_STR_LEN(CRLF));
 	}
