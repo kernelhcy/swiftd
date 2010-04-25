@@ -69,7 +69,7 @@ int config_setdefaults(server *srv)
 
 	srv -> srvconf.port = 8080;
 	srv -> srvconf.bindhost = NULL;
-	srv -> srvconf.errorlog_file = buffer_init_string("/home/hcy/swiftd.log");
+	srv -> srvconf.errorlog_file = buffer_init_string("/home/hcy/swiftd/swiftd.log");
 	srv -> srvconf.errorlog_use_syslog = 0;
 	srv -> srvconf.dont_daemonize = 0;
 	srv -> srvconf.changeroot = buffer_init_string("/");
@@ -91,7 +91,7 @@ int config_setdefaults(server *srv)
 	srv -> srvconf.max_write_idle = 30;
 	srv -> srvconf.max_close_idle = 10;
 	
-	srv -> srvconf.plugin_conf_file = buffer_init_string("/home/hcy/swiftd-plugin.conf");
+	srv -> srvconf.plugin_conf_file = buffer_init_string("/home/hcy/swiftd/swiftd-plugin.conf");
 
 	struct ev_map 
 	{
