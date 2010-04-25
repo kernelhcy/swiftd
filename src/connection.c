@@ -1063,6 +1063,8 @@ int connection_state_machine(server *srv, connection *con)
 					buffer_append_long(con -> tmp_buf, b -> used);
 					http_response_insert_header(srv, con, CONST_STR_LEN("Content-Length")
 											, con -> tmp_buf -> ptr, con -> tmp_buf -> used - 1);
+					http_response_insert_header(srv, con, CONST_STR_LEN("Content-Type")
+														, CONST_STR_LEN("text/html"));
 		
 				}
 				else if (0 == con -> http_status)
