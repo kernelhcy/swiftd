@@ -214,7 +214,7 @@ static void connection_clear(server *srv, connection *con)
 	con -> is_readable = 0;
 	con -> is_writable = 0;			
 
-	chunkqueue_remove_finished_chunks(con -> write_queue);			
+	chunkqueue_reset(con -> write_queue);			
 	chunkqueue_remove_finished_chunks(con -> read_queue);				
 	chunkqueue_remove_finished_chunks(con -> request_content_queue);
 	con -> http_status = 0; 				
@@ -576,7 +576,7 @@ static int connection_handle_read(server *srv, connection *con)
 			break;
 		}
 		b = c -> mem;
-		//log_error_write(srv, __FILE__, __LINE__, "sb", "---------+-chunk mem:", b);
+		//log_error_write(srv, __FILE__, __LINE__, "ss", "---------+-chunk mem:", b -> ptr + c -> offset);
 		for (i = c -> offset; i < b -> used; ++i)
 		{
 			if (b -> ptr[i] == '\r')
@@ -588,7 +588,7 @@ static int connection_handle_read(server *srv, connection *con)
 					{
 						found = 1;
 						lastchunk = c;
-						c -> offset = i + 4 + 1; //必须加1！！！！！！！！！
+						offset = i + 4;
 						break;
 					}
 				}
@@ -604,7 +604,7 @@ static int connection_handle_read(server *srv, connection *con)
 						{
 							found = 1;
 							lastchunk = c -> next;
-							c -> next -> offset = misschars + 1;//必须加1！！！！！！！！！
+							offset = misschars;
 							break;
 						}
 					}
@@ -628,8 +628,8 @@ static int connection_handle_read(server *srv, connection *con)
 		{			
 			if (c == lastchunk)
 			{
-				buffer_append_memory(b, c -> mem -> ptr, c -> offset);
-				
+				buffer_append_string_len(b, c -> mem -> ptr + c -> offset, offset - c -> offset);
+				c -> offset = offset;
 				if (c -> offset >= c -> mem -> used)
 				{
 					c -> finished = 1;
@@ -639,7 +639,8 @@ static int connection_handle_read(server *srv, connection *con)
 			}
 			else
 			{
-				buffer_append_memory(b, c -> mem -> ptr + c -> offset, c -> mem -> used);
+				buffer_append_string_len(b, c -> mem -> ptr + c -> offset, offset - c -> mem -> used);
+				c -> offset = offset;
 				c -> finished = 1;
 			}
 			
@@ -1088,22 +1089,11 @@ int connection_state_machine(server *srv, connection *con)
 				 * 试着直接写数据。如果无法写，那么在poll中等待。
 				 */
 				con -> is_writable = 1;
-				
+				log_error_write(srv, __FILE__, __LINE__, "sd", "write_queue len: ", chunkqueue_length(con -> write_queue));
 				break;
 			case CON_STATE_RESPONSE_END:
 				//对上一个请求的数据进行清空。
 				connection_clear(srv, con);
-				
-				if(chunkqueue_is_empty(con -> read_queue))
-				{	
-					/*
-					 * 对于HTTP/1.1，连接是保持的。
-					 * 在建立连接之后，client会将所有的请求头一次发送完毕。
-					 * 如果在处理完所有的请求之后。不在保持连接。
-					 */
-					con -> keep_alive = 0;
-					log_error_write(srv, __FILE__, __LINE__, "s", "Donot keep alive.");
-				}
 				
 				if(con -> keep_alive)
 				{

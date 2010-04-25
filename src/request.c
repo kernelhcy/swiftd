@@ -468,18 +468,18 @@ int http_parse_request(server *srv, connection *con)
 	int content_length_set = 0;		//标记是否有Content-Length
 	int host_set = 0;  				//标记是否有Host
 	
-	if (con->request_count > 1 && con->request.request->ptr[0] == '\r' &&
-		con->request.request->ptr[1] == '\n')
+	if (con -> request_count > 1 && con -> request.request -> ptr[0] == '\r' &&
+		con -> request.request -> ptr[1] == '\n')
 	{
 		/*
 		 * 在开始部分可能是"\r\n"
 		 */
-		buffer_copy_string_len(con->parse_request, con->request.request->ptr + 2,
-							   con->request.request->used - 1 - 2); //减去\r\n和"\0"
+		buffer_copy_string_len(con -> parse_request, con -> request.request -> ptr + 2,
+							   con -> request.request -> used - 1 - 2); //减去\r\n和"\0"
 	} 
 	else
 	{
-		buffer_copy_string_buffer(con->parse_request, con->request.request);
+		buffer_copy_string_buffer(con -> parse_request, con -> request.request);
 	}
 	
 	int i;
