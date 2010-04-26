@@ -479,7 +479,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 			}
 			rlen += rval;
 			b -> used = rval;
-			//log_error_write(srv, __FILE__, __LINE__, "sdsb", "the read length ", rval, "data: ", b); 
+			log_error_write(srv, __FILE__, __LINE__, "sdsb", "the read length ", rval, "data: ", b); 
 		}
 	}
 	
@@ -658,7 +658,6 @@ static int connection_handle_read(server *srv, connection *con)
 		
 		//删除已经处理过的数据。
 		chunkqueue_remove_finished_chunks(con -> read_queue);
-		
 		//log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 		connection_set_state(srv, con, CON_STATE_REQUEST_END);
 	}
@@ -671,6 +670,7 @@ static int connection_handle_read(server *srv, connection *con)
  */
 static int connection_handle_read_post(server *srv, connection *con)
 {
+	log_error_write(srv, __FILE__, __LINE__, "s", "Read POST data.");
 	if (con -> is_readable)
 	{
 		switch(connection_network_read(srv, con, con -> request_content_queue))
@@ -709,7 +709,52 @@ static int connection_handle_read_post(server *srv, connection *con)
 	}
 	else
 	{
-		//POST数据没有读取完。	
+		//POST数据没有读取完。
+		int tmp_len;
+		int weneed;
+		buffer *b;
+		weneed = con -> request.content_length - wehave;
+		chunk *c;
+		tmp_len = 0;
+		log_error_write(srv, __FILE__, __LINE__, "s", "We have POST data, now, copy it.");
+		for(c = con -> read_queue -> first; c; )
+		{
+			log_error_write(srv, __FILE__, __LINE__, "ss", "---------+-chunk mem post:", c -> mem -> ptr + c -> offset);
+			if(tmp_len + (c -> mem -> used - c -> offset) <= weneed)
+			{
+				/*
+				 * 这个chunk后面还有数据。
+				 */
+				log_error_write(srv, __FILE__, __LINE__, "s", "Need more chunks.");
+				b = chunkqueue_get_append_buffer(con -> request_content_queue);
+				buffer_copy_memory(b, c -> mem -> ptr + c -> offset, c -> mem -> used - c -> offset);
+				c -> finished = 1;
+				tmp_len += c -> mem -> used - c -> offset;
+			}
+			else
+			{
+				/*
+				 * 这个chunk中只有一部分是content数据。
+				 */
+				log_error_write(srv, __FILE__, __LINE__, "s", "Got all POST data.");
+				b = chunkqueue_get_append_buffer(con -> request_content_queue);
+				buffer_copy_memory(b, c -> mem -> ptr + c -> offset, weneed - tmp_len);
+				c -> offset += (weneed - tmp_len);
+				if(c -> offset >= c -> mem -> used)
+				{
+					c -> finished = 1;
+				}
+				weneed = 0;
+				break;
+			}
+			weneed -= tmp_len;
+			c = c -> next;
+		}
+		log_error_write(srv, __FILE__, __LINE__, "sd", "Post data len:", chunkqueue_length(con -> request_content_queue));
+		if(0 == weneed)
+		{
+			connection_set_state(srv, con, CON_STATE_RESPONSE_START);
+		}
 	}
 	
 	
@@ -717,6 +762,10 @@ static int connection_handle_read_post(server *srv, connection *con)
 	{
 		//POST数据过长。
 		//出错处理。
+		connection_set_state(srv, con, CON_STATE_ERROR);
+		con -> http_status = 413;
+		con -> keep_alive = 0;
+		return 0;
 	}
 	
 	return 0;
@@ -1014,6 +1063,7 @@ int connection_state_machine(server *srv, connection *con)
 				if (http_parse_request(srv, con))
 				{
 					//读取POST数据。
+					log_error_write(srv, __FILE__, __LINE__, "s", "We have POST data to read.");
 					connection_set_state(srv, con, CON_STATE_READ_POST);
 					break;
 				}

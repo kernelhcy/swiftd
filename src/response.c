@@ -73,7 +73,7 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 	 * 根据文件的扩展名确定Content-Type
 	 */
 	char *ext;
-	ext = file -> ptr + file -> used;
+	ext = file -> ptr + file -> used - 1;
 	while(*ext != '/' && *ext != '.')
 	{
 		//文件路径中至少包含一个'/',因此不会越界。
@@ -85,6 +85,7 @@ static handler_t response_handle_static_file(server *srv, connection *con)
 		/*
 		 * 资源没有扩展名。使用默认类型。
 		 */
+		log_error_write(srv, __FILE__, __LINE__, "s", "File has no extention name...");
 		http_response_insert_header(srv, con, CONST_STR_LEN("Content-Type")
 										, CONST_STR_LEN("application/octet-stream"));
 	}

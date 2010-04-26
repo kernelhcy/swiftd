@@ -596,6 +596,17 @@ int http_parse_request(server *srv, connection *con)
  					
  					con -> request.http_method = hm;
  					
+ 					if(strlen(url) > 40960)
+ 					{
+ 						/*
+ 						 * URL地址过长。
+ 						 * 出错。
+ 						 */
+ 						con -> http_status = 414;
+ 						con -> keep_alive = 0;
+ 						return 0;
+ 					}
+ 					
  					/*
  					 * 分析url地址。ndex.html?key=%E6%95%B0%E6%8D%AE 
  					 * 对于url地址中的host部分，乎略之。因为Host header中有。
@@ -774,8 +785,8 @@ int http_parse_request(server *srv, connection *con)
  							buffer_copy_string_len(ds -> key, key, key_len);
  							buffer_copy_string_len(ds -> value, value, value_len);
  							
- 							//log_error_write(srv, __FILE__, __LINE__, "sbsb", "key:", ds -> key
- 							//							, "value:", ds -> value);
+ 							log_error_write(srv, __FILE__, __LINE__, "sbsb", "key:", ds -> key
+ 														, "value:", ds -> value);
  							
  							if(!is_key_valid(key, key_len) || !is_value_valid(value, value_len))
  							{
@@ -791,7 +802,7 @@ int http_parse_request(server *srv, connection *con)
  							/*
  							 * 对获得的headers进行解析。
  							 */
- 							if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds->key), CONST_STR_LEN("Connection")))
+ 							if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key), CONST_STR_LEN("Connection")))
  							{
  								//默认保持连接。
  								con -> keep_alive = 1;
@@ -806,14 +817,14 @@ int http_parse_request(server *srv, connection *con)
  								{
  									dst = (data_string *)vals -> data[vi];
  									
- 									if (0 == buffer_caseless_compare(CONST_BUF_LEN(dst->value)
+ 									if (0 == buffer_caseless_compare(CONST_BUF_LEN(dst -> value)
  																		, CONST_STR_LEN("keep-alive")))
 									{
 										con -> keep_alive = 1;
 										//log_error_write(srv, __FILE__, __LINE__, "s", "Connection: keep-alive");
 										break;
 									} 
-									else if (0 == buffer_caseless_compare(CONST_BUF_LEN(dst->value)
+									else if (0 == buffer_caseless_compare(CONST_BUF_LEN(dst -> value)
 																			,CONST_STR_LEN("close")))
 									{
 										con -> keep_alive = 0;
@@ -824,20 +835,21 @@ int http_parse_request(server *srv, connection *con)
  								
  								
  							}
- 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds->key)
+ 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key)
  																, CONST_STR_LEN("Content-Length")))
  							{
+ 								
  								if (con -> request.content_length) //有content-length...
  								{
  									con -> http_status = 400;
 									//con -> keep_alive = 0;
 									log_error_write(srv, __FILE__, __LINE__, "s", "Double Content-Length.");
-									array_insert_unique(con->request.headers,(data_unset *) ds);
+									array_insert_unique(con -> request.headers,(data_unset *) ds);
 									return 0;
  								}
  								
  								size_t vi;
- 								for (vi = 0; vi < ds -> value -> used; ++i)
+ 								for (vi = 0; vi < ds -> value -> used - 1; ++vi)
  								{
  									if (!isdigit((unsigned char)ds -> value -> ptr[vi]))
  									{
@@ -876,7 +888,7 @@ int http_parse_request(server *srv, connection *con)
  								
  								content_length_set = 1;
  							}
- 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds->key)
+ 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key)
  																, CONST_STR_LEN("Content-Type")))
  							{
  								if (con -> request.http_content_type != NULL)
@@ -895,7 +907,7 @@ int http_parse_request(server *srv, connection *con)
  								con -> request.http_content_type = ds -> value -> ptr;
  								
  							}
- 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds->key)
+ 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key)
  																, CONST_STR_LEN("Expect")))
  							{
  								//不支持Expect！
@@ -904,7 +916,7 @@ int http_parse_request(server *srv, connection *con)
  								log_error_write(srv, __FILE__, __LINE__, "s", "Expectation Failed.");
  								return 0;
  							}
- 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds->key)
+ 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key)
  																, CONST_STR_LEN("Host")))
  							{
  								if (con -> request.http_host != NULL)
@@ -928,7 +940,7 @@ int http_parse_request(server *srv, connection *con)
  								host_set = 1;
  								
  							}
- 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds->key)
+ 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key)
  																, CONST_STR_LEN("If-Modified-Since")))
  							{
  								/*
@@ -947,7 +959,7 @@ int http_parse_request(server *srv, connection *con)
  								
  								
  							}
- 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds->key)
+ 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key)
  																, CONST_STR_LEN("If-None-Match")))
  							{
  								if (con -> request.http_if_none_match != NULL)
@@ -962,7 +974,7 @@ int http_parse_request(server *srv, connection *con)
  								}
  								
  							}
- 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds->key)
+ 							else if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key)
  																, CONST_STR_LEN("If-Range")))
  							{	
  								if (con -> request.http_if_range != NULL)
@@ -1092,20 +1104,21 @@ int http_parse_request(server *srv, connection *con)
 		/*
 		 * 超过最大允许长度。
 		 */
-		if (con->request.content_length > SSIZE_MAX)
+		if (con -> request.content_length > SSIZE_MAX)
 		{
-			con->http_status = 413;
-			con->keep_alive = 0;
+			con -> http_status = 413;
+			con -> keep_alive = 0;
 			log_error_write(srv, __FILE__, __LINE__, "sd",	"request-size too long:"
-							, con->request.content_length);
+							, con -> request.content_length);
 			return 0;
 		}
 
 		/*
 		 * 有POST数据。
 		 */
-		if (con->request.content_length != 0)
+		if (con -> request.content_length != 0)
 		{
+			log_error_write(srv, __FILE__, __LINE__, "sd", "Content-Length:", con -> request.content_length);
 			return 1;
 		}
 	}

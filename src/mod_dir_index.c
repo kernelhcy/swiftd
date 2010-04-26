@@ -37,14 +37,14 @@ static void dir_index_init()
 	fprintf(stderr, "dir_index init.\n");
 	return;
 }
-/*
-static hander_t dir_index_cleanup(server *srv, void *p_d)
+
+static handler_t dir_index_cleanup(server *srv, void *p_d)
 {
 	UNUSED(srv);
 	free(p_d);
 	return HANDLER_FINISHED;
 }
-*/
+
 static handler_t dir_index_set_default(server *srv, void *p_d)
 {
 	UNUSED(p_d);
@@ -54,6 +54,7 @@ static handler_t dir_index_set_default(server *srv, void *p_d)
 
 /*
  * 检测文件是否存在。不存在返回0
+ × 存在返回1;如果是目录返回2
  */
 static int dir_index_file_state(server *srv, const char *path)
 {
@@ -77,6 +78,13 @@ static int dir_index_file_state(server *srv, const char *path)
 				return 0;
 		}
 	}
+	
+	if (S_ISDIR(s.st_mode))
+	{
+		//是目录。
+		return 2;
+	}
+	
 	return 1;
 }
 
@@ -85,6 +93,12 @@ static handler_t dir_index_handle_physical(server *srv, connection *con, void *p
 	struct plugin_data *data = (struct plugin_data *)p_d;
 	
 	log_error_write(srv, __FILE__, __LINE__, "s", "dir_index_handle_physical");
+	
+	if(2 != dir_index_file_state(srv, con -> physical.real_path -> ptr))
+	{
+		//不是目录。
+		return HANDLER_GO_ON;
+	}
 	
 	buffer *b = buffer_init();
 	const char *fn;
@@ -95,7 +109,7 @@ static handler_t dir_index_handle_physical(server *srv, connection *con, void *p
 		fn = data -> index[i].index_name;
 		buffer_reset(b);
 		buffer_append_string_buffer(b, con -> physical.real_path);
-		if(b -> ptr[b -> used - 1] != '/')
+		if(b -> ptr[b -> used - 2] != '/') //最后一个是\0
 		{
 			buffer_append_string_len(b, CONST_STR_LEN("/"));
 		}
@@ -142,7 +156,7 @@ void dir_index_plugin_init(plugin *p)
 	
 	p -> init = dir_index_init;
 	p -> set_default = dir_index_set_default;
-	//p -> cleanup = dir_index_cleanup;
+	p -> cleanup = dir_index_cleanup;
 	p -> handle_physical = dir_index_handle_physical;
 	p -> data = p_d;
 

@@ -14,7 +14,7 @@ int main()
 	bzero(head, sizeof(head));
 
 	//request line
-	strcat(head, "GET");
+	strcat(head, "POST");
 	strcat(head, " ");
 	strcat(head, "/doc/index.html");
 	strcat(head, " ");
@@ -28,9 +28,14 @@ int main()
 	strcat(head, "Connection:");
 	strcat(head, "keep-alive");
 	strcat(head, CRLF);
+	strcat(head, "Content-Length:");
+	strcat(head, "100");
+	strcat(head, CRLF);
 	strcat(head, CRLF);
 	
 	printf("Head: %s\n", head);
+	char content[100];
+	memset(content, 'a', 100);
 
 	int sock ;
 	if (-1 == (sock= socket(AF_INET, SOCK_STREAM, 0)))
@@ -58,7 +63,7 @@ int main()
 	int len = 0, needlen = (int)strlen(head);
 	int val = 0;
 
-	head_cnt = 5;
+	head_cnt = 2;
 	for(i = 0; i < head_cnt; ++i)
 	{
 		len = 0;
@@ -75,6 +80,21 @@ int main()
 				len += val;
 			}
 		}
+		len = 0;
+		val = 0;
+		while(len < 100)
+		{
+			if( -1 == (val = write(sock, content, 100)))
+			{
+				printf("Wirte Error.\n");
+				return -1;
+			}
+			else
+			{
+				len += val;
+			}
+		}
+		printf("write head and content %d\n", i);
 	}
 
 	char buf[1];
