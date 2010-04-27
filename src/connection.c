@@ -181,8 +181,6 @@ static void connection_reset(server *srv, connection *con)
 	buffer_reset(con -> request.orig_uri);
 	buffer_reset(con -> request.pathinfo);
 	
-	free(con -> server_name);
-	con -> server_name = buffer_init_string("swiftd");
 	buffer_reset(con -> error_handler);
 	con -> error_handler_saved_status = 0;
 	con -> in_error_handler = 0;
@@ -651,7 +649,7 @@ static int connection_handle_read(server *srv, connection *con)
 			}
 			else
 			{
-				buffer_append_string_len(b, c -> mem -> ptr + c -> offset, offset - c -> mem -> used);
+				buffer_append_string_len(b, c -> mem -> ptr + c -> offset, c -> mem -> used - offset);
 				c -> offset = offset;
 				c -> finished = 1;
 			}
