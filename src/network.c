@@ -154,7 +154,7 @@ void network_close(server *srv)
 	for (i = 0; i < srv -> sockets -> used; ++i)
 	{
 		close(srv -> sockets -> ptr[i] -> fd);
-		free(srv -> sockets -> ptr[i]);
+		//free(srv -> sockets -> ptr[i]);
 	}
 	return;
 }
