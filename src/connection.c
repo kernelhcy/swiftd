@@ -479,7 +479,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 			}
 			rlen += rval;
 			b -> used = rval;
-			log_error_write(srv, __FILE__, __LINE__, "sdsb", "the read length ", rval, "data: ", b); 
+			//log_error_write(srv, __FILE__, __LINE__, "sdsb", "the read length ", rval, "data: ", b); 
 		}
 	}
 	
