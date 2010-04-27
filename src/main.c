@@ -217,6 +217,8 @@ static void server_free(server * srv)
 	free(srv -> plugins_np);
 	free(srv -> slots);
 	
+	fprintf(stderr, "errorlog_buf : %d\n ", srv -> errorlog_buf);
+	fprintf(stderr, "errorlog_buf -> ptr: %d\n ", srv -> errorlog_buf -> ptr);
 	buffer_free(srv -> errorlog_buf);
 	buffer_free(srv -> ts_debug_str);
 	

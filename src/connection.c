@@ -1198,7 +1198,10 @@ int connection_state_machine(server *srv, connection *con)
 				if (-1 == connection_handle_close(srv, con))
 				{
 					log_error_write(srv, __FILE__, __LINE__, "s", "close error.");
-					close(con -> fd);
+					if(-1 != con -> fd)
+					{
+						close(con -> fd);
+					}
 				}
 				connection_reset(srv, con);
 				//连接关闭以后，连接处于connect状态，等待下一次连接。

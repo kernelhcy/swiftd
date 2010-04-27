@@ -306,7 +306,7 @@ int log_error_write(server * srv, const char *filename, unsigned int line,
 		syslog(LOG_ERR, "%s", srv->errorlog_buf->ptr);
 		break;
 	}
-
+	
 	pthread_mutex_unlock(&srv -> log_lock);
 
 	return 0;

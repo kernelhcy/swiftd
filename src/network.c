@@ -92,7 +92,7 @@ int network_init(server *srv)
 	
 	//设置地址可重用。
 	//如果不设置可重用，在关闭服务器并重启时，会提示地址被占用。
-	int val;
+	int val = 1;
 	if (setsockopt(srv_sock -> fd, SOL_SOCKET, SO_REUSEADDR, &val, sizeof(val)) < 0)
 	{
 		log_error_write(srv, __FILE__, __LINE__, "ss", "socketsockopt failed:", strerror(errno));
@@ -154,6 +154,7 @@ void network_close(server *srv)
 	for (i = 0; i < srv -> sockets -> used; ++i)
 	{
 		close(srv -> sockets -> ptr[i] -> fd);
+		free(srv -> sockets -> ptr[i]);
 	}
 	return;
 }

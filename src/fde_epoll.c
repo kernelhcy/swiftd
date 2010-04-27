@@ -18,6 +18,10 @@ void fdevent_epoll_free(fdevent *ev)
 
 int fdevent_epoll_event_add(fdevent *ev, int fd, int events)
 {
+	if(fd < 0)
+	{
+		return 0;
+	}
 	struct epoll_event ee;
 
 	memset(&ee, 0, sizeof(ee));

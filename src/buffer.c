@@ -264,7 +264,9 @@ int buffer_append_string_rfill(buffer *b, const char *s, size_t maxlen)
 	s_len = strlen(s);
 	buffer_prepare_append(b, maxlen + 1);
 	if (b -> used == 0)
+	{
 		b -> used++;
+	}
 
 	//如果s的长度大于maxlen，这就溢出了。。。
 	memcpy(b -> ptr + b -> used - 1, s, s_len);

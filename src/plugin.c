@@ -326,9 +326,15 @@ int plugin_load(server *srv)
 		{
 			p -> init();
 		}
+
+		buffer_free(srv -> plugins_np -> path[i]);
+		buffer_free(srv -> plugins_np -> name[i]);
 		
 	}
 	
+	free(srv -> plugins_np -> path);
+	free(srv -> plugins_np -> name);
+
 	/*
 	 * 对插件所实现的功能进行注册。
 	 */
@@ -414,13 +420,6 @@ void plugin_free(server *srv)
 	free(srv -> plugins -> ptr);
 	srv -> plugins -> size = 0;
 	
-	for (i = 0; i < srv -> plugins_np -> used; ++i)
-	{
-		buffer_free(srv -> plugins_np -> name[i]);
-		buffer_free(srv -> plugins_np -> path[i]);
-	}
-	free(srv -> plugins_np -> name);
-	free(srv -> plugins_np -> path);
 }
 /*
  * 定义插件调用函数的宏模板。
