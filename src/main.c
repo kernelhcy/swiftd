@@ -747,6 +747,14 @@ int main(int argc, char *argv[])
 			break;	
 	}
 	
+	/*
+	 * 输出服务器当前的墙况
+	 */
+	log_error_write(srv, __FILE__, __LINE__, "s", "+++++++++++++++++++++The status of the server:");
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Num of struct connection:", srv -> conns -> used);
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Num of thread:", srv -> tp -> cur_num);
+	
+	
 	fprintf(stderr, "free the thread pool.\n");
 	tp_free(srv -> tp);
 	

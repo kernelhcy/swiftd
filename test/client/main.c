@@ -91,6 +91,7 @@ int main(int argc, char *argv[1])
 					break;
 				}
 			}
+			sleep(1);
 
 		}
 
