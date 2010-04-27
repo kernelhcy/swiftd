@@ -63,7 +63,7 @@ int main()
 	int len = 0, needlen = (int)strlen(head);
 	int val = 0;
 
-	head_cnt = 2;
+	head_cnt = 9999999;
 	for(i = 0; i < head_cnt; ++i)
 	{
 		len = 0;
@@ -111,7 +111,7 @@ int main()
 		else
 		{
 			totallen += rlen;
-			printf("read data. len: %d \n", totallen);
+			//printf("read data. len: %d \n", totallen);
 		}
 	}
 

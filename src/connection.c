@@ -216,7 +216,7 @@ static void connection_clear(server *srv, connection *con)
 
 	chunkqueue_reset(con -> write_queue);			
 	chunkqueue_remove_finished_chunks(con -> read_queue);				
-	chunkqueue_remove_finished_chunks(con -> request_content_queue);
+	chunkqueue_reset(con -> request_content_queue);
 	con -> http_status = 0; 				
 
 	buffer_reset(con -> parse_request); 	
@@ -710,17 +710,15 @@ static int connection_handle_read_post(server *srv, connection *con)
 	else
 	{
 		//POST数据没有读取完。
-		int tmp_len;
 		int weneed;
 		buffer *b;
 		weneed = con -> request.content_length - wehave;
 		chunk *c;
-		tmp_len = 0;
 		log_error_write(srv, __FILE__, __LINE__, "s", "We have POST data, now, copy it.");
 		for(c = con -> read_queue -> first; c; )
 		{
-			log_error_write(srv, __FILE__, __LINE__, "ss", "---------+-chunk mem post:", c -> mem -> ptr + c -> offset);
-			if(tmp_len + (c -> mem -> used - c -> offset) <= weneed)
+			//log_error_write(srv, __FILE__, __LINE__, "ss", "---------+-chunk mem post:", c -> mem -> ptr + c -> offset);
+			if(c -> mem -> used - c -> offset <= weneed)
 			{
 				/*
 				 * 这个chunk后面还有数据。
@@ -729,7 +727,7 @@ static int connection_handle_read_post(server *srv, connection *con)
 				b = chunkqueue_get_append_buffer(con -> request_content_queue);
 				buffer_copy_memory(b, c -> mem -> ptr + c -> offset, c -> mem -> used - c -> offset);
 				c -> finished = 1;
-				tmp_len += c -> mem -> used - c -> offset;
+				weneed -= (c -> mem -> used - c -> offset);
 			}
 			else
 			{
@@ -738,8 +736,8 @@ static int connection_handle_read_post(server *srv, connection *con)
 				 */
 				log_error_write(srv, __FILE__, __LINE__, "s", "Got all POST data.");
 				b = chunkqueue_get_append_buffer(con -> request_content_queue);
-				buffer_copy_memory(b, c -> mem -> ptr + c -> offset, weneed - tmp_len);
-				c -> offset += (weneed - tmp_len);
+				buffer_copy_memory(b, c -> mem -> ptr + c -> offset, weneed);
+				c -> offset += weneed;
 				if(c -> offset >= c -> mem -> used)
 				{
 					c -> finished = 1;
@@ -747,12 +745,16 @@ static int connection_handle_read_post(server *srv, connection *con)
 				weneed = 0;
 				break;
 			}
-			weneed -= tmp_len;
 			c = c -> next;
+			if(0 == weneed)
+			{
+				break;
+			}
 		}
 		log_error_write(srv, __FILE__, __LINE__, "sd", "Post data len:", chunkqueue_length(con -> request_content_queue));
 		if(0 == weneed)
 		{
+			log_error_write(srv, __FILE__, __LINE__, "s", "We have got enough POST data.");
 			connection_set_state(srv, con, CON_STATE_RESPONSE_START);
 		}
 	}
