@@ -450,15 +450,15 @@ off_t chunkqueue_length(chunkqueue * cq)
 	off_t len = 0;
 	chunk *c;
 
-	for (c = cq->first; c; c = c->next)
+	for (c = cq -> first; c; c = c -> next)
 	{
-		switch (c->type)
+		switch (c -> type)
 		{
 		case MEM_CHUNK:
-			len += c->mem->used ? c->mem->used - 1 : 0;
+			len += c -> mem -> used ? c -> mem -> used - 1 : 0;
 			break;
 		case FILE_CHUNK:
-			len += c->file.length;
+			len += c -> file.length;
 			break;
 		default:
 			break;

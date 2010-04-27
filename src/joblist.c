@@ -14,6 +14,7 @@ static int con_list_append(server *srv, connections *list, connection *con)
 	
 	if (con -> in_joblist)//防止多次追加
 	{
+		log_error_write(srv, __FILE__, __LINE__, "s", "Already in joblist.");
 		return 0;
 	}
 	

@@ -64,9 +64,6 @@ static void connection_init(server *srv, connection *con)
 	con -> is_readable = 0;
 	con -> is_writable = 0;
 	con -> keep_alive = 0;
-					
-	con -> is_running = 0;
-	pthread_mutex_init(&con -> running_lock, NULL);
 	
 	con -> write_queue = chunkqueue_init();			
 	con -> read_queue = chunkqueue_init();	
@@ -217,7 +214,7 @@ static void connection_clear(server *srv, connection *con)
 
 	con -> is_readable = 0;
 	con -> is_writable = 0;			
-	con -> is_running = 0;
+	con -> in_joblist = 0;
 	
 	chunkqueue_reset(con -> write_queue);			
 	chunkqueue_remove_finished_chunks(con -> read_queue);				
@@ -367,7 +364,6 @@ void connection_free(server *srv, connection *con)
 	chunkqueue_free(con -> read_queue);				
 	chunkqueue_free(con -> request_content_queue);			
 	pthread_mutex_destroy(&con -> read_queue_lock);
-	pthread_mutex_destroy(&con -> running_lock);
 	
 	buffer_free(con -> parse_request); 	
 	buffer_free(con -> uri.scheme);
@@ -723,7 +719,8 @@ static int connection_handle_read_post(server *srv, connection *con)
 		log_error_write(srv, __FILE__, __LINE__, "s", "We have POST data, now, copy it.");
 		for(c = con -> read_queue -> first; c; )
 		{
-			//log_error_write(srv, __FILE__, __LINE__, "ss", "---------+-chunk mem post:", c -> mem -> ptr + c -> offset);
+			//log_error_write(srv, __FILE__, __LINE__, "ss", "---------+-chunk mem post:"
+			//										, c -> mem -> ptr + c -> offset);
 			if(c -> mem -> used - c -> offset <= weneed)
 			{
 				/*
@@ -731,7 +728,7 @@ static int connection_handle_read_post(server *srv, connection *con)
 				 */
 				log_error_write(srv, __FILE__, __LINE__, "s", "Need more chunks.");
 				b = chunkqueue_get_append_buffer(con -> request_content_queue);
-				buffer_copy_memory(b, c -> mem -> ptr + c -> offset, c -> mem -> used - c -> offset);
+				buffer_copy_string_len(b, c -> mem -> ptr + c -> offset, c -> mem -> used - c -> offset);
 				c -> finished = 1;
 				weneed -= (c -> mem -> used - c -> offset);
 			}
@@ -742,7 +739,7 @@ static int connection_handle_read_post(server *srv, connection *con)
 				 */
 				log_error_write(srv, __FILE__, __LINE__, "s", "Got all POST data.");
 				b = chunkqueue_get_append_buffer(con -> request_content_queue);
-				buffer_copy_memory(b, c -> mem -> ptr + c -> offset, weneed);
+				buffer_copy_string_len(b, c -> mem -> ptr + c -> offset, weneed);
 				c -> offset += weneed;
 				if(c -> offset >= c -> mem -> used)
 				{
@@ -758,7 +755,8 @@ static int connection_handle_read_post(server *srv, connection *con)
 			}
 		}
 		chunkqueue_remove_finished_chunks(con -> read_queue);
-		log_error_write(srv, __FILE__, __LINE__, "sd", "Post data len:", chunkqueue_length(con -> request_content_queue));
+		log_error_write(srv, __FILE__, __LINE__, "sd", "Post data len:"
+							, chunkqueue_length(con -> request_content_queue));
 		if(0 == weneed)
 		{
 			log_error_write(srv, __FILE__, __LINE__, "s", "We have got enough POST data.");
@@ -891,7 +889,7 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		return HANDLER_ERROR;
 	}
 	
-	/*
+	
 	if (con -> state == CON_STATE_READ || con -> state == CON_STATE_READ_POST)
 	{
 		//继续读取数据。
@@ -901,7 +899,7 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 			connection_set_state(srv, con, CON_STATE_ERROR);
 		}
 	}
-	*/
+	
 	
 	if (con -> state == CON_STATE_WRITE && !chunkqueue_is_empty(con -> write_queue)
 										&& con -> is_writable)
@@ -1048,10 +1046,6 @@ int connection_state_machine(server *srv, connection *con)
 	connection_state_t old_state;
 	done = 0;
 	
-	pthread_mutex_lock(&con -> running_lock);
-	con -> is_running = 1;
-	pthread_mutex_unlock(&con -> running_lock);
-	
 	while(!done)
 	{
 		old_state = con -> state;
@@ -1171,11 +1165,6 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_READ:
-				/*
-				 * 对于可能一次运行处理不完的状态。
-				 * 在开始处理前，将连接加到作业队列中。
-				 */
-				joblist_append(srv, con);
 				//状态的改变视读取数据的情况而定。
 				switch(connection_handle_read(srv, con))
 				{
@@ -1193,13 +1182,10 @@ int connection_state_machine(server *srv, connection *con)
 				}
 				break;
 			case CON_STATE_READ_POST:
-				joblist_append(srv, con);
 				//状态的改变视读取数据的情况而定。
 				connection_handle_read_post(srv, con);
 				break;
 			case CON_STATE_WRITE:
-				joblist_append(srv, con);
-				
 				connection_handle_write(srv, con);
 				break;
 			case CON_STATE_ERROR:
@@ -1275,6 +1261,12 @@ int connection_state_machine(server *srv, connection *con)
 			log_error_write(srv, __FILE__, __LINE__, "sd", "Add in fdevent READ. fd:", con -> fd);
 			con -> read_idle_ts = srv -> cur_ts;
 			fdevent_event_add(srv -> ev, con -> fd, FDEVENT_IN);
+			/*
+			 * 对于可能一次运行处理不完的状态。
+			 * 在开始处理前，将连接加到作业队列中。
+			 */
+			joblist_append(srv, con);
+				
 			break;
 		case CON_STATE_WRITE:
 			
@@ -1282,6 +1274,12 @@ int connection_state_machine(server *srv, connection *con)
 			{
 				log_error_write(srv, __FILE__, __LINE__, "sd", "Add in fdevent WRITE. fd:", con -> fd);
 				fdevent_event_add(srv -> ev, con -> fd, FDEVENT_OUT);
+				/*
+				 * 对于可能一次运行处理不完的状态。
+				 * 在开始处理前，将连接加到作业队列中。
+				 */
+				joblist_append(srv, con);
+				
 			} 
 			else
 			{
@@ -1300,10 +1298,6 @@ int connection_state_machine(server *srv, connection *con)
 			fdevent_event_del(srv -> ev, con -> fd);
 			break;
 	}
-	
-	pthread_mutex_lock(&con -> running_lock);
-	con -> is_running = 0;
-	pthread_mutex_unlock(&con -> running_lock);
 	
 	return 0;
 }

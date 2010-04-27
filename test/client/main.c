@@ -68,6 +68,32 @@ int main(int argc, char *argv[1])
 	head_cnt = strtol(argv[1], &err, 10);
 	for(i = 0; i < head_cnt; ++i)
 	{
+		if(i % 100 == 0 && i != 0)
+		{
+			char buf[1];
+//			buf[5000] = '\0';
+			int rlen, totallen = 0;
+			int read_done = 0;
+			while(!read_done)
+			{
+				if(0 >=  (rlen = read(sock, buf, 1)))
+				{
+					printf("read error. %d\n", rlen);
+					read_done = 1;
+				}
+				else
+				{
+					totallen += rlen;
+					//printf("read data. len: %d \n", totallen);
+				}
+				if(800000 < totallen)
+				{
+					break;
+				}
+			}
+
+		}
+
 		len = 0;
 		val = 0;
 		while(len < needlen)
@@ -98,26 +124,6 @@ int main(int argc, char *argv[1])
 		}
 		printf("write head and content %d\n", i);
 	}
-
-	char buf[1];
-//	buf[5000] = '\0';
-	int rlen, totallen = 0;
-	int read_done = 0;
-	while(!read_done)
-	{
-		if(0 >=  (rlen = read(sock, buf, 1)))
-		{
-			printf("read error. %d\n", rlen);
-			read_done = 1;
-		}
-		else
-		{
-			totallen += rlen;
-			//printf("read data. len: %d \n", totallen);
-		}
-	}
-
-
 
 	close(sock);
 

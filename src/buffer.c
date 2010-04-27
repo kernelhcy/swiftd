@@ -23,9 +23,9 @@ buffer* buffer_init(void)
 	b = malloc(sizeof(*b));//b不指向任何数据，但可以确定其可以指向的数据的大小！
 	assert(b);
 
-	b->ptr = NULL;
-	b->size = 0;
-	b->used = 0;
+	b -> ptr = NULL;
+	b -> size = 0;
+	b -> used = 0;
 
 	return b;
 }
@@ -46,7 +46,7 @@ void buffer_free(buffer *b)
 {
 	if (!b) return;
 
-	free(b->ptr);
+	free(b -> ptr);
 	free(b);
 }
 
@@ -59,18 +59,18 @@ void buffer_reset(buffer *b)
 	 * 当buffer的大小超过BUFFER_MAX_REUSE_SIZE时，
 	 * 直接释放buffer的空间，而不是重新使用。
 	 */
-	if (b->size > BUFFER_MAX_REUSE_SIZE) 
+	if (b -> size > BUFFER_MAX_REUSE_SIZE) 
 	{
-		free(b->ptr);
-		b->ptr = NULL;
-		b->size = 0;
+		free(b -> ptr);
+		b -> ptr = NULL;
+		b -> size = 0;
 	} 
-	else if (b->size) 
+	else if (b -> size) 
 	{
-		b->ptr[0] = '\0';
+		b -> ptr[0] = '\0';
 	}
 
-	b->used = 0;
+	b -> used = 0;
 }
 
 
@@ -89,69 +89,80 @@ int buffer_prepare_copy(buffer *b, size_t size)
 	if (!b) return -1;
 	
 	//当原有的空间为0或小于所需的size，则重新分配空间
-	if ((0 == b -> size) || (size > b -> size)) 
+	if ((0 == b  ->  size) || (size > b  ->  size)) 
 	{
-		if (b->size) 
-			free(b->ptr);
+		if (b -> size) 
+			free(b -> ptr);
 
-		b->size = size;
+		b -> size = size;
 
 		/* 
 		 * always allocate a multiply of BUFFER_PIECE_SIZE 
 		 * 总是分配BUFFER_PIECE_SIZE倍数的大小的内存空间
 		 */
-		b->size += BUFFER_PIECE_SIZE - (b->size % BUFFER_PIECE_SIZE);
+		b -> size += BUFFER_PIECE_SIZE - (b -> size % BUFFER_PIECE_SIZE);
 
-		b->ptr = malloc(b->size);
-		assert(b->ptr);
+		b -> ptr = malloc(b -> size);
+		assert(b -> ptr);
 	}
-	b->used = 0;
+	b -> used = 0;
 	return 0;
 }
 
 /**
  *
  * increase the internal buffer (if neccessary) to append another 'size' byte
- * ->used isn't changed
+ *  -> used isn't changed
  * 为追加size大小的数据而准备空间，可能分配更多的空间
  *
  */
 
 int buffer_prepare_append(buffer *b, size_t size) 
 {
-	if (!b) return -1;
-
-	if (0 == b->size) {
-		b->size = size;
-
-		/* always allocate a multiply of BUFFER_PIECE_SIZE */
-		b->size += BUFFER_PIECE_SIZE - (b->size % BUFFER_PIECE_SIZE);
-
-		b->ptr = malloc(b->size);
-		b->used = 0;
-		assert(b->ptr);
-	} else if (b->used + size > b->size) {
-		b->size += size;
+	if (!b) 
+	{
+		return -1;
+	}
+	
+	if (0 == b -> size) 
+	{
+		b -> size = size;
 
 		/* always allocate a multiply of BUFFER_PIECE_SIZE */
-		b->size += BUFFER_PIECE_SIZE - (b->size % BUFFER_PIECE_SIZE);
+		b -> size += BUFFER_PIECE_SIZE - (b -> size % BUFFER_PIECE_SIZE);
 
-		b->ptr = realloc(b->ptr, b->size);
-		assert(b->ptr);
+		b -> ptr = malloc(b -> size);
+		b -> used = 0;
+		assert(b -> ptr);
+		
+	} 
+	else if (b -> used + size > b -> size) 
+	{
+		b -> size += size;
+
+		/* always allocate a multiply of BUFFER_PIECE_SIZE */
+		b -> size += BUFFER_PIECE_SIZE - (b -> size % BUFFER_PIECE_SIZE);
+
+		b -> ptr = realloc(b -> ptr, b -> size);
+		assert(b -> ptr);
 	}
 	return 0;
 }
 //将s复制到b中，覆盖原来的数据
-int buffer_copy_string(buffer *b, const char *s) {
+int buffer_copy_string(buffer *b, const char *s) 
+{
 	size_t s_len;
 
-	if (!s || !b) return -1;
-
+	if (!s || !b) 
+	{
+		return -1;
+	}
+	
 	s_len = strlen(s) + 1;
 	buffer_prepare_copy(b, s_len);
 
-	memcpy(b->ptr, s, s_len);
-	b->used = s_len;
+	memcpy(b -> ptr, s, s_len);
+	b -> used = s_len;
 
 	return 0;
 }
@@ -160,13 +171,16 @@ int buffer_copy_string(buffer *b, const char *s) {
  */
 int buffer_copy_string_len(buffer *b, const char *s, size_t s_len) 
 {
-	if (!s || !b) return -1;
-
+	if (!s || !b)
+	{
+		return -1;
+	}
+	
 	buffer_prepare_copy(b, s_len + 1);
 
-	memcpy(b->ptr, s, s_len);
-	b->ptr[s_len] = '\0';
-	b->used = s_len + 1;
+	memcpy(b -> ptr, s, s_len);
+	b -> ptr[s_len] = '\0';
+	b -> used = s_len + 1;
 
 	return 0;
 }
@@ -175,14 +189,17 @@ int buffer_copy_string_len(buffer *b, const char *s, size_t s_len)
  */
 int buffer_copy_string_buffer(buffer *b, const buffer *src) 
 {
-	if (!src) return -1;
-
-	if (src->used == 0) 
+	if (!src) 
 	{
-		b->used = 0;
+		return -1;
+	}
+	
+	if (src -> used == 0) 
+	{
+		b -> used = 0;
 		return 0;
 	}
-	return buffer_copy_string_len(b, src->ptr, src->used - 1);
+	return buffer_copy_string_len(b, src -> ptr, src -> used - 1);
 }
 
 /**
@@ -220,12 +237,12 @@ int buffer_append_string(buffer *b, const char *s)
 	 * 但当buffer为空时，就不需要覆盖NULL字符，因此，需要加一，
 	 * 以便和有数据的情况下处理相同。
 	 */
-	if (b->used == 0)
-		b->used++;
+	if (b -> used == 0)
+		b -> used++;
 	
 	//覆盖原来数据最后一个字符NULL，同时，也将s中的NULL复制到b中。
-	memcpy(b->ptr + b->used - 1, s, s_len + 1);
-	b->used += s_len;
+	memcpy(b -> ptr + b -> used - 1, s, s_len + 1);
+	b -> used += s_len;
 
 	return 0;
 }
@@ -246,21 +263,21 @@ int buffer_append_string_rfill(buffer *b, const char *s, size_t maxlen)
 
 	s_len = strlen(s);
 	buffer_prepare_append(b, maxlen + 1);
-	if (b->used == 0)
-		b->used++;
+	if (b -> used == 0)
+		b -> used++;
 
 	//如果s的长度大于maxlen，这就溢出了。。。
-	memcpy(b->ptr + b->used - 1, s, s_len);
+	memcpy(b -> ptr + b -> used - 1, s, s_len);
 	
 	//追加空格
 	if (maxlen > s_len) 
 	{
-		memset(b->ptr + b->used - 1 + s_len, ' ', maxlen - s_len);
+		memset(b -> ptr + b -> used - 1 + s_len, ' ', maxlen - s_len);
 	}
 	
 	//设置
-	b->used += maxlen;
-	b->ptr[b->used - 1] = '\0';
+	b -> used += maxlen;
+	b -> ptr[b -> used - 1] = '\0';
 	return 0;
 }
 
@@ -278,16 +295,24 @@ int buffer_append_string_rfill(buffer *b, const char *s, size_t maxlen)
 
 int buffer_append_string_len(buffer *b, const char *s, size_t s_len) 
 {
-	if (!s || !b) return -1;
-	if (s_len == 0) return 0;
-
+	if (!s || !b) 
+	{
+		return -1;
+	}
+	if (s_len == 0) 
+	{
+		return 0;
+	}
+	
 	buffer_prepare_append(b, s_len + 1);
-	if (b->used == 0)
-		b->used++;
-
-	memcpy(b->ptr + b->used - 1, s, s_len);
-	b->used += s_len;
-	b->ptr[b->used - 1] = '\0';
+	if (b -> used == 0)
+	{
+		++ b -> used;
+	}
+	
+	memcpy(b -> ptr + b -> used - 1, s, s_len);
+	b -> used += s_len;
+	b -> ptr[b -> used - 1] = '\0';
 
 	return 0;
 }
@@ -295,10 +320,16 @@ int buffer_append_string_len(buffer *b, const char *s, size_t s_len)
 //将src中的数据追加到b中
 int buffer_append_string_buffer(buffer *b, const buffer *src) 
 {
-	if (!src) return -1;
-	if (src->used == 0) return 0;
-
-	return buffer_append_string_len(b, src->ptr, src->used - 1);
+	if (!src) 
+	{
+		return -1;
+	}
+	if (src -> used == 0) 
+	{
+		return 0;
+	}
+	
+	return buffer_append_string_len(b, src -> ptr, src -> used - 1);
 }
 
 //将src中的数据追加到b中
@@ -308,7 +339,7 @@ int buffer_append_string_buffer_len(buffer *b, const buffer *src, size_t len)
 	{
 		return -1;
 	}
-	if (src->used == 0) 
+	if (src -> used == 0) 
 	{
 		return 0;
 	}
@@ -323,12 +354,19 @@ int buffer_append_string_buffer_len(buffer *b, const buffer *src, size_t len)
  */
 int buffer_append_memory(buffer *b, const char *s, size_t s_len) 
 {
-	if (!s || !b) return -1;
-	if (s_len == 0) return 0;
-
+	if (!s || !b) 
+	{
+		return -1;
+	}
+	
+	if (s_len == 0) 
+	{
+		return 0;
+	}
+	
 	buffer_prepare_append(b, s_len);
-	memcpy(b->ptr + b->used, s, s_len);
-	b->used += s_len;
+	memcpy(b -> ptr + b -> used, s, s_len);
+	b -> used += s_len;
 	/* 不需要追加一个'\0' */
 	return 0;
 }
@@ -336,10 +374,13 @@ int buffer_append_memory(buffer *b, const char *s, size_t s_len)
 //复制s指向的内存区域中的数据到b中
 int buffer_copy_memory(buffer *b, const char *s, size_t s_len) 
 {
-	if (!s || !b) return -1;
+	if (!s || !b) 
+	{
+		return -1;
+	}
 	
 	//将b的数据长度设为0,调用buffer_append_memory覆盖原来的数据。
-	b->used = 0;
+	b -> used = 0;
 
 	return buffer_append_memory(b, s, s_len);
 }
@@ -370,12 +411,12 @@ int buffer_append_long_hex(buffer *b, unsigned long value)
 		shift++;
 
 	buffer_prepare_append(b, shift + 1);//最后一个'\0'
-	if (b->used == 0)
-		b->used++;
+	if (b -> used == 0)
+		b -> used++;
 	//buf指向开始存放的位置
-	buf = b->ptr + (b->used - 1);
+	buf = b -> ptr + (b -> used - 1);
 
-	b->used += shift;
+	b -> used += shift;
 
 	/*
 	 * 每四位一组，转化value为十六进制形式的字符串
@@ -445,10 +486,10 @@ int buffer_append_long(buffer *b, long val)
 	if (!b) return -1;
 
 	buffer_prepare_append(b, 32); 	//将b的数据空间扩展32个字节
-	if (b->used == 0)
-		b->used++;
+	if (b -> used == 0)
+		b -> used++;
 
-	b->used += LI_ltostr(b->ptr + (b->used - 1), val);
+	b -> used += LI_ltostr(b -> ptr + (b -> used - 1), val);
 	return 0;
 }
 
@@ -456,7 +497,7 @@ int buffer_copy_long(buffer *b, long val)
 {
 	if (!b) return -1;
 
-	b->used = 0;
+	b -> used = 0;
 	return buffer_append_long(b, val);
 }
 
@@ -472,10 +513,10 @@ int buffer_append_off_t(buffer *b, off_t val)
 	if (!b) return -1;
 
 	buffer_prepare_append(b, 32);
-	if (b->used == 0)
-		b->used++;
+	if (b -> used == 0)
+		b -> used++;
 
-	start = b->ptr + (b->used - 1);
+	start = b -> ptr + (b -> used - 1);
 	if (val < 0) {
 		len++;
 		*(start++) = '-';
@@ -500,14 +541,14 @@ int buffer_append_off_t(buffer *b, off_t val)
 		end--;
 	}
 
-	b->used += len;
+	b -> used += len;
 	return 0;
 }
 
 int buffer_copy_off_t(buffer *b, off_t val) {
 	if (!b) return -1;
 
-	b->used = 0;
+	b -> used = 0;
 	return buffer_append_off_t(b, val);
 }
 
@@ -549,9 +590,9 @@ buffer_array* buffer_array_init(void)
 	b = malloc(sizeof(*b));
 
 	assert(b);
-	b->ptr = NULL;
-	b->size = 0;
-	b->used = 0;
+	b -> ptr = NULL;
+	b -> size = 0;
+	b -> used = 0;
 
 	return b;
 }
@@ -563,12 +604,12 @@ void buffer_array_reset(buffer_array *b)
 	if (!b) return;
 
 	/* if they are too large, reduce them */
-	for (i = 0; i < b->used; i++) 
+	for (i = 0; i < b -> used; i++) 
 	{
-		buffer_reset(b->ptr[i]);
+		buffer_reset(b -> ptr[i]);
 	}
 
-	b->used = 0;
+	b -> used = 0;
 }
 
 
@@ -582,11 +623,11 @@ void buffer_array_free(buffer_array *b)
 	size_t i;
 	if (!b) return;
 
-	for (i = 0; i < b->size; i++) 
+	for (i = 0; i < b -> size; i++) 
 	{
-		if (b->ptr[i]) buffer_free(b->ptr[i]);
+		if (b -> ptr[i]) buffer_free(b -> ptr[i]);
 	}
-	free(b->ptr);
+	free(b -> ptr);
 	free(b);
 }
 
@@ -599,35 +640,35 @@ buffer *buffer_array_append_get_buffer(buffer_array *b)
 {
 	size_t i;
 
-	if (b->size == 0) //分配空间
+	if (b -> size == 0) //分配空间
 	{
-		b->size = 16;
-		b->ptr = malloc(sizeof(*b->ptr) * b->size);
-		assert(b->ptr);
-		for (i = 0; i < b->size; i++) 
+		b -> size = 16;
+		b -> ptr = malloc(sizeof(*b -> ptr) * b -> size);
+		assert(b -> ptr);
+		for (i = 0; i < b -> size; i++) 
 		{
-			b->ptr[i] = NULL;
+			b -> ptr[i] = NULL;
 		}
 	} 
-	else if (b->size == b->used) //满，重新分配空间
+	else if (b -> size == b -> used) //满，重新分配空间
 	{
-		b->size += 16;
-		b->ptr = realloc(b->ptr, sizeof(*b->ptr) * b->size);
-		assert(b->ptr);
-		for (i = b->used; i < b->size; i++) 
+		b -> size += 16;
+		b -> ptr = realloc(b -> ptr, sizeof(*b -> ptr) * b -> size);
+		assert(b -> ptr);
+		for (i = b -> used; i < b -> size; i++) 
 		{
-			b->ptr[i] = NULL;
+			b -> ptr[i] = NULL;
 		}
 	}
 
-	if (b->ptr[b->used] == NULL) 
+	if (b -> ptr[b -> used] == NULL) 
 	{
-		b->ptr[b->used] = buffer_init(); //初始化这个buffer
+		b -> ptr[b -> used] = buffer_init(); //初始化这个buffer
 	}
 
-	b->ptr[b->used]->used = 0;
+	b -> ptr[b -> used] -> used = 0;
 
-	return b->ptr[b->used++]; 
+	return b -> ptr[b -> used++]; 
 }
 
 /**
@@ -640,13 +681,13 @@ char * buffer_search_string_len(buffer *b, const char *needle, size_t len)
 	if (len == 0) return NULL;
 	if (needle == NULL) return NULL;
 
-	if (b->used < len) return NULL;
+	if (b -> used < len) return NULL;
 
-	for(i = 0; i < b->used - len; i++) 
+	for(i = 0; i < b -> used - len; i++) 
 	{
-		if (0 == memcmp(b->ptr + i, needle, len)) 
+		if (0 == memcmp(b -> ptr + i, needle, len)) 
 		{
-			return b->ptr + i;
+			return b -> ptr + i;
 		}
 	}
 
@@ -666,7 +707,7 @@ buffer *buffer_init_string(const char *str)
 int buffer_is_empty(buffer *b) 
 {
 	if (!b) return 1;
-	return (b->used == 0);
+	return (b -> used == 0);
 }
 
 /**
@@ -678,11 +719,11 @@ int buffer_is_empty(buffer *b)
 
 int buffer_is_equal(buffer *a, buffer *b) 
 {
-	if (a->used != b->used) return 0;
+	if (a -> used != b -> used) return 0;
 	/* a中没有数据，返回1 */
-	if (a->used == 0) return 1;
+	if (a -> used == 0) return 1;
 
-	return (0 == strcmp(a->ptr, b->ptr));
+	return (0 == strcmp(a -> ptr, b -> ptr));
 }
 
 //b中的数据是否等于s，b_len为s的长度
@@ -770,17 +811,17 @@ int buffer_caseless_compare(const char *a, size_t a_len, const char *b, size_t b
 
 int buffer_is_equal_right_len(buffer *b1, buffer *b2, size_t len) 
 {
-	/* no, len -> equal */
+	/* no, len  ->  equal */
 	if (len == 0) return 1;
 
-	/* len > 0, but empty buffers -> not equal */
-	if (b1->used == 0 || b2->used == 0) return 0;
+	/* len > 0, but empty buffers  ->  not equal */
+	if (b1 -> used == 0 || b2 -> used == 0) return 0;
 
-	/* buffers too small -> not equal */
-	if (b1->used - 1 < len || b1->used - 1 < len) return 0;
+	/* buffers too small  ->  not equal */
+	if (b1 -> used - 1 < len || b1 -> used - 1 < len) return 0;
 
-	if (0 == strncmp(b1->ptr + b1->used - 1 - len,
-			 b2->ptr + b2->used - 1 - len, len))
+	if (0 == strncmp(b1 -> ptr + b1 -> used - 1 - len,
+			 b2 -> ptr + b2 -> used - 1 - len, len))
 	{
 		return 1;
 	}
@@ -799,10 +840,10 @@ int buffer_copy_string_hex(buffer *b, const char *in, size_t in_len)
 
 	for (i = 0; i < in_len; i++) 
 	{
-		b->ptr[b->used++] = hex_chars[(in[i] >> 4) & 0x0F];
-		b->ptr[b->used++] = hex_chars[in[i] & 0x0F];
+		b -> ptr[b -> used++] = hex_chars[(in[i] >> 4) & 0x0F];
+		b -> ptr[b -> used++] = hex_chars[in[i] & 0x0F];
 	}
-	b->ptr[b->used++] = '\0';
+	b -> ptr[b -> used++] = '\0';
 
 	return 0;
 }
@@ -961,7 +1002,7 @@ int buffer_append_string_encoded(buffer *b, const char *s, size_t s_len, buffer_
 	if (!s || !b) return -1;
 
 	//b中存放的不是亦'\0'结尾的字符串。报错。
-	if (b->ptr[b->used - 1] != '\0') 
+	if (b -> ptr[b -> used - 1] != '\0') 
 	{
 		abort();
 	}
@@ -1031,7 +1072,7 @@ int buffer_append_string_encoded(buffer *b, const char *s, size_t s_len, buffer_
 
 	//下面这个循环就是开始做实际的编码转换工作。
 	//ds指向字符串s中的字符。d指向b的数据去存放字符的位置。
-	for (ds = (unsigned char *)s, d = (unsigned char *)b->ptr + b->used - 1, d_len = 0, ndx = 0; 
+	for (ds = (unsigned char *)s, d = (unsigned char *)b -> ptr + b -> used - 1, d_len = 0, ndx = 0; 
 						ndx < s_len; ds++, ndx++) 
 	{
 		if (map[*ds]) 
@@ -1075,9 +1116,9 @@ int buffer_append_string_encoded(buffer *b, const char *s, size_t s_len, buffer_
 	 * terminate buffer and calculate new length 
 	 * 在新字符串尾部加上一个'\0' 
 	 */
-	b->ptr[b->used + d_len - 1] = '\0';
+	b -> ptr[b -> used + d_len - 1] = '\0';
 
-	b->used += d_len; 		//新的字符串长度。
+	b -> used += d_len; 		//新的字符串长度。
 
 	return 0;
 }
@@ -1098,11 +1139,11 @@ static int buffer_urldecode_internal(buffer *url, int is_query)
 	const char *src;
 	char *dst;
 
-	if (!url || !url->ptr) return -1;
+	if (!url || !url -> ptr) return -1;
 	
 	//源字符串和目的字符串是同一个串。
-	src = (const char*) url->ptr;
-	dst = (char*) url->ptr;
+	src = (const char*) url -> ptr;
+	dst = (char*) url -> ptr;
 
 	while ((*src) != '\0') 
 	{
@@ -1141,7 +1182,7 @@ static int buffer_urldecode_internal(buffer *url, int is_query)
 	}
 
 	*dst = '\0'; 	//新结尾。
-	url->used = (dst - url->ptr) + 1;
+	url -> used = (dst - url -> ptr) + 1;
 
 	return 0;
 }
@@ -1168,7 +1209,7 @@ int buffer_urldecode_query(buffer *url)
  *
  * 删除路径字符串中的"/../"，"//"和"/./",简化路径，并不是简单的删除。
  * 对于"/../"在路径中相当与父目录，因此，实际的路径相当于删除"/../"和其前面的一个"/XX/".
- * 如： /home/test/../foo   ->   /home/foo
+ * 如： /home/test/../foo    ->    /home/foo
  * 而"//"和"/./"表示当前目录，简单的将其删去就可以了。
  * NOTE： 源缓冲src和目的缓冲可以指向同一个缓冲，在这种情况下，操作将源缓冲中的数据替换。
  */
@@ -1180,18 +1221,18 @@ int buffer_path_simplify(buffer *dest, buffer *src)
 	char *start, *slash, *walk, *out;
 	unsigned short pre; 	//pre两个字节，char一个字节，pre中可以存放两个字符。
 
-	if (src == NULL || src->ptr == NULL || dest == NULL)
+	if (src == NULL || src -> ptr == NULL || dest == NULL)
 		return -1;
 
 	if (src == dest)
 		buffer_prepare_append(dest, 1);
 	else
-		buffer_prepare_copy(dest, src->used + 1);
+		buffer_prepare_copy(dest, src -> used + 1);
 
-	walk  = src->ptr;
-	start = dest->ptr;
-	out   = dest->ptr;
-	slash = dest->ptr;
+	walk  = src -> ptr;
+	start = dest -> ptr;
+	out   = dest -> ptr;
+	slash = dest -> ptr;
 
 	//过滤掉开始的空格。
 	while (*walk == ' ') 
@@ -1211,7 +1252,7 @@ int buffer_path_simplify(buffer *dest, buffer *src)
 
 	if (pre1 == '\0')  		//转换结束
 	{
-		dest->used = (out - start) + 1;
+		dest -> used = (out - start) + 1;
 		return 0;
 	}
 
@@ -1258,7 +1299,7 @@ int buffer_path_simplify(buffer *dest, buffer *src)
 	}
 
 	*out = '\0';
-	dest->used = (out - start) + 1;
+	dest -> used = (out - start) + 1;
 
 	return 0;
 }
@@ -1292,9 +1333,9 @@ int buffer_to_lower(buffer *b)
 {
 	char *c;
 
-	if (b->used == 0) return 0;
+	if (b -> used == 0) return 0;
 
-	for (c = b->ptr; *c; c++) 
+	for (c = b -> ptr; *c; c++) 
 	{
 		if (*c >= 'A' && *c <= 'Z') 
 		{
@@ -1310,9 +1351,9 @@ int buffer_to_upper(buffer *b)
 {
 	char *c;
 
-	if (b->used == 0) return 0;
+	if (b -> used == 0) return 0;
 
-	for (c = b->ptr; *c; c++) 
+	for (c = b -> ptr; *c; c++) 
 	{
 		if (*c >= 'a' && *c <= 'z') 
 		{
