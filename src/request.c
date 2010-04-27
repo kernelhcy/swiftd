@@ -57,7 +57,7 @@ static int is_key_valid(const char *key, int key_len)
 			case 30:
 			case 31:
 			case 127:
-				fprintf(stderr, "Invalid key char: %c %d\n", key[i], key[i]);
+				fprintf(stderr, "(%s, %d)Invalid key char: %c %d\n", __FILE__, __LINE__, key[i], key[i]);
 				return 0;
 		}
 	}
@@ -106,7 +106,7 @@ static int is_value_valid(const char *value, int v_len)
 			case 30:
 			case 31:
 			case 127:
-				fprintf(stderr, "Invalid value char: %c %d\n", value[i], value[i]);
+				fprintf(stderr, "(%s, %d)Invalid value char: %c %d\n", __FILE__, __LINE__, value[i], value[i]);
 				return 0;
 		}
 	}

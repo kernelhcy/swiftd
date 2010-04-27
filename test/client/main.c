@@ -5,8 +5,11 @@
 #include <strings.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <errno.h>
+#include <error.h>
 
 #define CRLF "\r\n"
+#define CL 100
 
 int main(int argc, char *argv[1])
 {
@@ -34,99 +37,82 @@ int main(int argc, char *argv[1])
 	strcat(head, CRLF);
 	
 	printf("Head: %s\n", head);
-	char content[100];
-	memset(content, 'a', 100);
+	char content[CL];
+	memset(content, 'a', CL);
 
 	int sock ;
-	if (-1 == (sock= socket(AF_INET, SOCK_STREAM, 0)))
-	{
-		printf("Create socket error.");
-		return -1;
-	}
 	struct sockaddr_in addr;
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(8080);
-	inet_aton("127.0.0.1", &addr.sin_addr);
+	inet_aton("202.117.21.117", &addr.sin_addr);
 
-	int fd; 
-	if ( -1 == connect(sock, (struct sockaddr *)&addr, (socklen_t)sizeof(addr)))
-	{
-		printf("Connect failed.\n");
-		return -1;
-	}
-	else
-	{
-		printf("Connect ok.\n");
-	}
-	int head_cnt, i;
-	int len = 0, needlen = (int)strlen(head);
-	int val = 0;
-
+	int cnt;
 	char *err;
-
-	head_cnt = strtol(argv[1], &err, 10);
-	for(i = 0; i < head_cnt; ++i)
+	int j;
+	char buf[100];
+	cnt = strtol(argv[1], &err, 10);
+	for(j = 0; j< cnt; ++j)
 	{
-		if(i % 100 == 0 && i != 0)
+		if (-1 == (sock= socket(AF_INET, SOCK_STREAM, 0)))
 		{
-			char buf[1];
-//			buf[5000] = '\0';
-			int rlen, totallen = 0;
-			int read_done = 0;
-			while(!read_done)
+			printf("Create socket error.");
+			return -1;
+		}
+		if ( -1 == connect(sock, (struct sockaddr *)&addr, (socklen_t)sizeof(addr)))
+		{
+			printf("Connect failed.%s\n", strerror(errno));
+			return -1;
+		}
+		else
+		{
+			printf("Connect %d ok.\n", j);
+		}
+		int head_cnt, i;
+		int len = 0, needlen = (int)strlen(head);
+		int val = 0;
+
+
+		head_cnt = 10;
+		for(i = 0; i < head_cnt; ++i)
+		{
+			len = 0;
+			val = 0;
+			while(len < needlen)
 			{
-				if(0 >=  (rlen = read(sock, buf, 1)))
+				if (-1 == (val = write(sock, head + len, needlen - len)))
 				{
-					printf("read error. %d\n", rlen);
-					read_done = 1;
+					printf("Write Error.\n");
+					return -1;
 				}
 				else
 				{
-					totallen += rlen;
-					//printf("read data. len: %d \n", totallen);
+					len += val;
 				}
-				if(800000 < totallen)
+			}
+			len = 0;
+			val = 0;
+			while(len < CL)
+			{
+				if( -1 == (val = write(sock, content + len, CL)))
 				{
-					break;
+					printf("Wirte Error.\n");
+					return -1;
+				}
+				else
+				{
+					len += val;
 				}
 			}
-			sleep(1);
+			printf("write head and content %d\n", i);
+			read(sock, buf, 100);
+		//	usleep(1000);
+		}
+		usleep(50000);
+		shutdown(sock, SHUT_WR);
+		close(sock);
 
-		}
-
-		len = 0;
-		val = 0;
-		while(len < needlen)
-		{
-			if (-1 == (val = write(sock, head + len, needlen - len)))
-			{
-				printf("Write Error.\n");
-				return -1;
-			}
-			else
-			{
-				len += val;
-			}
-		}
-		len = 0;
-		val = 0;
-		while(len < 100)
-		{
-			if( -1 == (val = write(sock, content, 100)))
-			{
-				printf("Wirte Error.\n");
-				return -1;
-			}
-			else
-			{
-				len += val;
-			}
-		}
-		printf("write head and content %d\n", i);
 	}
-
-	close(sock);
-
+	
 	return 0;
 }

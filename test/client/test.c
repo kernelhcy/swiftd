@@ -1,5 +1,11 @@
 #include <stdio.h>
 #include <errno.h>
+#include <stdlib.h>
+
+typedef struct 
+{
+	int test;
+}s;
 
 int main( void )
 {
@@ -21,5 +27,9 @@ int main( void )
         printf( "define _LIBC_REENTRANT\n" );
 #endif
 		printf("errno:%d", errno);
+		s* p = malloc(sizeof(*p));
+		free(p);
+		free(p);
+		free(p);
         return 0;
 }
