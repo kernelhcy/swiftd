@@ -143,7 +143,7 @@ static server *server_init(void)
 		return NULL;
 	}
 	srv -> conns -> used = 0;
-	srv -> conns -> size = 16;
+	srv -> conns -> size = 128;
 	srv -> conns -> ptr = (connection**)calloc(srv -> conns -> size
 													, sizeof(connection*));
 	if (srv -> conns -> ptr == NULL)
@@ -752,6 +752,7 @@ int main(int argc, char *argv[])
 	 */
 	log_error_write(srv, __FILE__, __LINE__, "s", "+++++++++++++++++++++The status of the server:");
 	log_error_write(srv, __FILE__, __LINE__, "sd", "Num of struct connection:", srv -> conns -> used);
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Size of struct connection:", srv -> conns -> size);
 	log_error_write(srv, __FILE__, __LINE__, "sd", "Num of thread:", srv -> tp -> cur_num);
 	
 	
