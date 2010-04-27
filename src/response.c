@@ -648,6 +648,7 @@ int http_response_finish_header(server *srv, connection *con)
 	-- b -> used;
 	
 	log_error_write(srv, __FILE__, __LINE__, "sb", "Response Headers:", b);
+	array_reset(con -> response.headers);
 	
 	return 0;
 }

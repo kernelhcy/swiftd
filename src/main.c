@@ -751,8 +751,30 @@ int main(int argc, char *argv[])
 	 * 输出服务器当前的墙况
 	 */
 	log_error_write(srv, __FILE__, __LINE__, "s", "+++++++++++++++++++++The status of the server:");
-	log_error_write(srv, __FILE__, __LINE__, "sd", "Num of struct connection:", srv -> conns -> used);
-	log_error_write(srv, __FILE__, __LINE__, "sd", "Size of struct connection:", srv -> conns -> size);
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Num of srv -> conns:", srv -> conns -> used);
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Size of srv -> conns:", srv -> conns -> size);
+
+	for(i = 0; i < srv -> conns -> used; ++i)
+	{
+		log_error_write(srv, __FILE__, __LINE__, "sds", "srv -> conns -> ptr ", i, "chunkqueue: ");
+		log_error_write(srv, __FILE__, __LINE__, "sd", "\t read_queue length:"
+								, chunkqueue_length(srv -> conns -> ptr[i] -> read_queue));
+		log_error_write(srv, __FILE__, __LINE__, "sd", "\t read_queue unused: "
+								, srv -> conns -> ptr[i] -> read_queue -> unused_chunks);
+		log_error_write(srv, __FILE__, __LINE__, "sd", "\t write_queue length:"
+								, chunkqueue_length(srv -> conns -> ptr[i] -> write_queue));
+		log_error_write(srv, __FILE__, __LINE__, "sd", "\t write_queue unused: "
+								, srv -> conns -> ptr[i] -> write_queue -> unused_chunks);
+		log_error_write(srv, __FILE__, __LINE__, "sd", "\t request_content_queue length:"
+								, chunkqueue_length(srv -> conns -> ptr[i] -> request_content_queue));
+		log_error_write(srv, __FILE__, __LINE__, "sd", "\t request_content_queue unused: "
+								, srv -> conns -> ptr[i] -> request_content_queue -> unused_chunks);
+	}
+
+
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Num of srv -> joblist:", srv -> joblist -> used);
+	log_error_write(srv, __FILE__, __LINE__, "sd", "Size of srv -> joblist:", srv -> joblist -> size);
+
 	log_error_write(srv, __FILE__, __LINE__, "sd", "Num of thread:", srv -> tp -> cur_num);
 	
 	

@@ -184,7 +184,7 @@ static void connection_reset(server *srv, connection *con)
 	buffer_reset(con -> error_handler);
 	con -> error_handler_saved_status = 0;
 	con -> in_error_handler = 0;
-	con -> srv_sock = NULL;	
+	//con -> srv_sock = NULL;	
 	
 	array_reset(con -> split_vals);
 	array_reset(con -> request.headers);

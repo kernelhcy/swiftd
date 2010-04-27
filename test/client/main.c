@@ -106,9 +106,9 @@ int main(int argc, char *argv[1])
 			}
 			printf("write head and content %d\n", i);
 			read(sock, buf, 100);
-		//	usleep(1000);
+			usleep(1000);
 		}
-		usleep(50000);
+		usleep(100000);
 		shutdown(sock, SHUT_WR);
 		close(sock);
 

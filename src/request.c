@@ -395,6 +395,8 @@ int http_request_split_value(array * vals, buffer * b)
 		return 0;
 	}
 	
+	array_reset(vals);
+
 	s = b -> ptr;
 	for (i = 0; i < b -> used - 1;)
 	{
@@ -802,7 +804,8 @@ int http_parse_request(server *srv, connection *con)
  							/*
  							 * 对获得的headers进行解析。
  							 */
- 							if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key), CONST_STR_LEN("Connection")))
+ 							if (0 == buffer_caseless_compare(CONST_BUF_LEN(ds -> key)
+ 															, CONST_STR_LEN("Connection")))
  							{
  								//默认保持连接。
  								con -> keep_alive = 1;
