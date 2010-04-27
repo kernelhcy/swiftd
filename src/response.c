@@ -548,11 +548,15 @@ int http_response_insert_header(server *srv, connection *con, const char *key, s
 		con -> response.headers = array_init();
 	}
 	
-	data_string *ds = data_string_init();
+	data_string *ds = (data_string *)array_get_unused_element(con -> response.headers, TYPE_STRING);
 	if (NULL == ds)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "s", "Init data_string failed.");
-		return -1;
+		ds = data_string_init();
+		if(NULL == ds)
+		{
+			log_error_write(srv, __FILE__, __LINE__, "s", "Init data_string failed.");
+			return -1;
+		}
 	}
 	
 	ds -> key = buffer_init();

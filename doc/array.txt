@@ -1,0 +1,97 @@
+文档
+
+名称： array.h/c 使用说明文档。
+
+文件： array.h array.c data_string.c data_array.c data_integer.c
+
+作者： hcy
+
+概述： 描述通用数组--array和其相关函数的使用与注意事项。文中同时包含设计思路。
+
+注意： 虽说是通用数组，但在同一个数组中，所存储的数据类型必须一致。否则会导致错误！
+	   在向数组中插入元素时，应先调用array_unused_element函数，从数组中获取未使用
+	   的元素，如果返回NULL（没有），则在通过data_XXXX_init系列函数申请数据。否则
+	   会导致内存泄露！！
+
+数据类型：
+	1、data_type_t：枚举。定义数组中元素的类型。
+
+	2、DATA_UNSET：宏。定义数组中所有元素都必须继承的数据成员。
+			@type	: data_type_t	数据的类型。
+			@key	: buffer *		数据的key。用于比较和查找元素。每个元素都对应一个特定的key。
+									通常，可以是一个数字的字符串形式。
+			@copy	: 函数指针。	用于复制数据本身。返回一个新的数据的指针。深拷贝。
+			@free	: 函数指针。	释放数据数据占用的空间。
+			@reset	: 函数指针。	重置数据。将数据清零。
+			@insert_dup: 函数指针。	用src替换dst。这个函数的实现比较灵活。在向数组中插入元素时，如果
+									元素已经存在，那么调用元素的这个函数进行处理。
+			@print	: 函数指针。	输出数据。
+
+	3、data_unset： 结构体。定义所有数据元素的公共接口。数据被存入到数组中时，将被转换成这个类型。
+							所有公共的数组处理函数均是处理这个类型的结构体。
+
+	4、array： 结构体。数组结构体。定义一个数组。
+			@data		: data_unset指针数组。 存储数组中的数据指针。
+			@sorted		: size_t类型数组。 对数组中的元素按照key进行排序。排序后的结果存储在sroted中。
+										   存储的是索引。
+			@used		: size_t。 数组中元素个数。
+			@size		: size_t。 data和sortd的长度。
+			@unique_ndx	: size_t。 用于产生key。始终是最小的未使用的key值。
+			@next_power_of_2	: size_t。 比数组的size大的最小的2的指数幂值。用于对数组进行二分查找。
+	
+	5、data_string: 结构体。 字符串类型的数组成员类型。
+	6、data_array: 结构体。 数组类型的数组成员类型。用于实现多维数组。
+	7、data_integer: 结构体。 整数类型的数组成员。
+			以上三个类型中的value对应于数据的值。	
+
+
+接口：
+	1、array *array_init(void);
+		初始化一个数组，返回array结构体的指针。
+
+	2、array *array_init_array(array * src);
+  		使用数组src初始化一个新的数组。返回array结构体指针。其中，数组src中的所有数据
+		都被拷贝到新数组中。对src中的每个元素，调用其copy函数复制一个新的副本保存在新
+ 		数组中。相当于深拷贝。
+
+	3、void array_free(array * a);
+		释放数组a。对数组中的每个元素，依次调用其free函数释放空间。
+
+	NOTE：每个数组不再使用后，必须调用对其调用array_free，否则内存泄露！
+
+	4、void array_reset(array * a);
+		重置数组。对数组中的每个元素依次调用其reset函数。重置后，数组被清空。
+		NOTE：函数中对每个元素调用其free函数。
+
+	5、int array_insert_unique(array * a, data_unset * str);
+		将str插入到数组中。如果数组中有和str key值相同的元素，调用其inster_dup函数。
+		
+	6、data_unset *array_pop(array * a);
+		返回数组中最后一个元素的指针，并从数组中删除。
+
+	7、data_unset *array_get_unused_element(array * a, data_type_t t);
+		返回数组中第一个未使用的数据。如果没有，则返回NULL。
+		参数t表述数据的类型。
+
+	8、data_unset *array_get_element(array * a, const char *key);
+		通过key查找元素。 没有则返回NULL。
+
+	9、data_unset *array_replace(array * a, data_unset * du);
+		使用du替换数组中具有相同key的元素，并返回被替换的元素的指针。
+		如果不存在key相同的元素，则将du插入数组中。
+
+	10、size_t array_get_max_key_length(array * a);
+		返回数组中最长的key的长度。
+
+	11、data_array *data_array_init(void);
+	12、data_string *data_string_init(void);
+	13、data_integer *data_integer_init(void);
+		以上三个函数初始化对应的结构体。
+
+实现说明：
+		再次声明：同一个数组中必须存储相同类型的元素！！
+		为了提高效率，在reset数组时，没有释放数组中元素所占用的空间，把这写元素当做未使用的
+	元素保存在数组中，可以通过array_get_element函数获得。
+		为了提高查询的效率，数组对元素进行排序，保存排好序的元素的索引在sorted中。
+		data_string.c data_array.c data_integer.c中是对具体类型的操作的函数。这些函数的指针
+	被保存在对应结构体的函数指针中。
