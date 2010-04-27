@@ -882,12 +882,22 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		return HANDLER_ERROR;
 	}
 	
-	if (con -> state == CON_STATE_READ_POST || con -> state == CON_STATE_READ)
+	if (con -> state == CON_STATE_READ)
 	{
 		//继续读取数据。
 		if (-1 == connection_handle_read(srv, con))
 		{
 			log_error_write(srv, __FILE__, __LINE__, "s", "Read ERROR.");
+			connection_set_state(srv, con, CON_STATE_ERROR);
+		}
+	}
+	
+	if (con -> state == CON_STATE_READ_POST)
+	{
+		//继续读取数据。
+		if (-1 == connection_handle_read_post(srv, con))
+		{
+			log_error_write(srv, __FILE__, __LINE__, "s", "Read POST ERROR.");
 			connection_set_state(srv, con, CON_STATE_ERROR);
 		}
 	}
