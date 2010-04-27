@@ -32,7 +32,16 @@ void *job_entry(void *ctx)
 		//ctx所指向的地址在joblist中，说明ctx是一个connection的指针。
 		//调用嗯状态机。
 		//log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "This is a connection. ");
-		connection_state_machine((server *)jc -> srv, (connection *)jc -> ctx);
+		pthread_mutex_lock(&(((connection *)jc -> ctx) -> running_lock));
+		if(((connection *)jc -> ctx) -> is_running)
+		{
+			pthread_mutex_unlock(&(((connection *)jc -> ctx) -> running_lock));
+		}
+		else
+		{
+			pthread_mutex_unlock(&(((connection *)jc -> ctx) -> running_lock));
+			connection_state_machine((server *)jc -> srv, (connection *)jc -> ctx);
+		}
 	}
 	
 	log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "A job done.");

@@ -8,7 +8,7 @@
 
 #define CRLF "\r\n"
 
-int main()
+int main(int argc, char *argv[1])
 {
 	char head[1000];
 	bzero(head, sizeof(head));
@@ -63,7 +63,9 @@ int main()
 	int len = 0, needlen = (int)strlen(head);
 	int val = 0;
 
-	head_cnt = 9999999;
+	char *err;
+
+	head_cnt = strtol(argv[1], &err, 10);
 	for(i = 0; i < head_cnt; ++i)
 	{
 		len = 0;

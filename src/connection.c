@@ -63,8 +63,11 @@ static void connection_init(server *srv, connection *con)
 
 	con -> is_readable = 0;
 	con -> is_writable = 0;
-	con -> keep_alive = 0;				
-
+	con -> keep_alive = 0;
+					
+	con -> is_running = 0;
+	pthread_mutex_init(&con -> running_lock, NULL);
+	
 	con -> write_queue = chunkqueue_init();			
 	con -> read_queue = chunkqueue_init();	
 	con -> request_content_queue = chunkqueue_init();
@@ -120,6 +123,7 @@ static void connection_init(server *srv, connection *con)
 	con -> request.http_method = HTTP_METHOD_UNSET;
 	con -> request.http_version = HTTP_VERSION_UNSET;
 	
+	pthread_mutex_init(&con -> read_queue_lock, NULL);
 	return;
 }
 
@@ -213,7 +217,8 @@ static void connection_clear(server *srv, connection *con)
 
 	con -> is_readable = 0;
 	con -> is_writable = 0;			
-
+	con -> is_running = 0;
+	
 	chunkqueue_reset(con -> write_queue);			
 	chunkqueue_remove_finished_chunks(con -> read_queue);				
 	chunkqueue_reset(con -> request_content_queue);
@@ -361,7 +366,9 @@ void connection_free(server *srv, connection *con)
 	chunkqueue_free(con -> write_queue);			
 	chunkqueue_free(con -> read_queue);				
 	chunkqueue_free(con -> request_content_queue);			
-
+	pthread_mutex_destroy(&con -> read_queue_lock);
+	pthread_mutex_destroy(&con -> running_lock);
+	
 	buffer_free(con -> parse_request); 	
 	buffer_free(con -> uri.scheme);
 	buffer_free(con -> uri.authority);
@@ -431,6 +438,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 		need_to_read + 64;
 	}
 	
+	pthread_mutex_lock(& con -> read_queue_lock);
 	/*
 	 * 由于epoll使用ET模式。因此，在一次读取时，必须将数据全部读完，
 	 * 直到read返回EAGAIN错误（没有数据可读。）
@@ -466,6 +474,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 				default:
 					//其他错误直接将连接设置为错误。
 					connection_set_state(srv, con, CON_STATE_ERROR);
+					pthread_mutex_unlock(& con -> read_queue_lock);
 					return -1;
 			}
 		}
@@ -475,6 +484,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 			{	
 				log_error_write(srv, __FILE__, __LINE__, "sd", "Client closes the connection. fd:"
 															, con -> fd);
+				pthread_mutex_unlock(& con -> read_queue_lock);
 				return -2;
 			}
 			rlen += rval;
@@ -530,7 +540,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 			c = c -> next;
 		}
 	}
-	
+	pthread_mutex_unlock(& con -> read_queue_lock);
 	return 0;
 }
 
@@ -540,7 +550,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
  */
 static int connection_handle_read(server *srv, connection *con)
 {
-
+	
 	if (con -> is_readable)
 	{
 		log_error_write(srv, __FILE__, __LINE__, "sd", "Read the data from the client. fd:", con -> fd);
@@ -565,7 +575,8 @@ static int connection_handle_read(server *srv, connection *con)
 				return -1;
 		}
 	}
-
+	
+	pthread_mutex_lock(& con -> read_queue_lock);
 	//查看是否HTTP头读取完毕。
 	chunk *c, *lastchunk;
 	buffer *b;
@@ -661,7 +672,7 @@ static int connection_handle_read(server *srv, connection *con)
 		//log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 		connection_set_state(srv, con, CON_STATE_REQUEST_END);
 	}
-	
+	pthread_mutex_unlock(& con -> read_queue_lock);
 	return 0;
 }
 
@@ -671,6 +682,7 @@ static int connection_handle_read(server *srv, connection *con)
 static int connection_handle_read_post(server *srv, connection *con)
 {
 	log_error_write(srv, __FILE__, __LINE__, "s", "Read POST data.");
+	
 	if (con -> is_readable)
 	{
 		switch(connection_network_read(srv, con, con -> request_content_queue))
@@ -681,27 +693,21 @@ static int connection_handle_read_post(server *srv, connection *con)
 			case -1: 	//出错。
 				con -> read_idle_ts = 0;
 				connection_set_state(srv, con, CON_STATE_ERROR);
-				break;
-			case -2: 	//非阻塞IO，但是没有数据可读。
-				con -> is_readable = 0;
-				break;
-			case -3: 	//被信号中断。
-				con -> is_readable = 1;
-				break;
-			case -4: 	//连接关闭。
+				return -1;
+			case -2: 	//连接关闭。
 				con -> is_readable = 0;
 				connection_set_state(srv, con, CON_STATE_CLOSE);
-				break;
+				return -2;
 			default: 
 				log_error_write(srv, __FILE__, __LINE__, "s", "Unknown status.");
 				connection_set_state(srv, con, CON_STATE_ERROR);
 				con -> is_readable = 0;
-				break;
+				return -1;
 		}
 	}
 	
 	int wehave = chunkqueue_length(con -> request_content_queue);
-	
+	pthread_mutex_lock(& con -> read_queue_lock);
 	//我们已经读取到所有的POST数据，开始处理连接请求。
 	if (wehave == con -> request.content_length)
 	{
@@ -751,6 +757,7 @@ static int connection_handle_read_post(server *srv, connection *con)
 				break;
 			}
 		}
+		chunkqueue_remove_finished_chunks(con -> read_queue);
 		log_error_write(srv, __FILE__, __LINE__, "sd", "Post data len:", chunkqueue_length(con -> request_content_queue));
 		if(0 == weneed)
 		{
@@ -767,9 +774,11 @@ static int connection_handle_read_post(server *srv, connection *con)
 		connection_set_state(srv, con, CON_STATE_ERROR);
 		con -> http_status = 413;
 		con -> keep_alive = 0;
+		pthread_mutex_unlock(& con -> read_queue_lock);
 		return 0;
 	}
 	
+	pthread_mutex_unlock(& con -> read_queue_lock);
 	return 0;
 }
 
@@ -882,25 +891,17 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		return HANDLER_ERROR;
 	}
 	
-	if (con -> state == CON_STATE_READ)
+	/*
+	if (con -> state == CON_STATE_READ || con -> state == CON_STATE_READ_POST)
 	{
 		//继续读取数据。
-		if (-1 == connection_handle_read(srv, con))
+		if (-1 == connection_network_read(srv, con, con -> read_queue))
 		{
 			log_error_write(srv, __FILE__, __LINE__, "s", "Read ERROR.");
 			connection_set_state(srv, con, CON_STATE_ERROR);
 		}
 	}
-	
-	if (con -> state == CON_STATE_READ_POST)
-	{
-		//继续读取数据。
-		if (-1 == connection_handle_read_post(srv, con))
-		{
-			log_error_write(srv, __FILE__, __LINE__, "s", "Read POST ERROR.");
-			connection_set_state(srv, con, CON_STATE_ERROR);
-		}
-	}
+	*/
 	
 	if (con -> state == CON_STATE_WRITE && !chunkqueue_is_empty(con -> write_queue)
 										&& con -> is_writable)
@@ -1046,6 +1047,10 @@ int connection_state_machine(server *srv, connection *con)
 	int done;
 	connection_state_t old_state;
 	done = 0;
+	
+	pthread_mutex_lock(&con -> running_lock);
+	con -> is_running = 1;
+	pthread_mutex_unlock(&con -> running_lock);
 	
 	while(!done)
 	{
@@ -1295,7 +1300,11 @@ int connection_state_machine(server *srv, connection *con)
 			fdevent_event_del(srv -> ev, con -> fd);
 			break;
 	}
-		
+	
+	pthread_mutex_lock(&con -> running_lock);
+	con -> is_running = 0;
+	pthread_mutex_unlock(&con -> running_lock);
+	
 	return 0;
 }
 

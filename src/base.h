@@ -218,10 +218,13 @@ typedef struct
 
 	time_t connection_start; 			//连接建立开始的时间
 	time_t request_start;  				//请求开始的时间
+	
+	int is_running; 					//标记此连接的状态机是否在运行。
+	pthread_mutex_t running_lock;
 
-	size_t request_count;		/* 这个连接所处理的请求的数量*/
+	size_t request_count;				/* 这个连接所处理的请求的数量*/
 
-	int fd;						/* 连接的描述符*/
+	int fd;								/* 连接的描述符*/
 	//在连接数组connections中的下标位置。
 	int ndx;					
 
@@ -234,7 +237,8 @@ typedef struct
 	int keep_alive;				
 
 	chunkqueue *write_queue;			// 存储需要发送给客户端的数据，内存中数据或文件。
-	chunkqueue *read_queue;				// 存储读取的数据。主要是http头 
+	chunkqueue *read_queue;				// 存储读取的数据。主要是http头
+	pthread_mutex_t read_queue_lock;
 	chunkqueue *request_content_queue;	// 存储POST数据。 
 
 	int http_status; 					//当前请求的状态。200, 404 etc.
