@@ -301,6 +301,7 @@ connection * connection_get_new(server *srv)
 		}
 		connection_init(srv, srv -> conns -> ptr[ndx]);
 		srv -> conns -> ptr[ndx] -> ndx = ndx;
+		srv -> conns -> ptr[ndx] -> state = CON_STATE_REQUEST_START;
 		++ srv -> conns -> used;
 		pthread_mutex_unlock(&srv -> conns_lock);
 		return srv -> conns -> ptr[ndx];
@@ -319,6 +320,7 @@ connection * connection_get_new(server *srv)
 		if (srv -> conns -> ptr[i] -> state == CON_STATE_CONNECT)
 		{
 			connection_init(srv, srv -> conns -> ptr[i]);
+			srv -> conns -> ptr[i] -> state = CON_STATE_REQUEST_START;
 			srv -> conns -> ptr[i] -> ndx = i;
 			pthread_mutex_unlock(&srv -> conns_lock);
 			return srv -> conns -> ptr[i];
@@ -343,6 +345,7 @@ connection * connection_get_new(server *srv)
 		srv -> conns -> ptr[ndx] = (connection *)malloc(sizeof(connection));
 		connection_init(srv, srv -> conns -> ptr[ndx]);
 		srv -> conns -> ptr[ndx] -> ndx = ndx;
+		srv -> conns -> ptr[ndx] -> state = CON_STATE_REQUEST_START;
 		pthread_mutex_unlock(&srv -> conns_lock);
 		return srv -> conns -> ptr[ndx];
 	}
@@ -1191,10 +1194,10 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_CONNECT:
+				joblist_find_del(srv, con);
 				connection_set_state(srv, con, CON_STATE_CONNECT);
 				break;
 			case CON_STATE_CLOSE:
-				joblist_append(srv, con);
 				if (-1 == connection_handle_close(srv, con))
 				{
 					log_error_write(srv, __FILE__, __LINE__, "s", "close error.");
@@ -1259,6 +1262,7 @@ int connection_state_machine(server *srv, connection *con)
 			break;
 		case CON_STATE_READ:
 		case CON_STATE_READ_POST:
+		case CON_STATE_CLOSE:
 			log_error_write(srv, __FILE__, __LINE__, "sd", "Add in fdevent READ. fd:", con -> fd);
 			con -> read_idle_ts = srv -> cur_ts;
 			fdevent_event_add(srv -> ev, con -> fd, FDEVENT_IN);
@@ -1292,7 +1296,6 @@ int connection_state_machine(server *srv, connection *con)
 			break;
 		case CON_STATE_ERROR:
 		case CON_STATE_CONNECT:
-		case CON_STATE_CLOSE:
 			break;
 		default:
 			log_error_write(srv, __FILE__, __LINE__, "s", "Unknown state!");
