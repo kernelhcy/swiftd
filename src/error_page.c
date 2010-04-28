@@ -34,5 +34,8 @@ int error_page_get_new(server *srv, connection *con, buffer *errorpage)
 	buffer_append_string_len(errorpage, CONST_STR_LEN("</body>"));
 	buffer_append_string_len(errorpage, CONST_STR_LEN("</html>"));
 	
+	//最后一个'\0'不发送
+	-- errorpage -> used;
+	
 	return 0;
 }

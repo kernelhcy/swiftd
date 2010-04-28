@@ -155,6 +155,9 @@ static int response_redirect_to_directory(server *srv, connection *con)
 			case AF_INET:
 				/*
 				 * 只支持IPv4。
+				 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+				 * gethostbyaddr不是线程安全的！
+				 * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 				 */
 				if (NULL == (he = gethostbyaddr((char *)&addr.ipv4.sin_addr, sizeof(struct in_addr), AF_INET)))
 				{
@@ -267,7 +270,8 @@ handler_t http_prepare_response(server *srv, connection *con)
 	if (con -> http_status >=400 && con -> http_status <600)
 	{
 		//有错误直接返回。
-		return HANDLER_ERROR;
+		//说明已经处理过了。不需要在处理。
+		return HANDLER_FINISHED;
 	}
 	
 	handler_t ht;
@@ -527,7 +531,7 @@ handler_t http_prepare_response(server *srv, connection *con)
 	/*
 	 * 到这就出错了。。。
 	 */
-	//return HANDLER_ERROR;
+	return HANDLER_ERROR;
 }
 
 int http_response_insert_header(server *srv, connection *con, const char *key, size_t key_len

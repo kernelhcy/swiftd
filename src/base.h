@@ -223,7 +223,10 @@ typedef struct
 
 	int fd;								/* 连接的描述符*/
 	//在连接数组connections中的下标位置。
-	int ndx;					
+	int ndx;
+	
+	int is_close; 						//标记连接是否已经关闭。
+	int is_error;						//标记连接是否出错。
 
 	/*
 	 * 描述符的状态，可写？可读？

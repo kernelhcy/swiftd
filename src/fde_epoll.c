@@ -57,7 +57,7 @@ int fdevent_epoll_event_add(fdevent *ev, int fd, int events)
 
 	if (0 != epoll_ctl(ev -> epoll_fd, op, fd, &ee))
 	{
-		fprintf(stderr, "(%s %d)epoll_ctl error.(%s)", __FILE__, __LINE__, strerror(errno));
+		fprintf(stderr, "(%s %d)epoll_ctl error.(%s %d)", __FILE__, __LINE__, strerror(errno), fd);
 		return -1;
 	}
 	

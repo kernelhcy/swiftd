@@ -58,12 +58,13 @@ static void connection_init(server *srv, connection *con)
 	}
 	
 	con -> request_count = 0;		
-	con -> fd = -1;			
-	con -> ndx = -1;					
+	con -> fd = -1;							
 
 	con -> is_readable = 0;
 	con -> is_writable = 0;
 	con -> keep_alive = 0;
+	con -> is_close = 0;
+	con -> is_error = 0;
 	
 	con -> write_queue = chunkqueue_init();			
 	con -> read_queue = chunkqueue_init();	
@@ -135,13 +136,14 @@ static void connection_reset(server *srv, connection *con)
 	}
 	
 	con -> request_count = 0;		
-	con -> fd = -1;			
-	con -> ndx = -1;					
+	con -> fd = -1;								
 
 	con -> is_readable = 0;
 	con -> is_writable = 0;
 	con -> keep_alive = 0;				
-
+	con -> is_close = 0;
+	con -> is_error = 0;
+	
 	chunkqueue_reset(con -> write_queue);			
 	chunkqueue_reset(con -> read_queue);				
 	chunkqueue_reset(con -> request_content_queue);
@@ -213,6 +215,8 @@ static void connection_clear(server *srv, connection *con)
 	con -> is_readable = 0;
 	con -> is_writable = 0;			
 	con -> in_joblist = 0;
+	con -> is_close = 0;
+	con -> is_error = 0;
 	
 	chunkqueue_reset(con -> write_queue);			
 	chunkqueue_remove_finished_chunks(con -> read_queue);				
@@ -258,6 +262,7 @@ static void connection_clear(server *srv, connection *con)
 	con -> request.content_length = 0;
 	con -> request.http_method = HTTP_METHOD_UNSET;
 	con -> request.http_version = HTTP_VERSION_UNSET;
+	
 	return;
 }
 
@@ -867,10 +872,11 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		con -> is_readable = 0;
 		if (revents & FDEVENT_ERR)
 		{
-			connection_set_state(srv, con, CON_STATE_ERROR);
+			con -> is_error = 1;
 		}
 		else if (revents & FDEVENT_HUP)
 		{
+			con -> is_close = 1;
 			if (con -> state == CON_STATE_CLOSE || con -> state == CON_STATE_CONNECT)
 			{
 				con -> close_timeout_ts = 0;
@@ -878,13 +884,13 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 			else 
 			{
 				log_error_write(srv, __FILE__, __LINE__, "s", "Client closes connection!");
-				connection_set_state(srv, con, CON_STATE_CLOSE);
+				con -> is_close = 1;
 			}
 		}
 		else
 		{
 			log_error_write(srv, __FILE__, __LINE__, "s", "epoll unknown event!");
-			connection_set_state(srv, con, CON_STATE_ERROR);
+			con -> is_error = 1;
 		}
 		
 		return HANDLER_ERROR;
@@ -899,13 +905,6 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 			log_error_write(srv, __FILE__, __LINE__, "s", "Read ERROR.");
 			connection_set_state(srv, con, CON_STATE_ERROR);
 		}
-	}
-	
-	
-	if (con -> state == CON_STATE_WRITE && !chunkqueue_is_empty(con -> write_queue)
-										&& con -> is_writable)
-	{
-		connection_handle_write(srv, con);
 	}
 	
 	return HANDLER_FINISHED;
@@ -1031,9 +1030,6 @@ static int connection_handle_close(server *srv, connection *con)
 		log_error_write(srv, __FILE__, __LINE__, "ssd", "close error."
 							, strerror(errno), con -> fd);
 	}
-	pthread_mutex_lock(&srv -> conns_lock);
-	connection_set_state(srv, con, CON_STATE_CONNECT);
-	pthread_mutex_unlock(&srv -> conns_lock);
 	
 	return 0;
 }
@@ -1049,11 +1045,23 @@ int connection_state_machine(server *srv, connection *con)
 	
 	while(!done)
 	{
+		if(con -> is_close)
+		{
+			connection_set_state(srv, con, CON_STATE_CLOSE);
+			con -> is_close = 0;
+		}
+		
+		if(con -> is_error)
+		{	
+			connection_set_state(srv, con, CON_STATE_ERROR);
+			con -> is_error = 0;
+		}
+		
 		old_state = con -> state;
 		log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
 						, connection_get_state_name(con -> state), "fd:", con -> fd
 						, "connection ndx:", con -> ndx);
-						
+			
 		switch(con -> state)
 		{
 			case CON_STATE_REQUEST_START:
@@ -1194,11 +1202,11 @@ int connection_state_machine(server *srv, connection *con)
 				break;
 			case CON_STATE_ERROR:
 				//关闭连接。
+				
 				connection_set_state(srv, con, CON_STATE_CLOSE);
 				break;
 			case CON_STATE_CONNECT:
 				joblist_find_del(srv, con);
-				connection_set_state(srv, con, CON_STATE_CONNECT);
 				break;
 			case CON_STATE_CLOSE:
 				if (-1 == connection_handle_close(srv, con))
@@ -1211,7 +1219,9 @@ int connection_state_machine(server *srv, connection *con)
 				}
 				connection_reset(srv, con);
 				//连接关闭以后，连接处于connect状态，等待下一次连接。
+				pthread_mutex_lock(&srv -> conns_lock);
 				connection_set_state(srv, con, CON_STATE_CONNECT);
+				pthread_mutex_unlock(&srv -> conns_lock);
 				//log_error_write(srv, __FILE__, __LINE__, "s", "close done.");
 				
 				//触发插件。
@@ -1265,7 +1275,6 @@ int connection_state_machine(server *srv, connection *con)
 			break;
 		case CON_STATE_READ:
 		case CON_STATE_READ_POST:
-		case CON_STATE_CLOSE:
 			log_error_write(srv, __FILE__, __LINE__, "sd", "Add in fdevent READ. fd:", con -> fd);
 			con -> read_idle_ts = srv -> cur_ts;
 			fdevent_event_add(srv -> ev, con -> fd, FDEVENT_IN);
@@ -1299,6 +1308,7 @@ int connection_state_machine(server *srv, connection *con)
 			break;
 		case CON_STATE_ERROR:
 		case CON_STATE_CONNECT:
+		case CON_STATE_CLOSE:
 			break;
 		default:
 			log_error_write(srv, __FILE__, __LINE__, "s", "Unknown state!");

@@ -7,12 +7,21 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <error.h>
+#include <signal.h>
 
 #define CRLF "\r\n"
 #define CL 100
+static int down = 0;
+
+void sig_handler(int sig)
+{
+	down = 1;
+	return;
+}
 
 int main(int argc, char *argv[1])
 {
+	signal(SIGPIPE, sig_handler);
 	char head[1000];
 	bzero(head, sizeof(head));
 
@@ -54,6 +63,7 @@ int main(int argc, char *argv[1])
 	cnt = strtol(argv[1], &err, 10);
 	for(j = 0; j< cnt; ++j)
 	{
+		down = 0;
 		if (-1 == (sock= socket(AF_INET, SOCK_STREAM, 0)))
 		{
 			printf("Create socket error.");
@@ -78,12 +88,16 @@ int main(int argc, char *argv[1])
 		{
 			len = 0;
 			val = 0;
-			while(len < needlen)
+			while(!down && len < needlen)
 			{
 				if (-1 == (val = write(sock, head + len, needlen - len)))
 				{
-					printf("Write Error.\n");
+					printf("Write Error. %s\n", strerror(errno));
 					return -1;
+				}
+				else if(val == 0)
+				{
+					printf("Write return 0!!!");
 				}
 				else
 				{
@@ -92,12 +106,16 @@ int main(int argc, char *argv[1])
 			}
 			len = 0;
 			val = 0;
-			while(len < CL)
+			while(!down && len < CL)
 			{
 				if( -1 == (val = write(sock, content + len, CL - len)))
 				{
-					printf("Wirte Error.\n");
+					printf("Write Error. %s\n", strerror(errno));
 					return -1;
+				}
+				else if(val == 0)
+				{
+					printf("content Write return 0!!!");
 				}
 				else
 				{
@@ -106,8 +124,9 @@ int main(int argc, char *argv[1])
 			}
 			printf("write head and content %d\n", i);
 			//read(sock, buf, 100);
+			usleep(2000);
 		}
-		usleep(200000);
+		usleep(50000);
 		//shutdown(sock, SHUT_WR);
 		if (-1 == close(sock))
 		{

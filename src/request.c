@@ -487,10 +487,10 @@ int http_parse_request(server *srv, connection *con)
 	{
 		buffer_copy_string_buffer(con -> parse_request, con -> request.request);
 	}
-	
+	//log_error_write(srv, __FILE__, __LINE__, "sb", "con -> parse_request:\n", con -> parse_request);
 	int i;
 	buffer *b = con -> parse_request;
-	log_error_write(srv, __FILE__, __LINE__, "sbs", "Request:\n\n", b, "\n\n");
+	log_error_write(srv, __FILE__, __LINE__, "sb", "Request:\n\n", b);
 	
 	/**
 	* HTTP Request Message的格式：
@@ -760,7 +760,7 @@ int http_parse_request(server *srv, connection *con)
  		{
  			case '\r':
  				if (b -> ptr[i + 1] == '\n')
- 				{
+ 				{ 					
  					/*
  				 	 * 找到一个filed value 对。
  				 	 */
@@ -768,8 +768,22 @@ int http_parse_request(server *srv, connection *con)
  					b -> ptr[i + 1] = '\0';
  					++i;
  					
+ 					if(NULL == value)
+ 					{
+ 						value = key + key_len;
+ 					}
+ 					
  					if(NULL != key)
  					{
+ 						if (!got_colon)
+ 						{
+ 							//key 和value 之间没有冒号！
+ 							//出错。
+ 							log_error_write(srv, __FILE__, __LINE__, "s", "header need ':'!!");
+ 							con -> http_status = 400;
+ 							return 0;
+ 						}
+ 						
  						value_len = b -> ptr + i - value;
  						//去除value末尾的空格换行等。
  						while(value_len > 0 && (value[value_len - 1] == ' '
@@ -788,8 +802,10 @@ int http_parse_request(server *srv, connection *con)
  								con -> http_status = 400;
  								con -> keep_alive = 0;
 								con -> response.keep_alive = 0;
-								log_error_write(srv, __FILE__, __LINE__, "ssssdsssd", "key or value has invalid chars."
-										, "key:", key, "key_len:", key_len, "&value:",  value, "value_len:", value_len);
+								log_error_write(srv, __FILE__, __LINE__, "ssssdsssd"
+													, "key or value has invalid chars."
+													, "key:", key, "key_len:", key_len
+													, "&value:",  value, "value_len:", value_len);
 								return 0;
  							}
 

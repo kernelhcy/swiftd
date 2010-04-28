@@ -647,6 +647,9 @@ int main(int argc, char *argv[])
 										, "plugin_handle_trigger error. Unknown hander_t");
 					break;	
 			}
+			
+			//刷新日志。重新开始日志周期。
+			log_error_cycle(srv);
 		}
 		
 		if (-1 == n)

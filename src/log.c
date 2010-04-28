@@ -120,8 +120,10 @@ int log_error_cycle(server * srv)
 
 	if (srv->errorlog_mode == ERRORLOG_FILE)
 	{
-		const char *logfile = srv->srvconf.errorlog_file->ptr;
-
+		const char *logfile = srv -> srvconf.errorlog_file -> ptr;
+		
+		close(srv -> errorlog_fd);
+		
 		int new_fd;
 		if (-1 == (new_fd =
 			 open(logfile, O_APPEND | O_WRONLY | O_CREAT | O_LARGEFILE, 0644)))
@@ -133,7 +135,7 @@ int log_error_cycle(server * srv)
 							"cycling errorlog '", logfile,"' failed: ", strerror(errno),
 							", falling back to syslog()");
 
-			close(srv->errorlog_fd);
+			
 			srv->errorlog_fd = -1;
 #ifdef HAVE_SYSLOG_H
 			srv->errorlog_mode = ERRORLOG_SYSLOG;
@@ -141,10 +143,6 @@ int log_error_cycle(server * srv)
 		} 
 		else
 		{
-			/*
-			 * 新日志创建，关闭旧日志的描述符。
-			 */
-			close(srv->errorlog_fd);
 			srv->errorlog_fd = new_fd;
 		}
 	}

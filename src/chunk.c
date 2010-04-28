@@ -384,7 +384,7 @@ int chunkqueue_set_tempdirs(chunkqueue * cq, array * tempdirs)
 chunk *chunkqueue_get_append_tempfile(chunkqueue * cq)
 {
 	chunk *c;
-	buffer *template = buffer_init_string("/var/tmp/lighttpd-upload-XXXXXX");
+	buffer *template = buffer_init_string("/var/tmp/upload-XXXXXX");
 
 	c = chunkqueue_get_unused_chunk(cq);
 
