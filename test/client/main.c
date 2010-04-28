@@ -45,7 +45,7 @@ int main(int argc, char *argv[1])
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(8080);
-	inet_aton("202.117.21.117", &addr.sin_addr);
+	inet_aton("127.0.0.1", &addr.sin_addr);
 
 	int cnt;
 	char *err;
@@ -94,7 +94,7 @@ int main(int argc, char *argv[1])
 			val = 0;
 			while(len < CL)
 			{
-				if( -1 == (val = write(sock, content + len, CL)))
+				if( -1 == (val = write(sock, content + len, CL - len)))
 				{
 					printf("Wirte Error.\n");
 					return -1;
@@ -105,12 +105,15 @@ int main(int argc, char *argv[1])
 				}
 			}
 			printf("write head and content %d\n", i);
-			read(sock, buf, 100);
-			usleep(1000);
+			//read(sock, buf, 100);
 		}
-		usleep(100000);
-		shutdown(sock, SHUT_WR);
-		close(sock);
+		usleep(200000);
+		//shutdown(sock, SHUT_WR);
+		if (-1 == close(sock))
+		{
+			printf("close sock: %d error.\n", sock);
+		}
+		printf("close connection %d\n", j);
 
 	}
 	

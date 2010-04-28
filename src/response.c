@@ -279,7 +279,7 @@ handler_t http_prepare_response(server *srv, connection *con)
 	buffer *uri = con -> request.uri;
 	if (uri -> ptr[0] != '/')
 	{
-		log_error_write(srv, __FILE__, __LINE__, "s", "bad uri. not begin with /.");
+		log_error_write(srv, __FILE__, __LINE__, "sb", "bad uri. not begin with /.", uri);
 		return HANDLER_ERROR;
 	}
 	//log_error_write(srv, __FILE__, __LINE__, "sb", "Request.uri", uri);

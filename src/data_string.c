@@ -33,8 +33,8 @@ static void data_string_reset(data_unset * d)
 	/*
 	 * reused array elements 
 	 */
-	buffer_reset(ds->key);
-	buffer_reset(ds->value);
+	buffer_reset(ds -> key);
+	buffer_reset(ds -> value);
 }
 
 static int data_string_insert_dup(data_unset * dst, data_unset * src)

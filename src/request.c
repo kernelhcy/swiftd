@@ -6,7 +6,7 @@
 static int is_key_valid(const char *key, int key_len)
 {
 	int i;
-	for (i = 0; i < key_len; ++i)
+	for (i = 0; i < key_len && key[i]; ++i)
 	{
 		switch(key[i])
 		{
@@ -69,8 +69,12 @@ static int is_key_valid(const char *key, int key_len)
  */
 static int is_value_valid(const char *value, int v_len)
 {
+	if(NULL == value)
+	{
+		return 1;
+	}
 	int i;
-	for (i = 0; i < v_len; ++i)
+	for (i = 0; i < v_len && value[i]; ++i)
 	{
 		switch(value[i])
 		{
@@ -779,6 +783,16 @@ int http_parse_request(server *srv, connection *con)
  						
  						if(value_len >= 0)//相当于什么都没判断。。。
  						{ 							
+ 							if(!is_key_valid(key, key_len) || !is_value_valid(value, value_len))
+ 							{
+ 								con -> http_status = 400;
+ 								con -> keep_alive = 0;
+								con -> response.keep_alive = 0;
+								log_error_write(srv, __FILE__, __LINE__, "ssssdsssd", "key or value has invalid chars."
+										, "key:", key, "key_len:", key_len, "&value:",  value, "value_len:", value_len);
+								return 0;
+ 							}
+
  							ds = (data_string*)array_get_unused_element(con -> request.headers, TYPE_STRING);
  							if (NULL == ds)
  							{
@@ -790,16 +804,6 @@ int http_parse_request(server *srv, connection *con)
  							log_error_write(srv, __FILE__, __LINE__, "sbsb", "key:", ds -> key
  														, "value:", ds -> value);
  							
- 							if(!is_key_valid(key, key_len) || !is_value_valid(value, value_len))
- 							{
- 								con -> http_status = 400;
- 								con -> keep_alive = 0;
-								con -> response.keep_alive = 0;
-								log_error_write(srv, __FILE__, __LINE__, "ssbsb", "key or value has invalid chars."
-													, "key:", ds -> key, "&value:", ds -> value);
-								ds -> free((data_unset*)ds);
-								return 0;
- 							}
  							
  							/*
  							 * 对获得的headers进行解析。
@@ -812,7 +816,7 @@ int http_parse_request(server *srv, connection *con)
  								
  								array *vals = con -> split_vals;
  								array_reset(vals);
- 								http_request_split_value(vals, ds->value);
+ 								http_request_split_value(vals, ds -> value);
  								
  								size_t vi;
  								data_string *dst;

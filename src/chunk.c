@@ -468,6 +468,24 @@ off_t chunkqueue_length(chunkqueue * cq)
 	return len;
 }
 
+off_t chunkqueue_size(chunkqueue * cq)
+{
+	off_t len = 0;
+	chunk *c;
+
+	for (c = cq -> first; c; c = c -> next)
+	{
+		len += c -> mem -> size;
+	}
+
+	for(c = cq -> unused; c; c = c -> next)
+	{
+		len += c -> mem -> size;
+	}
+
+	return len;
+}
+
 /**
  * 返回cq中所有的块已经写入的长度之和
  */

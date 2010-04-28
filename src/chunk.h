@@ -70,7 +70,10 @@ chunk *chunkqueue_get_append_tempfile(chunkqueue * cq);
 
 int chunkqueue_remove_finished_chunks(chunkqueue * cq);
 
+//chunkqueue中数据的长度。
 off_t chunkqueue_length(chunkqueue * c);
+//chunkqueue总共持有的空间。
+off_t chunkqueue_size(chunkqueue * c);
 off_t chunkqueue_written(chunkqueue * c);
 void chunkqueue_free(chunkqueue * c);
 void chunkqueue_reset(chunkqueue * c);

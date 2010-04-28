@@ -1083,6 +1083,9 @@ int connection_state_machine(server *srv, connection *con)
 				connection_set_state(srv, con, CON_STATE_RESPONSE_START);
 				break;
 			case CON_STATE_RESPONSE_START:
+				log_error_write(srv, __FILE__, __LINE__, "sd", "content data length:"
+										, chunkqueue_length(con -> request_content_queue));
+
 				/*
 				 * 处理http请求。
 				 */

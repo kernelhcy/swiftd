@@ -757,16 +757,16 @@ int main(int argc, char *argv[])
 	for(i = 0; i < srv -> conns -> used; ++i)
 	{
 		log_error_write(srv, __FILE__, __LINE__, "sds", "srv -> conns -> ptr ", i, "chunkqueue: ");
-		log_error_write(srv, __FILE__, __LINE__, "sd", "\t read_queue length:"
-								, chunkqueue_length(srv -> conns -> ptr[i] -> read_queue));
+		log_error_write(srv, __FILE__, __LINE__, "sd", "\t read_queue size:"
+								, chunkqueue_size(srv -> conns -> ptr[i] -> read_queue));
 		log_error_write(srv, __FILE__, __LINE__, "sd", "\t read_queue unused: "
 								, srv -> conns -> ptr[i] -> read_queue -> unused_chunks);
-		log_error_write(srv, __FILE__, __LINE__, "sd", "\t write_queue length:"
-								, chunkqueue_length(srv -> conns -> ptr[i] -> write_queue));
+		log_error_write(srv, __FILE__, __LINE__, "sd", "\t write_queue size:"
+								, chunkqueue_size(srv -> conns -> ptr[i] -> write_queue));
 		log_error_write(srv, __FILE__, __LINE__, "sd", "\t write_queue unused: "
 								, srv -> conns -> ptr[i] -> write_queue -> unused_chunks);
-		log_error_write(srv, __FILE__, __LINE__, "sd", "\t request_content_queue length:"
-								, chunkqueue_length(srv -> conns -> ptr[i] -> request_content_queue));
+		log_error_write(srv, __FILE__, __LINE__, "sd", "\t request_content_queue size:"
+								, chunkqueue_size(srv -> conns -> ptr[i] -> request_content_queue));
 		log_error_write(srv, __FILE__, __LINE__, "sd", "\t request_content_queue unused: "
 								, srv -> conns -> ptr[i] -> request_content_queue -> unused_chunks);
 	}
