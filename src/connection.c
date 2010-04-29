@@ -475,7 +475,6 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 					break;
 				default:
 					//其他错误直接将连接设置为错误。
-					connection_set_state(srv, con, CON_STATE_ERROR);
 					pthread_mutex_unlock(& con -> read_queue_lock);
 					return -1;
 			}
@@ -491,6 +490,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 			}
 			rlen += rval;
 			b -> used = rval;
+			b -> ptr[b -> used] = '\0'; //在最后加一个\0,便于打印。
 			//log_error_write(srv, __FILE__, __LINE__, "sdsb", "the read length ", rval, "data: ", b); 
 		}
 	}
@@ -579,6 +579,7 @@ static int connection_handle_read(server *srv, connection *con)
 	}
 	
 	pthread_mutex_lock(& con -> read_queue_lock);
+	chunkqueue_remove_finished_chunks(con -> read_queue);
 	//查看是否HTTP头读取完毕。
 	chunk *c, *lastchunk;
 	buffer *b;
@@ -599,6 +600,7 @@ static int connection_handle_read(server *srv, connection *con)
 		{
 			if (b -> ptr[i] == '\r')
 			{
+				//log_error_write(srv, __FILE__, __LINE__, "s", "-------Got a \\r");
 				if (b -> used - i >= 4)
 				{
 					//这个chunk有足够的长度可能存储着"\r\n\r\n"
@@ -615,8 +617,9 @@ static int connection_handle_read(server *srv, connection *con)
 					//这个chunk的长度不足以存储"\r\n\r\n", 向前搜索一个块。
 					if (c -> next != NULL)
 					{
-						havechars = b -> used - i - 1;
+						havechars = b -> used - i;
 						misschars = 4 - havechars;
+						//log_error_write(srv, __FILE__, __LINE__, "sdd", "----find next chunk. ", havechars, misschars);
 						if (0 == strncmp(b -> ptr + i, "\r\n\r\n", havechars)
 								&& 0 == strncmp(c -> next -> mem -> ptr, "\r\n\r\n" + havechars, misschars))
 						{
@@ -642,7 +645,7 @@ static int connection_handle_read(server *srv, connection *con)
 	{
 		buffer_reset(con -> request.request);
 		b = con -> request.request;
-		for (c = con -> read_queue -> first;;)
+		for (c = con -> read_queue -> first; c;)
 		{			
 			if (c == lastchunk)
 			{
@@ -657,8 +660,7 @@ static int connection_handle_read(server *srv, connection *con)
 			}
 			else
 			{
-				buffer_append_string_len(b, c -> mem -> ptr + c -> offset, c -> mem -> used - offset);
-				c -> offset = offset;
+				buffer_append_string_len(b, c -> mem -> ptr + c -> offset, c -> mem -> used - c -> offset);
 				c -> finished = 1;
 			}
 			
@@ -669,9 +671,17 @@ static int connection_handle_read(server *srv, connection *con)
 			c = c -> next;
 		}
 		
+		/*
+		log_error_write(srv, __FILE__, __LINE__, "s", "++++++show read_queue status:");
+		for(c = con -> read_queue -> first; c; c = c -> next)
+		{
+			log_error_write(srv, __FILE__, __LINE__, "sds", "read_queue chunk --- finished:", c -> finished, c -> mem -> ptr);
+		}
+		*/
 		//删除已经处理过的数据。
-		chunkqueue_remove_finished_chunks(con -> read_queue);
-		//log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
+		int rmcnt = chunkqueue_remove_finished_chunks(con -> read_queue);
+		//log_error_write(srv, __FILE__, __LINE__, "sd", "Remove finshed chunks : ", rmcnt);
+		log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 		connection_set_state(srv, con, CON_STATE_REQUEST_END);
 	}
 	pthread_mutex_unlock(& con -> read_queue_lock);
@@ -710,6 +720,8 @@ static int connection_handle_read_post(server *srv, connection *con)
 	
 	int wehave = chunkqueue_length(con -> request_content_queue);
 	pthread_mutex_lock(& con -> read_queue_lock);
+	chunkqueue_remove_finished_chunks(con -> read_queue);
+	
 	//我们已经读取到所有的POST数据，开始处理连接请求。
 	if (wehave == con -> request.content_length)
 	{
@@ -732,7 +744,7 @@ static int connection_handle_read_post(server *srv, connection *con)
 				/*
 				 * 这个chunk后面还有数据。
 				 */
-				log_error_write(srv, __FILE__, __LINE__, "s", "Need more chunks.");
+				//log_error_write(srv, __FILE__, __LINE__, "s", "Need more chunks.");
 				b = chunkqueue_get_append_buffer(con -> request_content_queue);
 				buffer_copy_string_len(b, c -> mem -> ptr + c -> offset, c -> mem -> used - c -> offset);
 				c -> finished = 1;
@@ -743,7 +755,7 @@ static int connection_handle_read_post(server *srv, connection *con)
 				/*
 				 * 这个chunk中只有一部分是content数据。
 				 */
-				log_error_write(srv, __FILE__, __LINE__, "s", "Got all POST data.");
+				//log_error_write(srv, __FILE__, __LINE__, "s", "Got all POST data.");
 				b = chunkqueue_get_append_buffer(con -> request_content_queue);
 				buffer_copy_string_len(b, c -> mem -> ptr + c -> offset, weneed);
 				c -> offset += weneed;
@@ -903,7 +915,7 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 		if (-1 == connection_network_read(srv, con, con -> read_queue))
 		{
 			log_error_write(srv, __FILE__, __LINE__, "s", "Read ERROR.");
-			connection_set_state(srv, con, CON_STATE_ERROR);
+			con -> is_error = 1;
 		}
 	}
 	
@@ -953,6 +965,7 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 	}
 	log_error_write(srv, __FILE__, __LINE__, "sd", "accept a fd:", fd);
 	connection *con = connection_get_new(srv);
+	log_error_write(srv, __FILE__, __LINE__, "ss", "new connection state:", connection_get_state_name(con -> state));
 	if (NULL == con)
 	{
 		return NULL;
@@ -1217,13 +1230,7 @@ int connection_state_machine(server *srv, connection *con)
 						close(con -> fd);
 					}
 				}
-				connection_reset(srv, con);
-				//连接关闭以后，连接处于connect状态，等待下一次连接。
-				pthread_mutex_lock(&srv -> conns_lock);
-				connection_set_state(srv, con, CON_STATE_CONNECT);
-				pthread_mutex_unlock(&srv -> conns_lock);
-				//log_error_write(srv, __FILE__, __LINE__, "s", "close done.");
-				
+
 				//触发插件。
 				switch(plugin_handle_connection_close(srv))
 				{
@@ -1248,6 +1255,14 @@ int connection_state_machine(server *srv, connection *con)
 						break;
 					
 				}
+				
+				joblist_find_del(srv, con);
+				connection_reset(srv, con);
+				//连接关闭以后，连接处于connect状态，等待下一次连接。
+				pthread_mutex_lock(&srv -> conns_lock);
+				connection_set_state(srv, con, CON_STATE_CONNECT);
+				pthread_mutex_unlock(&srv -> conns_lock);
+				//log_error_write(srv, __FILE__, __LINE__, "s", "close done.");
 				break;
 			default:
 				log_error_write(srv, __FILE__, __LINE__, "sd", "Unknown state!", con -> state);
@@ -1304,6 +1319,7 @@ int connection_state_machine(server *srv, connection *con)
 				 * 如果没有数据可写。则不监听这个fd。否则每次poll时都会因这个fd而停止。
 				 */
 				fdevent_event_del(srv -> ev, con -> fd);
+				joblist_find_del(srv, con);
 			}
 			break;
 		case CON_STATE_ERROR:
@@ -1313,6 +1329,7 @@ int connection_state_machine(server *srv, connection *con)
 		default:
 			log_error_write(srv, __FILE__, __LINE__, "s", "Unknown state!");
 			fdevent_event_del(srv -> ev, con -> fd);
+			joblist_find_del(srv, con);
 			break;
 	}
 	

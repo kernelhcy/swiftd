@@ -182,6 +182,7 @@ handler_t network_write(server *srv, connection *con)
 	}
 	
 	chunkqueue_remove_finished_chunks(con -> write_queue);
+	
 	if(chunkqueue_is_empty(con -> write_queue))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "s", "No data to write.");

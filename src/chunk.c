@@ -512,6 +512,10 @@ off_t chunkqueue_written(chunkqueue * cq)
 
 int chunkqueue_is_empty(chunkqueue * cq)
 {
+	if(NULL == cq)
+	{
+		return 0;
+	}
 	return cq -> first ? 0 : 1;
 }
 
@@ -524,25 +528,44 @@ int chunkqueue_remove_finished_chunks(chunkqueue * cq)
 	{
 		return 0;
 	}
-	chunk *c;
-	for (c = cq -> first; c; c = c -> next)
+	
+	int cnt = 0;
+	chunk *c, *pre, *tmp;
+	for (c = cq -> first, pre = c; c; )
 	{
-		if (c -> finished)
-		{
-			
-			chunk_reset(c);
-			cq -> first = c -> next;
+		tmp = c;
 		
-			if (c == cq -> last)
+		if (tmp -> finished)
+		{
+			++cnt;			
+			if(tmp == cq -> first)
+			{
+				cq -> first = tmp -> next;
+				c = c -> next;
+				pre = c;
+			}
+			else
+			{
+				pre -> next = c -> next;
+				c = c -> next;
+			}
+				
+			if(c == cq -> last)
 			{
 				cq -> last = NULL;
 			}
 			
-			c -> next = cq -> unused;	
-			cq -> unused = c;
+			chunk_reset(tmp);
+			tmp -> next = cq -> unused;	
+			cq -> unused = tmp;
 			++cq -> unused_chunks;
+		}
+		else
+		{
+			pre = c;
+			c = c -> next;
 		}
 	}
 
-	return 0;
+	return cnt;
 }
