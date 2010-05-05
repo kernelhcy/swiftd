@@ -54,7 +54,7 @@ int main(int argc, char *argv[1])
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(8080);
-	inet_aton("127.0.0.1", &addr.sin_addr);
+	inet_aton("202.117.21.117", &addr.sin_addr);
 
 	int cnt;
 	char *err;
@@ -67,12 +67,10 @@ int main(int argc, char *argv[1])
 		if (-1 == (sock= socket(AF_INET, SOCK_STREAM, 0)))
 		{
 			printf("Create socket error.");
-			return -1;
 		}
 		if ( -1 == connect(sock, (struct sockaddr *)&addr, (socklen_t)sizeof(addr)))
 		{
 			printf("Connect failed.%s\n", strerror(errno));
-			return -1;
 		}
 		else
 		{
@@ -93,7 +91,6 @@ int main(int argc, char *argv[1])
 				if (-1 == (val = write(sock, head + len, needlen - len)))
 				{
 					printf("Write Error. %s\n", strerror(errno));
-					return -1;
 				}
 				else if(val == 0)
 				{
@@ -111,7 +108,6 @@ int main(int argc, char *argv[1])
 				if( -1 == (val = write(sock, content + len, CL - len)))
 				{
 					printf("Write Error. %s\n", strerror(errno));
-					return -1;
 				}
 				else if(val == 0)
 				{
