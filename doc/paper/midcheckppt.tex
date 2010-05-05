@@ -1,0 +1,173 @@
+\documentclass[12pt]{beamer}
+\usepackage{CJKutf8} 	%支持汉字
+\usetheme{Madrid}		%使用主题
+
+%%%%%%%文档正文
+\begin{document}
+\begin{CJK}{UTF8}{gbsn}	%宋体
+
+%标题作者等信息。
+%这些信息将自动生成ppt的第一页
+\title{毕业设计中期检查}
+\author{黄丛宇}
+\institute{西安交通大学 软件学院 软件62}
+\date{\today}
+\frame{\titlepage}
+
+%第二页
+\begin{frame}
+	\frametitle{课题名称}
+	\begin{center}
+	\Large
+	{
+	基于动态链接技术的web服务器动态扩展功能\\
+			接口的设计与实现
+	}
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{背景和意义}
+	\begin{itemize}
+		\item Web服务器：
+			\begin{itemize}
+				\item 互联网的核心组成部分，支撑整个互联网应用服务。
+				\item 适应互联网应用的不断更新变化。
+				\item 必须保证7*24小时的运行。
+			\end{itemize}
+		\pause
+		\item Web服务器现状：
+			\begin{itemize}
+				\item 大部分都不支持功能的动态增加。
+				\item 必须重启或重新编译。
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{背景和意义}
+	\begin{itemize}
+		\item 针对以上问题，本课题将基于动态链接库技术，使服务器在运行期间，可以动态的获知模块的增加并加载模块。
+		\pause
+		\item 本系统实现了服务器的基本功能，重点实现模块动态加载特性。
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{课题主要任务}
+	\begin{enumerate}
+		\item 学习动态链接库和web服务器设计实现的相关知识和技术。
+			\begin{itemize}
+				\item Nonblocking IO, IO multiplexing，线程池，动态链接技术等。
+			\end{itemize}
+		\pause
+		\item 技术可行性论证，需求分析，构造系统结构。
+			\begin{itemize}
+				\item 分析HTTP协议，设计接口，构造服务器的整体框架等。
+			\end{itemize}
+		\pause
+		\item 搭建开发环境，设计和编码实现。
+			\begin{itemize}
+				\item 完成服务器的编码。实现预期的功能。
+			\end{itemize}
+		\pause
+		\item 撰写毕业设计论文
+		\pause
+		\item 查找外文文献并翻译。
+	\end{enumerate}
+\end{frame}
+
+\begin{frame}
+	\frametitle{已完成任务}
+	\begin{itemize}
+		\item 完成动态链接库技术和Web服务器设计相关资料的搜集和学习。
+		\pause
+		\begin{itemize}
+			\item 掌握了动态链接库的基本使用。
+			\item 掌握了Nonblocking IO和IO Multiplexing的使用和注意事项。
+			\item 学习有关线程池的资料并编写了一个简单的线程池，以备后期使用。
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{已完成任务}
+	\begin{itemize}
+		\item 完成技术可行性论证，需求分析，构造系统结构。
+		\pause
+		\begin{itemize}
+			\item 研究学习了HTTP/1.1协议（RFC2616）。理解掌握了HTTP协议的基本内容和处理过程。
+			\item 根据HTTP协议的内容设计插件的接口。
+			\item 完成服务器整体架构的设计。
+			\pause
+			\setbeamertemplate{items}[circle]
+			\begin{itemize}
+				\item 对于连接的处理采用状态机。
+				\item 每个IO事件调用一个线程进行处理。
+				\item 采用Inotify检测插件的增加和删除。
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\frametitle{已完成任务}
+	%
+	\begin{itemize}
+		\item 完成开发环境的搭建。完成服务器设计并编码实现。
+		\begin{itemize}
+			\item 开发环境：Linux(Debian5.0)+gcc+vim(gedit)
+			\item 完成服务器的编码工作。
+			\pause
+			\setbeamertemplate{items}[circle]
+			\begin{itemize}
+				\item 实现了HTTP/1.1的GET，POST和HEAD方法。
+				\item 实现了HTTP/1.1中的Persistent Connections和Pipelining。
+				\item 实现了HTTP/1.0中的Nonpersistent Connections。
+				\item 可以动态的加载和删除插件。
+				\item 实现了一个验证性质的插件：dir\_index。
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}
+	\begin{center}
+		\frametitle{完成情况}
+		\pause
+		\LARGE{目前已经完成课题任务的}\\
+		\Huge{80\%}
+		\\
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{存在的问题}
+	\begin{enumerate}
+		\item 对HTTP协议的理解不够透彻。
+			\begin{itemize}
+				\item 缓存
+				\item 条件获取
+			\end{itemize}
+		\pause
+		\item 代码存在BUG。
+			\begin{itemize}
+				\item 内存泄漏
+				\item 线程并发出现数据混乱
+			\end{itemize}
+	\end{enumerate}
+\end{frame}
+
+\begin{frame}
+	\frametitle{后期工作计划}
+	\begin{enumerate}
+		\item 继续深入研究学习HTTP协议。
+		\item 调成程序，修改BUG。
+		\item 编写毕业设计论文。
+		\item 查找翻译外文资料。
+		\item 准备毕业设计答辩文档。
+	\end{enumerate}
+\end{frame}
+
+\end{CJK}
+\end{document}
