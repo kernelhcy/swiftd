@@ -1,0 +1,44 @@
+% hcy style
+\ProvidesPackage{hcystyle}
+
+\usepackage{fontspec}
+\usepackage{hyperref}
+
+\mode<presentation>
+{
+	\usetheme{Madrid}		%使用主题
+	%\usefonttheme[onlymath]{serif}
+  	\setbeamercovered{transparent}
+}
+
+
+%中英混排
+%\usepackage{zhspacing}
+
+%\zhspacing
+%字体大小
+\newcommand {\ltwo}{\fontsize{18pt}{27pt}\selectfont} 		%小二
+\newcommand {\three}{\fontsize{16pt}{24pt}\selectfont}		%三号
+\newcommand {\lthree}{\fontsize{15pt}{22.5pt}\selectfont}	%小三
+\newcommand {\four}{\fontsize{14pt}{21pt}\selectfont}		%四号
+\newcommand {\lfour}{\fontsize{12pt}{18pt}\selectfont}		%小四
+\newcommand {\five}{\fontsize{10.5pt}{15.75pt}\selectfont}	%五号
+\newcommand {\lfive}{\fontsize{9pt}{13.5pt}\selectfont}		%小五
+
+%\renewcommand*\ttdefault{lcmtt}
+%\renewcommand*\ttdefault{lmvtt}
+%\renewcommand*\ttdefault{cmvtt}
+
+\newcommand{\song}{\fontspec{宋体}}
+\newcommand{\wqy}{\fontspec{文泉驿正黑}}
+\newcommand{\fsong}{\fontspec{仿体}}
+\newcommand{\kai}{\fontspec{楷体}}
+\newcommand{\cp}{\fontspec{Courier 10 Pitch}}
+\newcommand{\cn}{\fontspec{Courier New}}
+
+\setsansfont{文泉驿正黑}
+\setmonofont{Courier 10 Pitch}
+
+\XeTeXlinebreaklocale "zh"  % 表示用中文的断行
+\XeTeXlinebreakskip = 0pt plus 1pt % 多一点调整的空间
+
