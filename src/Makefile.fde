@@ -1,0 +1,19 @@
+CC=gcc
+DEBUG=-ggdb
+OBJPATH=../objects/
+OBJS=${OBJPATH}fdevent.o ${OBJPATH}fde_epoll.o ${OBJPATH}test_fde.o
+
+test:${OBJS}
+	gcc ${OBJS} -o test
+
+${OBJPATH}test_fde.o: test_fde.c
+	${CC} -c test_fde.c -o ${OBJPATH}test_fde.o
+
+${OBJPATH}fdevent.o: fdevent.c
+	${CC} -c  fdevent.c -o ${OBJPATH}fdevent.o
+
+${OBJPATH}fde_epoll.o: fde_epoll.c
+	${CC} -c  fde_epoll.c -o ${OBJPATH}fde_epoll.o
+
+clean:
+	rm ${OBJPATH}*.o test
