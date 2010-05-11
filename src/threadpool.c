@@ -447,7 +447,7 @@ int tp_run_job(thread_pool *tp, job_func job, void *ctx)
 static pthread_mutex_t debug_lock = PTHREAD_MUTEX_INITIALIZER;
 void debug_info(const char *fmt, ...)
 {
-	/*
+	
 	pthread_mutex_lock(&debug_lock);
 	va_list ap;
 	va_start(ap, fmt);
@@ -456,5 +456,5 @@ void debug_info(const char *fmt, ...)
 	va_end(ap);
 	pthread_mutex_unlock(&debug_lock);
 	return;
-	*/	
+		
 }
