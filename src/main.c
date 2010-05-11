@@ -369,6 +369,7 @@ int main(int argc, char *argv[])
 		server_free(srv);
 		return -1;
 	}
+	fprintf(stderr, "set defaults configure.\n");
 	
 	//记录服务器启动的时间和当前时间。
 	srv -> cur_ts = time(NULL);
@@ -376,6 +377,7 @@ int main(int argc, char *argv[])
 	
 	//带开日志。
 	log_error_open(srv);
+	fprintf(stderr, "open log.\n");
 	log_error_write(srv, __FILE__, __LINE__, "s", "Open log success!");
 	
 	//设置pid文件。
@@ -551,8 +553,8 @@ int main(int argc, char *argv[])
 			server_free(srv);
 			return -1;
 		}
-		
-		
+
+		fprintf(stderr, "init the network.\n");
 	
 	}
 	
@@ -566,6 +568,8 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	
+	fprintf(stderr, "starting thread pool.\n");
+	
 	//初始化fdevent系统。
 	log_error_write(srv, __FILE__, __LINE__, "s", "Starting fdevent system...");
 	if (NULL == (srv -> ev = fdevent_init(srv -> max_fds + 1, srv -> event_handler)))
@@ -573,6 +577,8 @@ int main(int argc, char *argv[])
 		log_error_write(srv, __FILE__, __LINE__,"s", "fdevent init failed." );
 		return -1;
 	}
+
+	fprintf(stderr, "starting fdevent system.\n");
 	
 	if (-1 == network_register_fdevent(srv))
 	{
@@ -589,6 +595,7 @@ int main(int argc, char *argv[])
 		server_free(srv);
 		return -1;
 	}
+	fprintf(stderr, "load plugins.\n");
 	
 	//初始化文件监测系统。
 	if( -1 == plugin_conf_inotify_init(srv, srv -> srvconf.plugin_conf_file -> ptr))
