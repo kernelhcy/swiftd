@@ -59,7 +59,7 @@ ${OBJSPATH}/mod_dir_index.o:mod_dir_index.c
 
 dir_index.so: ${OBJS} ${OBJSPATH}/mod_dir_index.o
 	gcc -fPIC -shared ${OBJS} ${OBJSPATH}/mod_dir_index.o -o dir_index.so
-	mv dir_index.so /home/hcy/swiftd
+	mv dir_index.so /home/hcy/tmp/swiftd/plugins/
 
 clean:
 	rm ${OBJSPATH}/*.o
