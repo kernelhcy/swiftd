@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include "memoryleak.h"
 
 #ifdef USE_EPOLL
 void fdevent_epoll_free(fdevent *ev)
@@ -13,7 +14,7 @@ void fdevent_epoll_free(fdevent *ev)
 		return;
 	}
 	close(ev -> epoll_fd);
-	free(ev -> epoll_events);
+	my_free(ev -> epoll_events);
 }
 
 int fdevent_epoll_event_add(fdevent *ev, int fd, int events)
@@ -180,7 +181,7 @@ int fdevent_epoll_init(fdevent *ev)
 		return -1;
 	}
 
-	ev -> epoll_events = (struct epoll_event*)calloc(ev -> maxfds, sizeof(*ev -> epoll_events));
+	ev -> epoll_events = (struct epoll_event*)my_calloc(ev -> maxfds, sizeof(*ev -> epoll_events));
 
 	return 0;
 }

@@ -10,7 +10,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <error.h>
-
+#include "memoryleak.h"
 /*
  * 可能的文件名。
  */
@@ -41,7 +41,7 @@ static void dir_index_init()
 static handler_t dir_index_cleanup(server *srv, void *p_d)
 {
 	UNUSED(srv);
-	free(p_d);
+	my_free(p_d);
 	return HANDLER_FINISHED;
 }
 
@@ -144,7 +144,7 @@ void dir_index_plugin_init(plugin *p)
 		return;
 	}
 	
-	struct plugin_data *p_d = malloc(sizeof(*p_d));
+	struct plugin_data *p_d = my_malloc(sizeof(*p_d));
 	if(NULL == p_d)
 	{
 		return;

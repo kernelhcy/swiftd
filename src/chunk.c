@@ -17,11 +17,12 @@
 #include <string.h>
 
 #include "chunk.h"
+#include "memoryleak.h"
 
 chunkqueue *chunkqueue_init(void)
 {
 	chunkqueue *cq;
-	cq = calloc(1, sizeof(*cq));
+	cq = my_calloc(1, sizeof(*cq));
 
 	cq -> first = NULL;
 	cq -> last = NULL;
@@ -36,7 +37,7 @@ static chunk *chunk_init(void)
 {
 	chunk *c;
 
-	c = calloc(1, sizeof(*c));
+	c = my_calloc(1, sizeof(*c));
 
 	c -> mem = buffer_init();
 	c -> file.name = buffer_init();
@@ -59,7 +60,7 @@ static void chunk_free(chunk * c)
 	buffer_free(c -> mem);
 	buffer_free(c -> file.name);
 
-	free(c);
+	my_free(c);
 }
 
 static void chunk_reset(chunk * c)
@@ -117,7 +118,7 @@ void chunkqueue_free(chunkqueue * cq)
 		chunk_free(pc);
 	}
 
-	free(cq);
+	my_free(cq);
 }
 
 static chunk *chunkqueue_get_unused_chunk(chunkqueue * cq)

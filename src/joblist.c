@@ -4,6 +4,7 @@
 #include "base.h"
 #include "joblist.h"
 #include "log.h"
+#include "memoryleak.h"
 
 static int con_list_append(server *srv, connections *list, connection *con)
 {
@@ -21,7 +22,7 @@ static int con_list_append(server *srv, connections *list, connection *con)
 	if(list -> size == 0)
 	{
 		list -> size = 128;
-		list -> ptr = (connection **)calloc(list -> size, sizeof(connection *));
+		list -> ptr = (connection **)my_calloc(list -> size, sizeof(connection *));
 		if(NULL == list -> ptr)
 		{	
 			log_error_write(srv, __FILE__, __LINE__, "s", "mallloc memory for joblist failed.");
@@ -31,7 +32,7 @@ static int con_list_append(server *srv, connections *list, connection *con)
 	else if(list -> used == list -> size)
 	{
 		list -> size += 128;
-		list -> ptr =(connection **)realloc(list -> ptr, list -> size * sizeof(connection *));
+		list -> ptr =(connection **)my_realloc(list -> ptr, list -> size * sizeof(connection *));
 		if(NULL == list -> ptr)
 		{	
 			log_error_write(srv, __FILE__, __LINE__, "s", "reallloc memory for joblist failed.");
@@ -100,7 +101,7 @@ static int con_list_del(server *srv, connections *list, connection *con)
 
 static void con_list_free(connections *list)
 {
-	free(list -> ptr);
+	my_free(list -> ptr);
 	list -> ptr = NULL;
 	list -> used = 0;
 	list -> size = 0;

@@ -12,7 +12,7 @@
 #include "fdevent.h"
 #include "joblist.h"
 #include "connection.h"
-
+#include "memoryleak.h"
 
 /*
  * 初始化网络。
@@ -41,7 +41,7 @@ int network_init(server *srv)
 						, bindhost, port);
 	socklen_t addr_len;
 	int fd;
-	server_socket *srv_sock = (server_socket *)calloc(1, sizeof(*srv_sock));
+	server_socket *srv_sock = (server_socket *)my_calloc(1, sizeof(*srv_sock));
 	srv_sock -> fd = -1;
 	srv_sock -> srv_token = buffer_init();
 	
@@ -120,12 +120,12 @@ int network_init(server *srv)
 	{
 		srv -> sockets -> size = 16;
 		srv -> sockets -> used = 0;
-		srv -> sockets -> ptr = (server_socket **)malloc(srv -> sockets -> size * sizeof(server_socket*));
+		srv -> sockets -> ptr = (server_socket **)my_malloc(srv -> sockets -> size * sizeof(server_socket*));
 	}
 	else
 	{
 		srv -> sockets -> size += 16;
-		srv -> sockets -> ptr = (server_socket **)realloc(srv -> sockets -> ptr
+		srv -> sockets -> ptr = (server_socket **)my_realloc(srv -> sockets -> ptr
 				, srv -> sockets -> size * sizeof(server_socket*));
 	}
 	if (NULL == srv -> sockets -> ptr)
@@ -133,7 +133,7 @@ int network_init(server *srv)
 		log_error_write(srv, __FILE__, __LINE__, "s", "alloc error.");
 		return -1;
 	}
-	srv -> sockets -> ptr[srv -> sockets -> used] = (server_socket*)malloc(sizeof(server_socket));
+	srv -> sockets -> ptr[srv -> sockets -> used] = (server_socket*)my_malloc(sizeof(server_socket));
 	srv -> sockets -> ptr[srv -> sockets -> used] -> fde_ndx = srv -> sockets -> used;
 	srv -> sockets -> ptr[srv -> sockets -> used] = srv_sock;
 	++srv -> sockets -> used;

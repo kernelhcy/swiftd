@@ -17,6 +17,7 @@
 #include <fcntl.h>
 #include <error.h>
 #include <errno.h>
+#include "memoryleak.h"
 
 static volatile int shutdown_server = 0;
 /**
@@ -79,7 +80,7 @@ static void daemonize(void)
 static server *server_init(void)
 {
 
-	server *srv = calloc(1, sizeof(*srv));
+	server *srv = my_calloc(1, sizeof(*srv));
 
 	srv -> max_fds = 4096;
 	srv ->  cur_fds = -1;
@@ -98,32 +99,32 @@ static server *server_init(void)
 	srv -> ev = NULL; 
 
 	// plugins;
-	srv -> plugins = (plugin_array *)malloc(sizeof(plugin_array));
+	srv -> plugins = (plugin_array *)my_malloc(sizeof(plugin_array));
 	srv -> plugins -> ptr = NULL;
 	srv -> plugins -> size = 0;
 	srv -> plugins -> used = 0;
 
-	srv -> plugins_np = (plugin_name_path *)malloc(sizeof(plugin_name_path));
+	srv -> plugins_np = (plugin_name_path *)my_malloc(sizeof(plugin_name_path));
 	srv -> plugins_np -> name = NULL;
 	srv -> plugins_np -> path = NULL;
 	srv -> plugins_np -> size = 0;
 	srv -> plugins_np -> used = 0;
 	
-	srv -> slots = (plugin_slot *)malloc(sizeof(plugin_slot));
+	srv -> slots = (plugin_slot *)my_malloc(sizeof(plugin_slot));
 	srv -> slots -> ptr = NULL;
 	srv -> slots -> used = NULL;
 	srv -> slots -> size = NULL;
 	
 	pthread_mutex_init(&srv -> plugin_lock, NULL);
 
-	srv -> sockets = (socket_array*)malloc(sizeof(socket_array));
+	srv -> sockets = (socket_array*)my_malloc(sizeof(socket_array));
 	if (srv -> sockets == NULL)
 	{
 		return NULL;
 	}
 	srv -> sockets -> used = 0;
 	srv -> sockets -> size = 16;
-	srv -> sockets -> ptr = (server_socket**)calloc(srv -> sockets -> size
+	srv -> sockets -> ptr = (server_socket**)my_calloc(srv -> sockets -> size
 													, sizeof(server_socket*));
 	if (srv -> sockets -> ptr == NULL)
 	{
@@ -137,14 +138,14 @@ static server *server_init(void)
 	srv -> con_closed = 0;
 	pthread_mutex_init(&srv -> con_lock, NULL);
 
-	srv -> conns = (connections *)malloc(sizeof(connections));
+	srv -> conns = (connections *)my_malloc(sizeof(connections));
 	if (srv -> conns == NULL)
 	{
 		return NULL;
 	}
 	srv -> conns -> used = 0;
 	srv -> conns -> size = 128;
-	srv -> conns -> ptr = (connection**)calloc(srv -> conns -> size
+	srv -> conns -> ptr = (connection**)my_calloc(srv -> conns -> size
 													, sizeof(connection*));
 	if (srv -> conns -> ptr == NULL)
 	{
@@ -152,7 +153,7 @@ static server *server_init(void)
 	}
 	pthread_mutex_init(&srv -> conns_lock, NULL);
 	
-	srv -> joblist = (connections*)malloc(sizeof(connections)); 
+	srv -> joblist = (connections*)my_malloc(sizeof(connections)); 
 	if(NULL == srv -> joblist)
 	{
 		return NULL;
@@ -162,7 +163,7 @@ static server *server_init(void)
 	srv -> joblist -> size = 0;	
 	pthread_mutex_init(&srv -> joblist_lock, NULL);
 	 
-	srv -> fdwaitqueue = (connections*)malloc(sizeof(connections));
+	srv -> fdwaitqueue = (connections*)my_malloc(sizeof(connections));
 	if (NULL == srv -> fdwaitqueue)
 	{
 		return NULL;
@@ -180,7 +181,7 @@ static server *server_init(void)
 	srv -> jc_nodes = NULL;
 	pthread_mutex_init(&srv -> jc_lock, NULL);
 	
-	srv -> conf_ity = (conf_inotify*)malloc(sizeof(conf_inotify));
+	srv -> conf_ity = (conf_inotify*)my_malloc(sizeof(conf_inotify));
 	if(NULL == srv -> conf_ity)
 	{
 		log_error_write(srv, __FILE__, __LINE__, "malloc conf_ity failed.");
@@ -203,19 +204,19 @@ static void server_free(server * srv)
 	{
 		connection_free(srv, srv -> conns -> ptr[i]);
 	}
-	free(srv -> conns -> ptr);
-	free(srv -> conns);
+	my_free(srv -> conns -> ptr);
+	my_free(srv -> conns);
 	
 	for (i = 0; i < srv -> sockets -> used; ++i)
 	{
-		free(srv -> sockets -> ptr[i]);
+		my_free(srv -> sockets -> ptr[i]);
 	}
-	free(srv -> sockets -> ptr);
-	free(srv -> sockets);
+	my_free(srv -> sockets -> ptr);
+	my_free(srv -> sockets);
 
-	free(srv -> plugins);
-	free(srv -> plugins_np);
-	free(srv -> slots);
+	my_free(srv -> plugins);
+	my_free(srv -> plugins_np);
+	my_free(srv -> slots);
 	
 	buffer_free(srv -> errorlog_buf);
 	buffer_free(srv -> ts_debug_str);
@@ -229,8 +230,8 @@ static void server_free(server * srv)
 	pthread_mutex_destroy(&srv -> log_lock);
 	pthread_mutex_destroy(&srv -> jc_lock);
 	
-	free(srv -> joblist);
-	free(srv -> fdwaitqueue);
+	my_free(srv -> joblist);
+	my_free(srv -> fdwaitqueue);
 	srv -> joblist = NULL;
 	srv -> fdwaitqueue = NULL;
 	
@@ -239,12 +240,12 @@ static void server_free(server * srv)
 	{
 		tmp = jc;
 		jc = jc -> next;
-		free(tmp);
+		my_free(tmp);
 	}
 	
-	free(srv -> conf_ity);
+	my_free(srv -> conf_ity);
 	
-	free(srv);
+	my_free(srv);
 }
 
 //显示服务器版本
@@ -375,7 +376,10 @@ int main(int argc, char *argv[])
 	srv -> startup_ts = srv -> cur_ts;
 	
 	//带开日志。
-	log_error_open(srv);
+	if (-1 == log_error_open(srv))
+	{
+		fprintf(stderr, "Open log error.\n");
+	}
 	log_error_write(srv, __FILE__, __LINE__, "s", "Open log success!");
 	
 	//设置pid文件。

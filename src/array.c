@@ -8,13 +8,13 @@
 
 #include "array.h"
 #include "buffer.h"
-
+#include "memoryleak.h"
 
 array *array_init(void) 
 {
 	array *a;
 
-	a = calloc(1, sizeof(*a));
+	a = my_calloc(1, sizeof(*a));
 	/* a所指向的空间已经全部清零 */
 	assert(a);
 
@@ -33,7 +33,7 @@ array *array_init_array(array *src)
 	a -> next_power_of_2 = src -> next_power_of_2;
 	a -> unique_ndx = src -> unique_ndx;
 
-	a -> data = malloc(sizeof(*src -> data) * src -> size);
+	a -> data = my_malloc(sizeof(*src -> data) * src -> size);
 	for (i = 0; i < src -> size; i++) 
 	{
 		if (src -> data[i]) 
@@ -46,7 +46,7 @@ array *array_init_array(array *src)
 		}
 	}
 
-	a -> sorted = malloc(sizeof(*src -> sorted) * src -> size);
+	a -> sorted = my_malloc(sizeof(*src -> sorted) * src -> size);
 	memcpy(a -> sorted, src -> sorted, sizeof(*src -> sorted) * src -> size);
 	return a;
 }
@@ -64,10 +64,10 @@ void array_free(array *a)
 		}
 	}
 
-	if (a -> data) free(a -> data);
-	if (a -> sorted) free(a -> sorted);
+	if (a -> data) my_free(a -> data);
+	if (a -> sorted) my_free(a -> sorted);
 
-	free(a);
+	my_free(a);
 }
 
 void array_reset(array *a) 
@@ -239,8 +239,8 @@ int array_insert_unique(array *a, data_unset *str)
 	if (a -> size == 0) 
 	{
 		a -> size = 16;
-		a -> data = malloc(sizeof(*a -> data) * a -> size);
-		a -> sorted = malloc(sizeof(*a -> sorted) * a -> size);
+		a -> data = my_malloc(sizeof(*a -> data) * a -> size);
+		a -> sorted = my_malloc(sizeof(*a -> sorted) * a -> size);
 		assert(a -> data);
 		assert(a -> sorted);
 		for (j = a -> used; j < a -> size; j++) 
@@ -251,8 +251,8 @@ int array_insert_unique(array *a, data_unset *str)
 	else if (a -> size == a -> used) 
 	{
 		a -> size += 16;
-		a -> data  = realloc(a -> data, sizeof(*a -> data) * a -> size);
-		a -> sorted = realloc(a -> sorted, sizeof(*a -> sorted) * a -> size);
+		a -> data  = my_realloc(a -> data, sizeof(*a -> data) * a -> size);
+		a -> sorted = my_realloc(a -> sorted, sizeof(*a -> sorted) * a -> size);
 		assert(a -> data);
 		assert(a -> sorted);
 		for (j = a -> used; j < a -> size; j++) 

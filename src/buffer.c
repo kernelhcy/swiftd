@@ -6,6 +6,7 @@
 #include <ctype.h>
 
 #include "buffer.h"
+#include "memoryleak.h"
 
 //16进制
 static const char hex_chars[] = "0123456789abcdef";
@@ -20,7 +21,7 @@ buffer* buffer_init(void)
 {
 	buffer *b;
 
-	b = malloc(sizeof(*b));//b不指向任何数据，但可以确定其可以指向的数据的大小！
+	b = my_malloc(sizeof(*b));//b不指向任何数据，但可以确定其可以指向的数据的大小！
 	assert(b);
 
 	b -> ptr = NULL;
@@ -46,8 +47,8 @@ void buffer_free(buffer *b)
 {
 	if (!b) return;
 
-	free(b -> ptr);
-	free(b);
+	my_free(b -> ptr);
+	my_free(b);
 }
 
 void buffer_reset(buffer *b) 
@@ -61,7 +62,7 @@ void buffer_reset(buffer *b)
 	 */
 	if (b -> size > BUFFER_MAX_REUSE_SIZE) 
 	{
-		free(b -> ptr);
+		my_free(b -> ptr);
 		b -> ptr = NULL;
 		b -> size = 0;
 	} 
@@ -92,7 +93,7 @@ int buffer_prepare_copy(buffer *b, size_t size)
 	if ((0 == b  ->  size) || (size > b  ->  size)) 
 	{
 		if (b -> size) 
-			free(b -> ptr);
+			my_free(b -> ptr);
 
 		b -> size = size;
 
@@ -102,7 +103,7 @@ int buffer_prepare_copy(buffer *b, size_t size)
 		 */
 		b -> size += BUFFER_PIECE_SIZE - (b -> size % BUFFER_PIECE_SIZE);
 
-		b -> ptr = malloc(b -> size);
+		b -> ptr = my_malloc(b -> size);
 		assert(b -> ptr);
 	}
 	b -> used = 0;
@@ -131,7 +132,7 @@ int buffer_prepare_append(buffer *b, size_t size)
 		/* always allocate a multiply of BUFFER_PIECE_SIZE */
 		b -> size += BUFFER_PIECE_SIZE - (b -> size % BUFFER_PIECE_SIZE);
 
-		b -> ptr = malloc(b -> size);
+		b -> ptr = my_malloc(b -> size);
 		b -> used = 0;
 		assert(b -> ptr);
 		
@@ -143,7 +144,7 @@ int buffer_prepare_append(buffer *b, size_t size)
 		/* always allocate a multiply of BUFFER_PIECE_SIZE */
 		b -> size += BUFFER_PIECE_SIZE - (b -> size % BUFFER_PIECE_SIZE);
 
-		b -> ptr = realloc(b -> ptr, b -> size);
+		b -> ptr = my_realloc(b -> ptr, b -> size);
 		assert(b -> ptr);
 	}
 	return 0;
@@ -589,7 +590,7 @@ buffer_array* buffer_array_init(void)
 {
 	buffer_array *b;
 
-	b = malloc(sizeof(*b));
+	b = my_malloc(sizeof(*b));
 
 	assert(b);
 	b -> ptr = NULL;
@@ -629,8 +630,8 @@ void buffer_array_free(buffer_array *b)
 	{
 		if (b -> ptr[i]) buffer_free(b -> ptr[i]);
 	}
-	free(b -> ptr);
-	free(b);
+	my_free(b -> ptr);
+	my_free(b);
 }
 
 /**
@@ -645,7 +646,7 @@ buffer *buffer_array_append_get_buffer(buffer_array *b)
 	if (b -> size == 0) //分配空间
 	{
 		b -> size = 16;
-		b -> ptr = malloc(sizeof(*b -> ptr) * b -> size);
+		b -> ptr = my_malloc(sizeof(*b -> ptr) * b -> size);
 		assert(b -> ptr);
 		for (i = 0; i < b -> size; i++) 
 		{
@@ -655,7 +656,7 @@ buffer *buffer_array_append_get_buffer(buffer_array *b)
 	else if (b -> size == b -> used) //满，重新分配空间
 	{
 		b -> size += 16;
-		b -> ptr = realloc(b -> ptr, sizeof(*b -> ptr) * b -> size);
+		b -> ptr = my_realloc(b -> ptr, sizeof(*b -> ptr) * b -> size);
 		assert(b -> ptr);
 		for (i = b -> used; i < b -> size; i++) 
 		{

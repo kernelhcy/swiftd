@@ -8,7 +8,7 @@
 
 #include "buffer.h"
 #include "log.h"
-
+#include "memoryleak.h"
 
 static void fdnode_init(fdnode *n)
 {
@@ -28,10 +28,10 @@ static void fdnode_init(fdnode *n)
 fdevent* fdevent_init(size_t maxfds, fdevent_handler_t type)
 {
 	fdevent* ev = NULL;
-	ev = (fdevent *)malloc(sizeof(*ev));
+	ev = (fdevent *)my_malloc(sizeof(*ev));
 	memset(ev, 0, sizeof(*ev));
 	
-	ev -> fdarray = (fdnode *)calloc(maxfds, sizeof(fdnode));
+	ev -> fdarray = (fdnode *)my_calloc(maxfds, sizeof(fdnode));
 	int i;
 	for (i = 0; i < maxfds; ++i)
 	{
@@ -73,8 +73,8 @@ void fdevent_free(fdevent *ev)
 	size_t i;
 	ev -> free(ev);
 
-	free(ev -> fdarray);
-	free(ev);
+	my_free(ev -> fdarray);
+	my_free(ev);
 	return;
 }
 

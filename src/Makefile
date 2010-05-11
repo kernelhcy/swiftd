@@ -1,6 +1,6 @@
 OBJS=${OBJSPATH}/buffer.o ${OBJSPATH}/log.o  ${OBJSPATH}/chunk.o ${OBJSPATH}/connection.o ${OBJSPATH}/array.o\
 	 ${OBJSPATH}/configure.o ${OBJSPATH}/fdevent.o ${OBJSPATH}/threadpool.o ${OBJSPATH}/error_page.o\
-	 ${OBJSPATH}/fde_epoll.o ${OBJSPATH}/joblist.o ${OBJSPATH}/main.o ${OBJSPATH}/network.o\
+	 ${OBJSPATH}/fde_epoll.o ${OBJSPATH}/joblist.o ${OBJSPATH}/main.o ${OBJSPATH}/network.o ${OBJSPATH}/memoryleak.o\
 	 ${OBJSPATH}/base.o ${OBJSPATH}/request.o ${OBJSPATH}/plugin.o ${OBJSPATH}/response.o ${OBJSPATH}/network_write.o\
 	 ${OBJSPATH}/data_string.o ${OBJSPATH}/data_integer.o ${OBJSPATH}/data_array.o ${OBJSPATH}/keyvalue.o
 FLAGS=-g
@@ -56,10 +56,12 @@ ${OBJSPATH}/network_write.o:network_write.c
 	gcc -c ${FLAGS} network_write.c  -o  ${OBJSPATH}/network_write.o
 ${OBJSPATH}/mod_dir_index.o:mod_dir_index.c
 	gcc -c ${FLAGS} mod_dir_index.c  -o  ${OBJSPATH}/mod_dir_index.o
+${OBJSPATH}/memoryleak.o:memoryleak.c
+	gcc -c ${FLAGS} memoryleak.c  -o  ${OBJSPATH}/memoryleak.o
 
 dir_index.so: ${OBJS} ${OBJSPATH}/mod_dir_index.o
 	gcc -fPIC -shared ${OBJS} ${OBJSPATH}/mod_dir_index.o -o dir_index.so
-	mv dir_index.so /home/hcy/swiftd
+	mv dir_index.so /home/hcy/tmp/swiftd/plugins/
 
 clean:
 	rm ${OBJSPATH}/*.o

@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include "memoryleak.h"
 
 static struct connection_state_name
 {
@@ -298,7 +299,7 @@ connection * connection_get_new(server *srv)
 	if (srv -> conns -> used < srv -> conns -> size)
 	{
 		ndx = srv -> conns -> used;
-		srv -> conns -> ptr[ndx] = (connection *)malloc(sizeof(connection));
+		srv -> conns -> ptr[ndx] = (connection *)my_malloc(sizeof(connection));
 		if (NULL == srv -> conns -> ptr[ndx])
 		{
 			pthread_mutex_unlock(&srv -> conns_lock);
@@ -337,7 +338,7 @@ connection * connection_get_new(server *srv)
 	{
 		//延长数组conns -> ptr
 		srv -> conns -> size += 128;
-		srv -> conns -> ptr = (connection **)realloc(srv -> conns -> ptr
+		srv -> conns -> ptr = (connection **)my_realloc(srv -> conns -> ptr
 										, (srv -> conns -> size) * sizeof(connection *));
 		if (NULL == srv -> conns -> ptr)
 		{
@@ -347,7 +348,7 @@ connection * connection_get_new(server *srv)
 		ndx = srv -> conns -> used;
 		
 		//创建connection并初始化
-		srv -> conns -> ptr[ndx] = (connection *)malloc(sizeof(connection));
+		srv -> conns -> ptr[ndx] = (connection *)my_malloc(sizeof(connection));
 		connection_init(srv, srv -> conns -> ptr[ndx]);
 		srv -> conns -> ptr[ndx] -> ndx = ndx;
 		srv -> conns -> ptr[ndx] -> state = CON_STATE_REQUEST_START;
@@ -408,7 +409,7 @@ void connection_free(server *srv, connection *con)
 	//这两个变量要释放空间？
 	//con -> plugin_ctx
 	//con -> srv_socket
-	free(con);
+	my_free(con);
 	return;
 }
 

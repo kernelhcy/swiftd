@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <dlfcn.h>
+#include "memoryleak.h"
 
 struct plugin_data
 {
@@ -127,8 +128,8 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 				if (pnp -> size == 0)
 				{
 					pnp -> size = 8;
-					pnp -> name = (buffer **)malloc(pnp -> size * sizeof(buffer*));
-					pnp -> path = (buffer **)malloc(pnp -> size * sizeof(buffer*));
+					pnp -> name = (buffer **)my_malloc(pnp -> size * sizeof(buffer*));
+					pnp -> path = (buffer **)my_malloc(pnp -> size * sizeof(buffer*));
 
 					if (NULL == pnp -> name || NULL == pnp -> path)
 					{
@@ -139,8 +140,8 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 				else if (pnp -> size == pnp -> used)
 				{
 					pnp -> size += 8;
-					pnp -> name = (buffer **)realloc(pnp -> name, pnp -> size * sizeof(buffer*));
-					pnp -> path = (buffer **)realloc(pnp -> path, pnp -> size * sizeof(buffer*));
+					pnp -> name = (buffer **)my_realloc(pnp -> name, pnp -> size * sizeof(buffer*));
+					pnp -> path = (buffer **)my_realloc(pnp -> path, pnp -> size * sizeof(buffer*));
 
 					if (NULL == pnp -> name || NULL == pnp -> path)
 					{
@@ -185,7 +186,7 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 static plugin * plugin_plugin_init()
 {
 	plugin *p = NULL;
-	p = (plugin*)malloc(sizeof(*p));
+	p = (plugin*)my_malloc(sizeof(*p));
 	if(NULL == p)
 	{
 		return NULL;
@@ -307,12 +308,12 @@ int plugin_load(server *srv)
 		if (srv -> plugins -> size = 0)
 		{
 			srv -> plugins -> size = 8;
-			srv -> plugins -> ptr = malloc(8 * sizeof(plugin*));
+			srv -> plugins -> ptr = my_malloc(8 * sizeof(plugin*));
 		}
 		else if (srv -> plugins -> size == srv -> plugins -> size)
 		{
 			srv -> plugins -> size += 8;
-			srv -> plugins -> ptr = malloc(srv -> plugins -> size * sizeof(plugin*));
+			srv -> plugins -> ptr = my_malloc(srv -> plugins -> size * sizeof(plugin*));
 		}
 		srv -> plugins -> ptr[srv -> plugins -> used] = p;
 		p -> ndx = srv -> plugins -> used;
@@ -361,19 +362,19 @@ int plugin_load(server *srv)
 			log_error_write(srv, __FILE__, __LINE__, "sb", "slot: ", p -> name);\
 			if(NULL == srv -> slots -> size)\
 			{\
-				srv -> slots -> used = (size_t *)calloc(PLUGIN_SLOT_SIZE, sizeof(size_t *));\
-				srv -> slots -> size = (size_t *)calloc(PLUGIN_SLOT_SIZE, sizeof(size_t *));\
-				srv -> slots -> ptr = (void ***)calloc(PLUGIN_SLOT_SIZE, sizeof(void **));\
+				srv -> slots -> used = (size_t *)my_calloc(PLUGIN_SLOT_SIZE, sizeof(size_t *));\
+				srv -> slots -> size = (size_t *)my_calloc(PLUGIN_SLOT_SIZE, sizeof(size_t *));\
+				srv -> slots -> ptr = (void ***)my_calloc(PLUGIN_SLOT_SIZE, sizeof(void **));\
 			}\
 			if (srv -> slots -> size[x] == 0)\
 			{\
 				srv -> slots -> size[x] = 8;\
-				srv -> slots -> ptr[x] = (void **)calloc(srv -> slots -> size[x], sizeof(void *));\
+				srv -> slots -> ptr[x] = (void **)my_calloc(srv -> slots -> size[x], sizeof(void *));\
 			}\
 			else if (srv -> slots -> size[x] == srv -> slots -> used[x])\
 			{\
 				srv -> slots -> size[x] += 8;\
-				srv -> slots -> ptr[x] = (void **)realloc(srv -> slots -> ptr[x]\
+				srv -> slots -> ptr[x] = (void **)my_realloc(srv -> slots -> ptr[x]\
 								, srv -> slots -> size[x] * sizeof(void *));\
 			}\
 			srv -> slots -> ptr[x][srv -> slots -> used[x]] = (void*)p;\
@@ -417,7 +418,7 @@ void plugin_free(server *srv)
 	{
 		plugin_plugin_free(srv -> plugins -> ptr[i]);
 	}
-	free(srv -> plugins -> ptr);
+	my_free(srv -> plugins -> ptr);
 	srv -> plugins -> size = 0;
 	
 }
@@ -637,7 +638,7 @@ int plugin_conf_inotify_init(server *srv, const char *conf_path)
 	log_error_write(srv, __FILE__, __LINE__, "sds", "inotify_add_watch return fd:", wd, conf_path);
 	
 	srv -> conf_ity -> buf_len = 2048;
-	if(NULL == (srv -> conf_ity -> buf = (char *)malloc(srv -> conf_ity -> buf_len * sizeof(char))))
+	if(NULL == (srv -> conf_ity -> buf = (char *)my_malloc(srv -> conf_ity -> buf_len * sizeof(char))))
 	{
 		close(fd);
 		buffer_free(dir_path);
@@ -659,7 +660,7 @@ int plugin_conf_inotify_free(server *srv)
 	}
 
 	close(srv -> conf_ity -> fd);
-	free(srv -> conf_ity -> buf);
+	my_free(srv -> conf_ity -> buf);
 	return 0;
 }
 
@@ -694,9 +695,9 @@ static handler_t plugin_conf_inotify_fdevent_handler(void *srv, void *ctx, int r
 	
 	if(nlen > ity -> buf_len || NULL == ity -> buf)
 	{
-		free(ity -> buf);
+		my_free(ity -> buf);
 		ity -> buf_len = nlen + 16;
-		ity -> buf = (char *)malloc(ity -> buf_len * sizeof(char));
+		ity -> buf = (char *)my_malloc(ity -> buf_len * sizeof(char));
 		if(NULL == ity -> buf)
 		{
 			log_error_write(s, __FILE__, __LINE__, "s", "malloc memory for ity -> buf failed.");

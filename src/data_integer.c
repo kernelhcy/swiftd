@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "array.h"
+#include "memoryleak.h"
 
 static data_unset *data_integer_copy(const data_unset * s)
 {
@@ -21,7 +22,7 @@ static void data_integer_free(data_unset * d)
 
 	buffer_free(ds->key);
 
-	free(d);
+	my_free(d);
 }
 
 static void data_integer_reset(data_unset * d)
@@ -47,7 +48,7 @@ data_integer *data_integer_init(void)
 {
 	data_integer *ds;
 
-	ds = calloc(1, sizeof(*ds));
+	ds = my_calloc(1, sizeof(*ds));
 
 	ds->key = buffer_init();
 	ds->value = 0;

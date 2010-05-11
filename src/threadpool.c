@@ -7,6 +7,8 @@
 #include <time.h>
 #include <errno.h>
 #include <unistd.h>
+#include "base.h"
+#include "memoryleak.h"
 
 /**
  * 工作线程的主函数。
@@ -66,7 +68,7 @@ static void * thread_main(void *arg)
 
 		if (NULL == n)
 		{
-			n = (int_node*)malloc(sizeof(*n));
+			n = (int_node*)my_malloc(sizeof(*n));
 		}
 		else
 		{
@@ -156,7 +158,7 @@ static void * manage_thread(void *arg)
 					n = tp -> unused;
 					if (NULL == n)
 					{
-						n = (int_node*)malloc(sizeof(*n));
+						n = (int_node*)my_malloc(sizeof(*n));
 					}
 					else
 					{
@@ -188,7 +190,7 @@ static void * manage_thread(void *arg)
  */
 thread_pool* tp_init(int minnum, int maxnum)
 {
-	thread_pool *tp = (thread_pool *)malloc(sizeof(*tp));
+	thread_pool *tp = (thread_pool *)my_malloc(sizeof(*tp));
 	if (NULL == tp)
 	{
 		return NULL;
@@ -205,7 +207,7 @@ thread_pool* tp_init(int minnum, int maxnum)
 
 	sem_init(&tp -> thread_cnt_sem, 0, maxnum); //信号量不跨进程。
 
-	tp -> threads = (thread_info *)calloc(maxnum, sizeof(thread_info));
+	tp -> threads = (thread_info *)my_calloc(maxnum, sizeof(thread_info));
 	if (NULL == tp -> threads)
 	{
 		return NULL;
@@ -233,7 +235,7 @@ thread_pool* tp_init(int minnum, int maxnum)
 		}
 
 		//在空闲链表中记录线程。
-		tmp = (int_node*)malloc(sizeof(*tmp));
+		tmp = (int_node*)my_malloc(sizeof(*tmp));
 		if (NULL == tmp)
 		{
 			return NULL;
@@ -300,14 +302,14 @@ void tp_free(thread_pool *tp)
 	debug_info("Free thread pool.");
 	pthread_mutex_destroy(&tp -> lock);
 	sem_destroy(&tp -> thread_cnt_sem);
-	free(tp -> threads);
+	my_free(tp -> threads);
 
 	int_node *n = tp -> unused, *tmp;
 	while(NULL != n)
 	{
 		tmp = n;
 		n = n -> next;
-		free(tmp);
+		my_free(tmp);
 	}
 	
 	n = tp -> idle_threads;
@@ -315,7 +317,7 @@ void tp_free(thread_pool *tp)
 	{
 		tmp = n;
 		n = n -> next;
-		free(tmp);
+		my_free(tmp);
 	}
 
 	n = tp -> unused_ndx;
@@ -323,10 +325,10 @@ void tp_free(thread_pool *tp)
 	{
 		tmp = n;
 		n = n -> next;
-		free(tmp);
+		my_free(tmp);
 	}
 
-	free(tp);
+	my_free(tp);
 	return;
 }
 
@@ -357,9 +359,12 @@ int tp_run_job(thread_pool *tp, job_func job, void *ctx)
 	tmp = tp -> idle_threads;
 	while(NULL != tmp && tp -> threads[tmp -> id].stop)
 	{
-		tmp = tmp -> next;
-		free(tp -> idle_threads);
-		tp -> idle_threads = tmp;
+		tp -> idle_threads = tp -> idle_threads -> next;
+
+		tmp -> next = tp -> unused;
+		tp -> unused = tmp;
+		
+		tmp = tp -> idle_threads;
 	}
 
 	if(tp -> idle_threads != NULL)
@@ -368,7 +373,10 @@ int tp_run_job(thread_pool *tp, job_func job, void *ctx)
 		id = tp -> idle_threads -> id;
 		int_node *tmp = tp -> idle_threads;
 		tp -> idle_threads = tp -> idle_threads -> next;
-		free(tmp);
+		
+		tmp -> next = tp -> unused;
+		tp -> unused = tmp;
+		
 		debug_info("有空闲:%d", id);
 		tp -> threads[id].is_busy = 1;
 		

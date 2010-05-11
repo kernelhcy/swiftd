@@ -3,7 +3,7 @@
 #include <stdio.h>
 
 #include "keyvalue.h"
-
+#include "memoryleak.h"
 
 static keyvalue http_versions[] = 
 {
@@ -137,7 +137,7 @@ keyvalue_buffer *keyvalue_buffer_init(void)
 {
 	keyvalue_buffer *kvb;
 
-	kvb = calloc(1, sizeof(*kvb));
+	kvb = my_calloc(1, sizeof(*kvb));
 
 	return kvb;
 }
@@ -149,21 +149,21 @@ int keyvalue_buffer_append(keyvalue_buffer * kvb, int key, const char *value)
 	{
 		kvb->size = 4;
 
-		kvb->kv = malloc(kvb->size * sizeof(*kvb->kv));
+		kvb->kv = my_malloc(kvb->size * sizeof(*kvb->kv));
 
 		for (i = 0; i < kvb->size; i++)
 		{
-			kvb->kv[i] = calloc(1, sizeof(**kvb->kv));
+			kvb->kv[i] = my_calloc(1, sizeof(**kvb->kv));
 		}
 	} else if (kvb->used == kvb->size)
 	{
 		kvb->size += 4;
 
-		kvb->kv = realloc(kvb->kv, kvb->size * sizeof(*kvb->kv));
+		kvb->kv = my_realloc(kvb->kv, kvb->size * sizeof(*kvb->kv));
 
 		for (i = kvb->used; i < kvb->size; i++)
 		{
-			kvb->kv[i] = calloc(1, sizeof(**kvb->kv));
+			kvb->kv[i] = my_calloc(1, sizeof(**kvb->kv));
 		}
 	}
 
@@ -182,14 +182,14 @@ void keyvalue_buffer_free(keyvalue_buffer * kvb)
 	for (i = 0; i < kvb->size; i++)
 	{
 		if (kvb->kv[i]->value)
-			free(kvb->kv[i]->value);
-		free(kvb->kv[i]);
+			my_free(kvb->kv[i]->value);
+		my_free(kvb->kv[i]);
 	}
 
 	if (kvb->kv)
-		free(kvb->kv);
+		my_free(kvb->kv);
 
-	free(kvb);
+	my_free(kvb);
 }
 
 
@@ -197,7 +197,7 @@ s_keyvalue_buffer *s_keyvalue_buffer_init(void)
 {
 	s_keyvalue_buffer *kvb;
 
-	kvb = calloc(1, sizeof(*kvb));
+	kvb = my_calloc(1, sizeof(*kvb));
 
 	return kvb;
 }
@@ -212,21 +212,21 @@ s_keyvalue_buffer_append(s_keyvalue_buffer * kvb, const char *key,
 		kvb->size = 4;
 		kvb->used = 0;
 
-		kvb->kv = malloc(kvb->size * sizeof(*kvb->kv));
+		kvb->kv = my_malloc(kvb->size * sizeof(*kvb->kv));
 
 		for (i = 0; i < kvb->size; i++)
 		{
-			kvb->kv[i] = calloc(1, sizeof(**kvb->kv));
+			kvb->kv[i] = my_calloc(1, sizeof(**kvb->kv));
 		}
 	} else if (kvb->used == kvb->size)
 	{
 		kvb->size += 4;
 
-		kvb->kv = realloc(kvb->kv, kvb->size * sizeof(*kvb->kv));
+		kvb->kv = my_realloc(kvb->kv, kvb->size * sizeof(*kvb->kv));
 
 		for (i = kvb->used; i < kvb->size; i++)
 		{
-			kvb->kv[i] = calloc(1, sizeof(**kvb->kv));
+			kvb->kv[i] = my_calloc(1, sizeof(**kvb->kv));
 		}
 	}
 
@@ -245,16 +245,16 @@ void s_keyvalue_buffer_free(s_keyvalue_buffer * kvb)
 	for (i = 0; i < kvb->size; i++)
 	{
 		if (kvb->kv[i]->key)
-			free(kvb->kv[i]->key);
+			my_free(kvb->kv[i]->key);
 		if (kvb->kv[i]->value)
-			free(kvb->kv[i]->value);
-		free(kvb->kv[i]);
+			my_free(kvb->kv[i]->value);
+		my_free(kvb->kv[i]);
 	}
 
 	if (kvb->kv)
-		free(kvb->kv);
+		my_free(kvb->kv);
 
-	free(kvb);
+	my_free(kvb);
 }
 
 
@@ -262,7 +262,7 @@ httpauth_keyvalue_buffer *httpauth_keyvalue_buffer_init(void)
 {
 	httpauth_keyvalue_buffer *kvb;
 
-	kvb = calloc(1, sizeof(*kvb));
+	kvb = my_calloc(1, sizeof(*kvb));
 
 	return kvb;
 }
@@ -277,21 +277,21 @@ httpauth_keyvalue_buffer_append(httpauth_keyvalue_buffer * kvb,
 	{
 		kvb->size = 4;
 
-		kvb->kv = malloc(kvb->size * sizeof(*kvb->kv));
+		kvb->kv = my_malloc(kvb->size * sizeof(*kvb->kv));
 
 		for (i = 0; i < kvb->size; i++)
 		{
-			kvb->kv[i] = calloc(1, sizeof(**kvb->kv));
+			kvb->kv[i] = my_calloc(1, sizeof(**kvb->kv));
 		}
 	} else if (kvb->used == kvb->size)
 	{
 		kvb->size += 4;
 
-		kvb->kv = realloc(kvb->kv, kvb->size * sizeof(*kvb->kv));
+		kvb->kv = my_realloc(kvb->kv, kvb->size * sizeof(*kvb->kv));
 
 		for (i = kvb->used; i < kvb->size; i++)
 		{
-			kvb->kv[i] = calloc(1, sizeof(**kvb->kv));
+			kvb->kv[i] = my_calloc(1, sizeof(**kvb->kv));
 		}
 	}
 
@@ -311,16 +311,16 @@ void httpauth_keyvalue_buffer_free(httpauth_keyvalue_buffer * kvb)
 	for (i = 0; i < kvb->size; i++)
 	{
 		if (kvb->kv[i]->key)
-			free(kvb->kv[i]->key);
+			my_free(kvb->kv[i]->key);
 		if (kvb->kv[i]->realm)
-			free(kvb->kv[i]->realm);
-		free(kvb->kv[i]);
+			my_free(kvb->kv[i]->realm);
+		my_free(kvb->kv[i]);
 	}
 
 	if (kvb->kv)
-		free(kvb->kv);
+		my_free(kvb->kv);
 
-	free(kvb);
+	my_free(kvb);
 }
 
 

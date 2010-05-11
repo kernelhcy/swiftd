@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "array.h"
+#include "memoryleak.h"
 
 static data_unset *data_string_copy(const data_unset * s)
 {
@@ -23,7 +24,7 @@ static void data_string_free(data_unset * d)
 	buffer_free(ds->key);
 	buffer_free(ds->value);
 
-	free(d);
+	my_free(d);
 }
 
 static void data_string_reset(data_unset * d)
@@ -61,7 +62,7 @@ data_string *data_string_init(void)
 {
 	data_string *ds;
 
-	ds = calloc(1, sizeof(*ds));
+	ds = my_calloc(1, sizeof(*ds));
 	assert(ds);
 
 	ds->key = buffer_init();

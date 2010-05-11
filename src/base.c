@@ -2,6 +2,7 @@
 #include "log.h"
 #include "connection.h"
 #include "joblist.h"
+#include "memoryleak.h"
 
 void *job_entry(void *ctx)
 {
@@ -43,7 +44,7 @@ job_ctx* job_ctx_get_new(server *srv)
 	
 	if (NULL == srv -> jc_nodes)
 	{
-		jc = (job_ctx *)malloc(sizeof(*jc));
+		jc = (job_ctx *)my_malloc(sizeof(*jc));
 	}
 	else
 	{
@@ -65,4 +66,5 @@ void job_ctx_free(server *srv, job_ctx *jc)
 	
 	pthread_mutex_unlock(&srv -> jc_lock);
 }
+
 
