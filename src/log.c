@@ -123,7 +123,7 @@ int log_error_cycle(server * srv)
 		const char *logfile = srv -> srvconf.errorlog_file -> ptr;
 		
 		close(srv -> errorlog_fd);
-		unlink(logfile);
+		//unlink(logfile);
 		int new_fd;
 		if (-1 == (new_fd =
 			 open(logfile, O_APPEND | O_WRONLY | O_CREAT | O_LARGEFILE, 0644)))

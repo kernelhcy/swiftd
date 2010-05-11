@@ -553,6 +553,7 @@ int http_response_insert_header(server *srv, connection *con, const char *key, s
 	}
 	
 	data_string *ds = (data_string *)array_get_unused_element(con -> response.headers, TYPE_STRING);
+	log_error_write(srv, __FILE__, __LINE__, "sd", "@@@@@@@@@@ get_unused_element: ", ds);
 	if (NULL == ds)
 	{
 		ds = data_string_init();
