@@ -33,6 +33,10 @@ void *job_entry(void *ctx)
 	}
 	
 	log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "A job done.");
+
+	//释放
+	job_ctx_free(jc -> srv, jc);
+
 	return ctx;
 }
 
