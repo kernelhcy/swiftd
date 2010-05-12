@@ -564,8 +564,8 @@ int http_response_insert_header(server *srv, connection *con, const char *key, s
 		}
 	}
 	
-	ds -> key = buffer_init();
-	ds -> value = buffer_init();
+	buffer_reset(ds -> value);
+	buffer_reset(ds -> key);
 	
 	buffer_copy_string_len(ds -> key, key, key_len);
 	buffer_copy_string_len(ds -> value, value, value_len);

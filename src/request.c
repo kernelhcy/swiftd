@@ -814,6 +814,10 @@ int http_parse_request(server *srv, connection *con)
  							{
  								ds = data_string_init();
  							}
+
+							buffer_reset(ds -> key);
+							buffer_reset(ds -> value);
+
  							buffer_copy_string_len(ds -> key, key, key_len);
  							buffer_copy_string_len(ds -> value, value, value_len);
  							

@@ -287,13 +287,27 @@ connection * connection_get_new(server *srv)
 	
 	pthread_mutex_lock(&srv -> conns_lock);
 	/*
-	 * 首先检查conns数组中是否还有空间，如果有，申请一个新的connection结构体
-	 * 如果数组没有空间，则搜索数组中的connection，查看是否有连接处在close或
+	 * 首先搜索数组中的connection，查看是否有连接处在close或
 	 * connect状态，如果有，则重新使用。
+	 * 如果没有，检查conns数组中是否还有空间，如果有，申请一个新的connection结构体
 	 * 这个算法使得每次有新连接时，分配connection结构体的概率很高。
 	 *
 	 * 如果数组满了且没有可用的空间，则加长数组。
 	 */
+
+	//查找数组中的空闲connection
+	size_t i;
+	for (i = 0; i < srv -> conns -> used; ++i)
+	{
+		if (srv -> conns -> ptr[i] -> state == CON_STATE_CONNECT)
+		{
+			connection_init(srv, srv -> conns -> ptr[i]);
+			srv -> conns -> ptr[i] -> state = CON_STATE_REQUEST_START;
+			srv -> conns -> ptr[i] -> ndx = i;
+			pthread_mutex_unlock(&srv -> conns_lock);
+			return srv -> conns -> ptr[i];
+		}
+	}
 	
 	if (srv -> conns -> used < srv -> conns -> size)
 	{
@@ -318,19 +332,6 @@ connection * connection_get_new(server *srv)
 		return NULL;
 	}
 	
-	//查找数组中的空闲connection
-	size_t i;
-	for (i = 0; i < srv -> conns -> size; ++i)
-	{
-		if (srv -> conns -> ptr[i] -> state == CON_STATE_CONNECT)
-		{
-			connection_init(srv, srv -> conns -> ptr[i]);
-			srv -> conns -> ptr[i] -> state = CON_STATE_REQUEST_START;
-			srv -> conns -> ptr[i] -> ndx = i;
-			pthread_mutex_unlock(&srv -> conns_lock);
-			return srv -> conns -> ptr[i];
-		}
-	}
 	
 	//扩容数组。
 	if (srv -> conns -> used == srv -> conns -> size)

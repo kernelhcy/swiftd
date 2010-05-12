@@ -357,9 +357,12 @@ int tp_run_job(thread_pool *tp, job_func job, void *ctx)
 	tmp = tp -> idle_threads;
 	while(NULL != tmp && tp -> threads[tmp -> id].stop)
 	{
-		tmp = tmp -> next;
-		free(tp -> idle_threads);
-		tp -> idle_threads = tmp;
+		tp -> idle_threads = tp -> idle_threads -> next;
+		
+		tmp -> next = tp -> unused;
+		tp -> unused = tmp;
+		
+		tmp = tp -> idle_threads;
 	}
 
 	if(tp -> idle_threads != NULL)
@@ -368,7 +371,10 @@ int tp_run_job(thread_pool *tp, job_func job, void *ctx)
 		id = tp -> idle_threads -> id;
 		int_node *tmp = tp -> idle_threads;
 		tp -> idle_threads = tp -> idle_threads -> next;
-		free(tmp);
+		
+		tmp -> next = tp -> unused;
+		tp -> unused = tmp;
+		
 		debug_info("有空闲:%d", id);
 		tp -> threads[id].is_busy = 1;
 		
