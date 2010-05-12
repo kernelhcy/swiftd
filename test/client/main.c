@@ -54,7 +54,7 @@ int main(int argc, char *argv[1])
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(8080);
-	inet_aton("202.117.21.117", &addr.sin_addr);
+	inet_aton("127.0.0.1", &addr.sin_addr);
 
 	int cnt;
 	char *err;
@@ -122,7 +122,7 @@ int main(int argc, char *argv[1])
 			//read(sock, buf, 100);
 			usleep(2000);
 		}
-		usleep(50000);
+		usleep(100000);
 		//shutdown(sock, SHUT_WR);
 		if (-1 == close(sock))
 		{
