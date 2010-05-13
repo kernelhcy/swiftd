@@ -1,0 +1,105 @@
+% hcy毕业设计论文模板
+% id : hcy@bmy 
+% email : huangcongyu2006@gmail.com
+% 按照《本科毕业设计（论文）工作手册》要求设计。
+
+\ProvidesPackage{hcypaperstyle}
+
+\usepackage{fontspec, xunicode, xltxtra}
+\usepackage{hyperref}
+
+%中英混排
+\usepackage{xeCJK}
+\setmainfont{Times New Roman} 		%默认字体，默认英文字体。
+\setCJKmainfont{SimSun} 			%中文默认字体
+\CJKsetecglue{}					%中英间隔
+
+%字体大小
+\newcommand{\ltwo}{\fontsize{18pt}{27pt}\selectfont} 		%小二
+\newcommand{\three}{\fontsize{16pt}{24pt}\selectfont}		%三号
+\newcommand{\lthree}{\fontsize{15pt}{22.5pt}\selectfont}	%小三
+\newcommand{\four}{\fontsize{14pt}{21pt}\selectfont}		%四号
+\newcommand{\lfour}{\fontsize{12pt}{18pt}\selectfont}		%小四
+\newcommand{\five}{\fontsize{10.5pt}{15.75pt}\selectfont}	%五号
+\newcommand{\lfive}{\fontsize{9pt}{13.5pt}\selectfont}		%小五
+
+%字体命令
+\newcommand{\song}{\fontspec{SimSun}}
+\newcommand{\kai}{\fontspec{KaiTi}}
+\newcommand{\cp}{\fontspec{Courier 10 Pitch}}
+\newcommand{\cn}{\fontspec{Courier New}}
+\newcommand{\tnr}{\fontspec{Times New Roman}}
+
+\XeTeXlinebreaklocale "zh"  % 表示用中文的断行
+\XeTeXlinebreakskip = 0pt plus 1pt % 多一点调整的空间
+
+%%摘要格式
+%中文格式
+\newcommand {\zhabstract}{\section*{\rm 摘\quad 要}\sectionmark{摘\quad 要}}
+\newcommand {\zhkeywords}{~\\\hspace{-2em}\five\textbf{关键字：}}
+%英文格式
+\newcommand {\enabstract}{\section*{ABSTRACT}\sectionmark{ABSTRACT}}
+\newcommand {\enkeywords}{\five\textbf{KEY WORDS: }}
+
+%标题格式
+\usepackage[raggedleft]{titlesec}	
+%\titleformat {\section}{\centering\sanhao\bf}{第\thesection 章}{1em}{}
+\titleformat {\section}{\center\three\bf}{\thesection}{1em}{}
+\titleformat {\subsection}{\four\bf}{\thesubsection}{1em}{}
+\titleformat {\subsubsection}{\lfour\bf}{\thesubsubsection}{1em}{}
+%\titlespacing* {\section}{}{2cm}{1cm}
+%\titlespacing* {\subsection}{}{1\baselineskip}{0.5\baselineskip}
+%\titlespacing* {\subsubsection}{1em}{0.5\baselineskip}{0}
+\titlespacing {\section}{}{3ex}{*4}
+\titlespacing {\subsection}{}{*2}{*1}
+\titlespacing {\subsubsection}{1em}{*1}{0}
+
+%目录格式
+\usepackage{titletoc}	
+\titlecontents{section}[0em]{\rm\vspace{0.3\baselineskip}}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+\titlecontents{subsection}[0.5em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+\titlecontents{subsubsection}[1em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+
+
+\renewcommand {\today}{\number\year 年\number\month 月\number\day 日}
+
+\renewcommand {\contentsname}{目\quad 录}
+%\renewcommand {\appendixtocname}{附\quad 录}
+%\renewcommand {\appendixpagename}{附\quad 录}
+%\renewcommand {\refname}{参考文献}
+
+\renewcommand {\figurename}{\five 图}
+\renewcommand {\thefigure}{\arabic{section}-\arabic{figure}}
+
+\renewcommand {\tablename}{\five 表}
+\renewcommand {\thetable}{\arabic{section}-\arabic{table}}
+\usepackage{booktabs}
+\renewcommand {\heavyrulewidth}{2.25pt}	%表格外线宽
+\renewcommand {\lightrulewidth}{1pt}	%表格内线宽
+
+\usepackage{fancyhdr}	%页眉页脚
+\pagestyle{fancy}
+%\renewcommand{\sectionmark}[1]{\markboth{第\thesection 章\quad #1}{}}
+\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
+\fancyhf{}
+\makeatletter %双线页眉
+\def\headrule{{\if@fancyplain\let\headrulewidth\plainheadrulewidth\fi%
+	\hrule\@height 1.0pt \@width\headwidth\vskip1.0pt%
+		  \hrule\@height 1.0pt\@width\headwidth%
+		   \vskip-2\headrulewidth\vskip-1pt}}%\vspace{1cm}}
+	\makeatother
+\setlength{\headheight}{15pt}
+\fancyhead[EC]{\lfive 西安交通大学本科生毕业设计（论文）}
+\fancyhead[OC]{\lfive \leftmark}
+\fancyfoot[EL,OR]{\lfive\thepage} %奇数页页码在右下脚
+
+\usepackage{fancyvrb}	%代码环境
+\DefineVerbatimEnvironment{verbatim}{Verbatim} {frame=single, baselinestretch=1, xleftmargin=5pt, xrightmargin=5pt}
+
+\usepackage{graphicx,indentfirst,cite,tabularx}
+\newcommand{\ucite}[1]{$^{\mbox{\scriptsize \cite{#1}}}$}	%参考文献上标
+
+    %Define a new command \ucite to generate upper-script (i.e., superscript) cite.
+	% It is only for paragraph mode. By PENG Zhaowang on July 15, 1999
+	% Note: the command \cite generates in-text citation, not superscript one.
+

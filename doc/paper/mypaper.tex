@@ -1,0 +1,183 @@
+\documentclass[12pt, a4paper, dvipdfm]{book}
+
+\usepackage{hcypaperstyle}
+
+\begin{document}
+
+\title{Lighttpd1.4.20源码分析之插件系统（2）}
+%\subtitle{插件的加载和初始化}
+\author{黄丛宇\\06161032}
+\maketitle
+
+{\tnr lighttpd }
+{\song lighttpd}
+
+前面讲了lighttpd插件系统的接口，下面我们来看看插件是怎么加载和初始化的。lighttpd的插件是以动态链接库的形式存在的。在服务器启动的时候，在初始化阶段将所有插件都加载进来。在server.c中的main函数中，加载插件是调用plugins\_load函数：
+
+\begin{verbatim}
+if (plugins_load(srv))
+{
+	plugins_free(srv);
+	server_free(srv);
+	return -1;
+}
+\end{verbatim}
+
+请读者注意一下这个函数调用的位置。这个函数是在服务器的初始化阶段进行调用的，并且该函数就在这调用了一次，其他地方没有再被调用过。虽然插件是以动态链接库的形式存在，但这些库是在服务器启动阶段一次性加载完毕，如果想再增加插件，只能配置好配置文件后重新启动服务器。下面看一看plugins\_load函数的实现：
+
+\begin{verbatim}
+#ifdef LIGHTTPD_STATIC
+int plugins_load(server * srv)
+{
+	plugin *p;
+	return 0;
+}
+#else
+//动态链接
+int plugins_load(server * srv)
+{
+	plugin *p;
+	int (*init) (plugin * pl);
+	const char *error;
+	size_t i;
+	for (i = 0; i < srv->srvconf.modules->used; i++)
+	{
+		plugins_register(srv, p);
+	}
+	return 0;
+}
+#endif //end of #ifdef LIGHTTPD_STATIC
+\end{verbatim}
+
+上面的函数中删除了处理在windows下加载动态链接库的部分。有兴趣的读者可以自行查看源代码。下面全部讨论在linux下的实现。
+
+这个函数作者编写了两个版本，从宏LIGHTTPD\_STATIC可以看出，作者貌似是想提供一个加载静态链接库的版本。但是，该版本的函数并没有什么实质性的实现（在最新的版本中(1.4.26)，该函数依然没有实现）。我们主要来看看后面的动态链接库的版本。加载的过程如下：
+\begin{enumerate}
+	\item 从配置文件中读取到动态链接库所在的文件夹和动态库的名称。
+	\item 创建一个plugin结构体的实例。
+	\item 调用dlopen函数加载动态库。在plugin结构体中保存返回的句柄。
+	\item 通过dlsym函数获得XXX\_plugin\_init函数的地址。其中XXX是配置文件中定义的这个插件的内容。
+	\item 调用XXX\_plugin\_init函数。
+	\item 调用plugins\_register函数注册插件。
+\end{enumerate}
+
+
+XXXXXX\_plugin\_init函数在插件中定义，对这个插件进行初始化。其中，最重要的部分就是对plugin结构体中那一系列的函数指针进行赋值。如，mod\_cgi模块中：
+
+\begin{verbatim}
+int mod_cgi_plugin_init(plugin * p)
+{
+	return 0;
+}
+\end{verbatim}
+
+
+plugins\_register函数是将plugin结构体的指针存放在server结构体的plugins数组中。插件加载完毕之后，main函数有处理了一些初始化的工作，然后，调用plugins\_call\_init函数对所有插件进行初始化：
+
+\begin{verbatim}
+if (HANDLER_GO_ON != plugins_call_init(srv)) 
+{
+	plugins_free(srv);
+	network_close(srv);
+	server_free(srv);
+	return -1;
+}
+\end{verbatim}
+
+
+plugins\_call\_init函数在plugin.c文件中：
+
+\begin{verbatim}
+handler_t plugins_call_init(server * srv)
+{
+	size_t i;
+	plugin **ps;
+	ps = srv->plugins.ptr;
+	return HANDLER_GO_ON;
+}
+\end{verbatim}
+
+整个函数中，这个宏是重点：
+
+\begin{verbatim}
+#define PLUGIN_TO_SLOT(x, y) \
+	if (p->y) { \
+	}
+\end{verbatim}
+
+在结构体server中，plugin\_slots是一个void指针。在这个宏中可以看到，plugin\_slots被转换成了plugin结构体的三级指针。朝前看：
+
+\begin{verbatim}
+srv->plugin_slots = calloc(PLUGIN_FUNC_SIZEOF, sizeof(ps));
+\end{verbatim}
+
+plugin\_slots是一个存放ps类型数据的数组，数组的长度为\\PLUGIN\_FUNC\_SIZEOF。PLUGIN\_FUNC\_SIZEOF在后面说明。ps的类型是plugin结构体的二级指针。在上面的宏中，我们看到，plugin\_slots是一个数组，随后的if分支中可以看到，plugin\_slots的元素也是数组。因此，plugin\_slots是一个二维数组，数组中的元素是plugin结构体的指针，并且，plugin\_slots是动态创建的。下面在来看PLUGIN\_FUNC\_SIZEOF，它定义在下面的枚举结构中：
+
+\begin{verbatim}
+typedef enum 
+{
+	PLUGIN_FUNC_UNSET,
+	PLUGIN_FUNC_HANDLE_URI_CLEAN,
+	PLUGIN_FUNC_HANDLE_URI_RAW,
+	PLUGIN_FUNC_HANDLE_REQUEST_DONE,
+	PLUGIN_FUNC_HANDLE_CONNECTION_CLOSE,
+	PLUGIN_FUNC_HANDLE_TRIGGER,
+	PLUGIN_FUNC_HANDLE_SIGHUP,
+	PLUGIN_FUNC_HANDLE_SUBREQUEST,
+	PLUGIN_FUNC_HANDLE_SUBREQUEST_START,
+	PLUGIN_FUNC_HANDLE_JOBLIST,
+	PLUGIN_FUNC_HANDLE_DOCROOT,
+	PLUGIN_FUNC_HANDLE_PHYSICAL,
+	PLUGIN_FUNC_CONNECTION_RESET,
+	PLUGIN_FUNC_INIT,
+	PLUGIN_FUNC_CLEANUP,
+	PLUGIN_FUNC_SET_DEFAULTS,
+
+	PLUGIN_FUNC_SIZEOF
+} plugin_t;
+\end{verbatim}
+
+从枚举结构的名字可以看出，这个枚举类型定义了插件的功能的类型，对应着plugin结构体中那些函数指针。而最后一个量，\\PLUGIN\_FUNC\_SIZEOF，根据枚举类型的特点，正好是上面所定义的类型的数量。这是一个很常用的技巧，这样可以保证在增加类型的时候，保证程序中可以得到正确的类型数量，而不要去改动那些需要类型数量的代码。
+
+
+接着回到上面的宏，这个宏有两个参数，有后面的使用可以看出，第一个参数x是枚举类型plugin\_t，第二个参数x对应的在plugin结构体中函数指针的名称。因此，上面的宏的作用就是：根据参数x所指定的插件功能类型，判断插件p中是否含有功能x，也就是指针p->y是否非NULL。如果包含功能x，则将指针p添加到数组plugin\_slots的第x行中。内层的if语句是为了判断plugin\_slots的第x行是否存在，不存在则创建之。for循环是为了将p添加到plugin\_slots的第x行的末尾。例如，插件*p1, *p2, *p3,在执行完后面那些宏调用之后，会形成一个如下的表：
+
+\begin{verbatim}
+PLUGIN_FUNC_UNSET	p1	p2	p3
+PLUGIN__URI_CLEAN	p1	p2	p3
+PLUGIN__RAW	p1	p2	p3
+\end{verbatim}
+
+从表中可以看出，插件p1包含所有的功能，也就是实现了plugin结构体中函数指针对应的所有函数。插件p2不包含功能HANDLE\_SUBREQUEST，HANDLE\_SUBREQUEST\_START和HANDLE\_REQUEST\_DONE功能，插件p3中不包含HANDLE\_TRIGGER，HANDLE\_SIGHUP和\\CONNECTION\_RESET功能。当然，这仅仅是举个例子。
+
+
+上面的例子中的表就是plugins\_slots。这个宏和后面的宏调用可以看成是给所有的插件“登记造册”。通过plugins\_slots数组，可以快速的确定某个功能都有那些插件实现了，这方便后面的插件的调用。完成这些宏调用后，初始化函数测试插件是否定义了init函数。如果定义了则调用之。这里的init函数和前面加载函数中的XXX\_plugin\_init函数不一样。XXX\_plugin\_init初始化函数是初始化plugin结构体，核心工作是对plugin结构体中的函数指针进行赋值。而init函数则是初始化这个插件对应的plugin\_data结构体，分配数据空间，初始化成员变量并返回其指针。
+如：mod\_cgi.c的init函数定义为，
+
+\begin{verbatim}
+INIT_FUNC(mod_cgi_init)
+{
+	plugin_data *p;
+	p = calloc(1, sizeof(*p));
+	assert(p);
+	p->tmp_buf = buffer_init();
+	p->parse_response = buffer_init();
+	return p;
+}
+\end{verbatim}
+
+返回的指针存放在plugin结构体中的data成员中。然后对data中的id进行赋值。接着，检查插件的版本是否和当前服务器的版本相同。如果插件没有定义init函数，则data赋值NULL。至此，插件的加载和初始化工作全部完成了。下面总结一下整个加载和初始化的过程：
+
+\begin{enumerate}
+	\item 根据配置文件从相应的目录中加载插件的动态连接库。
+	\item 获得插件动态库中XXX\_plugin\_init函数的入口地址并调用之。此函数对plugin结构体进行赋值。
+	\item 在server结构体中注册插件。
+	\item 调用plugins\_call\_init初始化插件。
+	\item 通过上面那个宏及后面一系列的宏调用，将插件登记造册，记录在server结构体的plugins\_slots成员中。plugins\_slot是一个二维数组，数组成员是plugin结构体指针。
+	\item 最后调用插件的init函数初始化各自的plugin\_data结构体。
+\end{enumerate}
+
+
+	下一篇中，将介绍一下plugin.c中的宏PLUGIN\_TO\_SLOT。
+
+\end{document}
