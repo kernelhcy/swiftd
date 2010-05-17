@@ -20,7 +20,7 @@
 \newfontfamily\zhfont[BoldFont=SimHei]{SimSun}
 %\setromanfont{Times LT Std}
 %\newfontfamily\zhfont[BoldFont=STHeiti]{STZhongsong}
-\setromanfont{Times New Roman MT Std}
+\setromanfont{Times New Roman}
 \zhspacing
 \newcommand {\xiaoer}{\fontsize{18pt}{27pt}\selectfont}
 \newcommand {\sanhao}{\fontsize{16pt}{24pt}\selectfont}
@@ -38,16 +38,16 @@
 \newcommand {\enkeywords}{\wuhao\textbf{KEY WORDS: }}
 
 \usepackage[raggedleft]{titlesec}	%标题格式
-%\titleformat {\section}{\centering\sanhao\bf}{第\thesection 章}{1em}{}
-\titleformat {\section}{\center\three\bf}{\thesection}{1em}{}
-\titleformat {\subsection}{\four\bf}{\thesubsection}{1em}{}
-\titleformat {\subsubsection}{\lfour\bf}{\thesubsubsection}{1em}{}
+%\titleformat {\chapter}{\center\sanhao\bf}{第\thechapter 章}{1em}{}
+\titleformat {\section}{\center\sanhao\bf}{\thesection}{1em}{}
+\titleformat {\subsection}{\sihao\bf}{\thesubsection}{1em}{}
+\titleformat {\subsubsection}{\xiaosi\bf}{\thesubsubsection}{1em}{}
 %\titlespacing* {\section}{}{2cm}{1cm}
 %\titlespacing* {\subsection}{}{1\baselineskip}{0.5\baselineskip}
 %\titlespacing* {\subsubsection}{1em}{0.5\baselineskip}{0}
-\titlespacing {\section}{}{3ex}{*4}
-\titlespacing {\subsection}{}{*2}{*1}
-\titlespacing {\subsubsection}{1em}{*1}{0}
+\titlespacing {\section}{0em}{3ex}{*4}
+\titlespacing {\subsection}{0em}{*2}{*1}
+\titlespacing {\subsubsection}{1em}{*1}{*1}
 
 \usepackage{titletoc}	%目录格式
 \titlecontents{section}[0em]{\rm\vspace{0.3\baselineskip}}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
@@ -58,9 +58,9 @@
 \renewcommand {\today}{\number\year 年\number\month 月\number\day 日}
 
 \renewcommand {\contentsname}{目\quad 录}
-\renewcommand {\appendixtocname}{附\quad 录}
-\renewcommand {\appendixpagename}{附\quad 录}
-\renewcommand {\refname}{参考文献}
+%\renewcommand {\appendixtocname}{附\quad 录}
+%\renewcommand {\appendixpagename}{附\quad 录}
+%\renewcommand {\refname}{参考文献}
 
 \renewcommand {\figurename}{\wuhao 图}
 \renewcommand {\thefigure}{\arabic{section}-\arabic{figure}}
@@ -83,9 +83,9 @@
 		   \vskip-2\headrulewidth\vskip-1pt}}%\vspace{1cm}}
 	\makeatother
 \setlength{\headheight}{15pt}
-\fancyhead[EC]{\lfive 西安交通大学本科生毕业设计（论文）}
-\fancyhead[OC]{\lfive \leftmark}
-\fancyfoot[EL,OR]{\lfive \thepage} %奇数页页码在右下脚
+\fancyhead[EC]{\xiaowu 西安交通大学本科生毕业设计（论文）}
+\fancyhead[OC]{\xiaowu \leftmark}
+\fancyfoot[EL,OR]{\xiaowu\thepage} %奇数页页码在右下脚
 
 \usepackage{fancyvrb}	%代码环境
 \DefineVerbatimEnvironment{verbatim}{Verbatim} {frame=single, baselinestretch=1, xleftmargin=5pt, xrightmargin=5pt}

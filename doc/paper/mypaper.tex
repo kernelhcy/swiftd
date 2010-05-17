@@ -1,6 +1,6 @@
-\documentclass[12pt, dvipdfm]{book}
+\documentclass[12pt, dvipdfm]{article}
 
-\usepackage{hcypaperstyle}
+\usepackage{xjtupaper_zh}
 
 \begin{document}
 
@@ -12,13 +12,13 @@
 \tableofcontents
 
 \newpage
-\newpage
+
 \zhabstract 
 这里是摘要。摘要是个什么东西呢？？？前面讲了lighttpd插件系统的接口，下面我们来看看插件是怎么加载和初始化的。lighttpd的插件是以动态链接库的形式存在的。在服务器启动的时候，在初始化阶段将所有插件都加载进来。在server.c中的main函数中，加载插件是调用plugins\_load函数。\\
 
 {\zhkeywords 服务器;Linux;HTTP}
 
-\chapter{plugins\_load函数}
+\section{plugins\_load函数}
 前面讲了lighttpd插件系统的接口，下面我们来看看插件是怎么加载和初始化的。lighttpd的插件是以动态链接库的形式存在的。在服务器启动的时候，在初始化阶段将所有插件都加载进来。在server.c中的main函数中，加载插件是调用plugins\_load函数：
 
 \begin{verbatim}
@@ -80,8 +80,8 @@ int plugins_load(server * srv)
 
 上面的函数中删除了处理在windows下加载动态链接库的部分。有兴趣的读者可以自行查看源代码。下面全部讨论在linux下的实现。
 
-\chapter{加载的过程}
 \section{加载的过程}
+\subsection{加载的过程}
 这个函数作者编写了两个版本，从宏LIGHTTPD\_STATIC可以看出，作者貌似是想提供一个加载静态链接库的版本。但是，该版本的函数并没有什么实质性的实现（在最新的版本中(1.4.26)，该函数依然没有实现）。我们主要来看看后面的动态链接库的版本。加载的过程如下：
 \begin{enumerate}
 	\item 从配置文件中读取到动态链接库所在的文件夹和动态库的名称。
@@ -92,7 +92,7 @@ int plugins_load(server * srv)
 	\item 调用plugins\_register函数注册插件。
 \end{enumerate}
 
-\subsection{XXXXXX\_plugin\_init函数}
+\subsubsection{XXXXXX\_plugin\_init函数}
 XXXXXX\_plugin\_init函数在插件中定义，对这个插件进行初始化。其中，最重要的部分就是对plugin结构体中那一系列的函数指针进行赋值。如，mod\_cgi模块中：
 
 \begin{verbatim}
@@ -103,7 +103,42 @@ int mod_cgi_plugin_init(plugin * p)
 \end{verbatim}
 
 
-\subsection{plugins\_register函数}
+\subsubsection{plugins\_register函数}
+plugins\_register函数是将plugin结构体的指针存放在server结构体的plugins数组中。插件加载完毕之后，main函数有处理了一些初始化的工作，然后，调用plugins\_call\_init函数对所有插件进行初始化：
+
+\begin{verbatim}
+if (HANDLER_GO_ON != plugins_call_init(srv)) 
+{
+	plugins_free(srv);
+	network_close(srv);
+	server_free(srv);
+	return -1;
+}
+\end{verbatim}
+
+\subsection{加载的过程}
+这个函数作者编写了两个版本，从宏LIGHTTPD\_STATIC可以看出，作者貌似是想提供一个加载静态链接库的版本。但是，该版本的函数并没有什么实质性的实现（在最新的版本中(1.4.26)，该函数依然没有实现）。我们主要来看看后面的动态链接库的版本。加载的过程如下：
+\begin{enumerate}
+	\item 从配置文件中读取到动态链接库所在的文件夹和动态库的名称。
+	\item 创建一个plugin结构体的实例。
+	\item 调用dlopen函数加载动态库。在plugin结构体中保存返回的句柄。
+	\item 通过dlsym函数获得XXX\_plugin\_init函数的地址。其中XXX是配置文件中定义的这个插件的内容。
+	\item 调用XXX\_plugin\_init函数。
+	\item 调用plugins\_register函数注册插件。
+\end{enumerate}
+
+\subsubsection{XXXXXX\_plugin\_init函数}
+XXXXXX\_plugin\_init函数在插件中定义，对这个插件进行初始化。其中，最重要的部分就是对plugin结构体中那一系列的函数指针进行赋值。如，mod\_cgi模块中：
+
+\begin{verbatim}
+int mod_cgi_plugin_init(plugin * p)
+{
+	return 0;
+}
+\end{verbatim}
+
+
+\subsubsection{plugins\_register函数}
 plugins\_register函数是将plugin结构体的指针存放在server结构体的plugins数组中。插件加载完毕之后，main函数有处理了一些初始化的工作，然后，调用plugins\_call\_init函数对所有插件进行初始化：
 
 \begin{verbatim}
@@ -127,7 +162,7 @@ if (HANDLER_GO_ON != plugins_call_init(srv))
 	\item 调用plugins\_register函数注册插件。
 \end{enumerate}
 
-\subsection{XXXXXX\_plugin\_init函数}
+\subsubsection{XXXXXX\_plugin\_init函数}
 XXXXXX\_plugin\_init函数在插件中定义，对这个插件进行初始化。其中，最重要的部分就是对plugin结构体中那一系列的函数指针进行赋值。如，mod\_cgi模块中：
 
 \begin{verbatim}
@@ -138,7 +173,7 @@ int mod_cgi_plugin_init(plugin * p)
 \end{verbatim}
 
 
-\subsection{plugins\_register函数}
+\subsubsection{plugins\_register函数}
 plugins\_register函数是将plugin结构体的指针存放在server结构体的plugins数组中。插件加载完毕之后，main函数有处理了一些初始化的工作，然后，调用plugins\_call\_init函数对所有插件进行初始化：
 
 \begin{verbatim}
@@ -151,7 +186,8 @@ if (HANDLER_GO_ON != plugins_call_init(srv))
 }
 \end{verbatim}
 
-\section{加载的过程}
+
+\subsection{加载的过程}
 这个函数作者编写了两个版本，从宏LIGHTTPD\_STATIC可以看出，作者貌似是想提供一个加载静态链接库的版本。但是，该版本的函数并没有什么实质性的实现（在最新的版本中(1.4.26)，该函数依然没有实现）。我们主要来看看后面的动态链接库的版本。加载的过程如下：
 \begin{enumerate}
 	\item 从配置文件中读取到动态链接库所在的文件夹和动态库的名称。
@@ -173,7 +209,7 @@ int mod_cgi_plugin_init(plugin * p)
 \end{verbatim}
 
 
-\subsection{plugins\_register函数}
+\subsubsection{plugins\_register函数}
 plugins\_register函数是将plugin结构体的指针存放在server结构体的plugins数组中。插件加载完毕之后，main函数有处理了一些初始化的工作，然后，调用plugins\_call\_init函数对所有插件进行初始化：
 
 \begin{verbatim}
@@ -187,7 +223,7 @@ if (HANDLER_GO_ON != plugins_call_init(srv))
 \end{verbatim}
 
 
-\section{加载的过程}
+\subsection{加载的过程}
 这个函数作者编写了两个版本，从宏LIGHTTPD\_STATIC可以看出，作者貌似是想提供一个加载静态链接库的版本。但是，该版本的函数并没有什么实质性的实现（在最新的版本中(1.4.26)，该函数依然没有实现）。我们主要来看看后面的动态链接库的版本。加载的过程如下：
 \begin{enumerate}
 	\item 从配置文件中读取到动态链接库所在的文件夹和动态库的名称。
@@ -198,7 +234,7 @@ if (HANDLER_GO_ON != plugins_call_init(srv))
 	\item 调用plugins\_register函数注册插件。
 \end{enumerate}
 
-\subsection{XXXXXX\_plugin\_init函数}
+\subsubsection{XXXXXX\_plugin\_init函数}
 XXXXXX\_plugin\_init函数在插件中定义，对这个插件进行初始化。其中，最重要的部分就是对plugin结构体中那一系列的函数指针进行赋值。如，mod\_cgi模块中：
 
 \begin{verbatim}
@@ -209,7 +245,7 @@ int mod_cgi_plugin_init(plugin * p)
 \end{verbatim}
 
 
-\subsection{plugins\_register函数}
+\subsubsection{plugins\_register函数}
 plugins\_register函数是将plugin结构体的指针存放在server结构体的plugins数组中。插件加载完毕之后，main函数有处理了一些初始化的工作，然后，调用plugins\_call\_init函数对所有插件进行初始化：
 
 \begin{verbatim}
@@ -223,7 +259,7 @@ if (HANDLER_GO_ON != plugins_call_init(srv))
 \end{verbatim}
 
 
-\section{加载的过程}
+\subsection{加载的过程}
 这个函数作者编写了两个版本，从宏LIGHTTPD\_STATIC可以看出，作者貌似是想提供一个加载静态链接库的版本。但是，该版本的函数并没有什么实质性的实现（在最新的版本中(1.4.26)，该函数依然没有实现）。我们主要来看看后面的动态链接库的版本。加载的过程如下：
 \begin{enumerate}
 	\item 从配置文件中读取到动态链接库所在的文件夹和动态库的名称。
@@ -234,7 +270,7 @@ if (HANDLER_GO_ON != plugins_call_init(srv))
 	\item 调用plugins\_register函数注册插件。
 \end{enumerate}
 
-\subsection{XXXXXX\_plugin\_init函数}
+\subsubsection{XXXXXX\_plugin\_init函数}
 XXXXXX\_plugin\_init函数在插件中定义，对这个插件进行初始化。其中，最重要的部分就是对plugin结构体中那一系列的函数指针进行赋值。如，mod\_cgi模块中：
 
 \begin{verbatim}
@@ -245,7 +281,7 @@ int mod_cgi_plugin_init(plugin * p)
 \end{verbatim}
 
 
-\subsection{plugins\_register函数}
+\subsubsection{plugins\_register函数}
 plugins\_register函数是将plugin结构体的指针存放在server结构体的plugins数组中。插件加载完毕之后，main函数有处理了一些初始化的工作，然后，调用plugins\_call\_init函数对所有插件进行初始化：
 
 \begin{verbatim}
@@ -258,44 +294,8 @@ if (HANDLER_GO_ON != plugins_call_init(srv))
 }
 \end{verbatim}
 
-
-\section{加载的过程}
-这个函数作者编写了两个版本，从宏LIGHTTPD\_STATIC可以看出，作者貌似是想提供一个加载静态链接库的版本。但是，该版本的函数并没有什么实质性的实现（在最新的版本中(1.4.26)，该函数依然没有实现）。我们主要来看看后面的动态链接库的版本。加载的过程如下：
-\begin{enumerate}
-	\item 从配置文件中读取到动态链接库所在的文件夹和动态库的名称。
-	\item 创建一个plugin结构体的实例。
-	\item 调用dlopen函数加载动态库。在plugin结构体中保存返回的句柄。
-	\item 通过dlsym函数获得XXX\_plugin\_init函数的地址。其中XXX是配置文件中定义的这个插件的内容。
-	\item 调用XXX\_plugin\_init函数。
-	\item 调用plugins\_register函数注册插件。
-\end{enumerate}
-
-\subsection{XXXXXX\_plugin\_init函数}
-XXXXXX\_plugin\_init函数在插件中定义，对这个插件进行初始化。其中，最重要的部分就是对plugin结构体中那一系列的函数指针进行赋值。如，mod\_cgi模块中：
-
-\begin{verbatim}
-int mod_cgi_plugin_init(plugin * p)
-{
-	return 0;
-}
-\end{verbatim}
-
-
-\subsection{plugins\_register函数}
-plugins\_register函数是将plugin结构体的指针存放在server结构体的plugins数组中。插件加载完毕之后，main函数有处理了一些初始化的工作，然后，调用plugins\_call\_init函数对所有插件进行初始化：
-
-\begin{verbatim}
-if (HANDLER_GO_ON != plugins_call_init(srv)) 
-{
-	plugins_free(srv);
-	network_close(srv);
-	server_free(srv);
-	return -1;
-}
-\end{verbatim}
-
-\chapter{plugins\_call\_init函数}
 \section{plugins\_call\_init函数}
+\subsection{plugins\_call\_init函数}
 plugins\_call\_init函数在plugin.c文件中：
 
 \begin{verbatim}
@@ -308,7 +308,7 @@ handler_t plugins_call_init(server * srv)
 }
 \end{verbatim}
 
-\section{宏PLUGIN\_TO\_SLOT(x, y)}
+\subsection{宏PLUGIN\_TO\_SLOT(x, y)}
 整个函数中，这个宏是重点：
 
 \begin{verbatim}
@@ -323,11 +323,11 @@ handler_t plugins_call_init(server * srv)
 srv->plugin_slots = calloc(PLUGIN_FUNC_SIZEOF, sizeof(ps));
 \end{verbatim}
 
-\section{plugin\_slots}
+\subsection{plugin\_slots}
 plugin\_slots是一个存放ps类型数据的数组，数组的长度为\\PLUGIN\_FUNC\_SIZEOF。PLUGIN\_FUNC\_SIZEOF在后面说明。ps的类型是plugin结构体的二级指针。在上面的宏中，我们看到，plugin\_slots是一个数组，随后的if分支中可以看到，plugin\_slots的元素也是数组。因此，plugin\_slots是一个二维数组，数组中的元素是plugin结构体的指针，并且，plugin\_slots是动态创建的。下面在来看PLUGIN\_FUNC\_SIZEOF，它定义在下面的枚举结构中：
 
-\chapter{枚举PLUGIN\_FUNC\_SIZEOF}
 \section{枚举PLUGIN\_FUNC\_SIZEOF}
+\subsection{枚举PLUGIN\_FUNC\_SIZEOF}
 \begin{verbatim}
 typedef enum 
 {
@@ -359,7 +359,7 @@ typedef enum
 
 从表中可以看出，插件p1包含所有的功能，也就是实现了plugin结构体中函数指针对应的所有函数。插件p2不包含功能HANDLE\_SUBREQUEST，HANDLE\_SUBREQUEST\_START\\和HANDLE\_REQUEST\_DONE功能，插件p3中不包含HANDLE\_TRIGGER，HANDLE\_SIGHUP和\\CONNECTION\_RESET功能。当然，这仅仅是举个例子。
 
-\section{plugins\_slots数组}
+\subsection{plugins\_slots数组}
 上面的例子中的表就是plugins\_slots。这个宏和后面的宏调用可以看成是给所有的插件“登记造册”。通过plugins\_slots数组，可以快速的确定某个功能都有那些插件实现了，这方便后面的插件的调用。完成这些宏调用后，初始化函数测试插件是否定义了init函数。如果定义了则调用之。这里的init函数和前面加载函数中的XXX\_plugin\_init函数不一样。XXX\_plugin\_init初始化函数是初始化plugin结构体，核心工作是对plugin结构体中的函数指针进行赋值。而init函数则是初始化这个插件对应的plugin\_data结构体，分配数据空间，初始化成员变量并返回其指针。
 如：mod\_cgi.c的init函数定义为，
 
@@ -377,7 +377,7 @@ INIT_FUNC(mod_cgi_init)
 
 返回的指针存放在plugin结构体中的data成员中。然后对data中的id进行赋值。接着，检查插件的版本是否和当前服务器的版本相同。如果插件没有定义init函数，则data赋值NULL。至此，插件的加载和初始化工作全部完成了。下面总结一下整个加载和初始化的过程：
 
-\section{加载和初始化的过程}
+\subsection{加载和初始化的过程}
 \begin{enumerate}
 	\item 根据配置文件从相应的目录中加载插件的动态连接库。
 	\item 获得插件动态库中XXX\_plugin\_init函数的入口地址并调用之。此函数对plugin结构体进行赋值。
@@ -387,7 +387,7 @@ INIT_FUNC(mod_cgi_init)
 	\item 最后调用插件的init函数初始化各自的plugin\_data结构体。
 \end{enumerate}
 
-\chapter{End}
+\section{End}
 	下一篇中，将介绍一下plugin.c中的宏PLUGIN\_TO\_SLOT。
 
 \end{document}
