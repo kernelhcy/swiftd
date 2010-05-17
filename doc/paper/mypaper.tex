@@ -1,4 +1,4 @@
-\documentclass[dvipdfm]{book}
+\documentclass[12pt, dvipdfm]{book}
 
 \usepackage{hcypaperstyle}
 
@@ -11,8 +11,12 @@
 
 \tableofcontents
 
-\zhkeywords
-\zhabstract
+\newpage
+\newpage
+\zhabstract 
+这里是摘要。摘要是个什么东西呢？？？前面讲了lighttpd插件系统的接口，下面我们来看看插件是怎么加载和初始化的。lighttpd的插件是以动态链接库的形式存在的。在服务器启动的时候，在初始化阶段将所有插件都加载进来。在server.c中的main函数中，加载插件是调用plugins\_load函数。\\
+
+{\zhkeywords 服务器;Linux;HTTP}
 
 \chapter{plugins\_load函数}
 前面讲了lighttpd插件系统的接口，下面我们来看看插件是怎么加载和初始化的。lighttpd的插件是以动态链接库的形式存在的。在服务器启动的时候，在初始化阶段将所有插件都加载进来。在server.c中的main函数中，加载插件是调用plugins\_load函数：

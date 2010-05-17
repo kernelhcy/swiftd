@@ -29,8 +29,8 @@
 
 %中英混排
 \usepackage{xeCJK}
-\setmainfont{Courier 10 Pitch} 		%默认字体，默认英文字体。
-\setCJKmainfont{WenQuanYi Zen Hei}	%中文默认字体
+\setmainfont{Times New Roman} 		%默认字体，默认英文字体。
+\setCJKmainfont{SimSun}	%中文默认字体
 \CJKsetecglue{}						%中英间隔
 
 %字体大小
@@ -54,8 +54,8 @@
 
 %%摘要格式
 %中文格式
-\newcommand{\zhabstract}{\section*{\rm 摘\quad 要}\sectionmark{摘\quad 要}}
-\newcommand{\zhkeywords}{~\\\hspace{-2em}\five\textbf{关键字：}}
+\newcommand{\zhabstract}{\sectionmark{摘\quad 要} {\three \center 摘\quad 要 \\}}
+\newcommand{\zhkeywords}{~\\\hspace{-2em} \five\textbf{关键字：}}
 %英文格式
 \newcommand{\enabstract}{\section*{ABSTRACT}\sectionmark{ABSTRACT}}
 \newcommand{\enkeywords}{\five\textbf{KEY WORDS: }}
@@ -80,9 +80,9 @@
 
 %目录格式
 \usepackage{titletoc}	
-%\titlecontents{section}[0em]{\rm\vspace{0.3\baselineskip}}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
-%\titlecontents{subsection}[0.5em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
-%\titlecontents{subsubsection}[1em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+\titlecontents{section}[0em]{\rm\vspace{0.3\baselineskip}}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+\titlecontents{subsection}[0.5em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+\titlecontents{subsubsection}[1em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
 
 
 \renewcommand {\today}{\number\year 年\number\month 月\number\day 日}
@@ -120,11 +120,20 @@
 \renewcommand{\sectionmark}[1]{\markboth{#1}{}}
 \fancyhf{}
 \makeatletter %双线页眉
+
+%章节首页加上页眉
+\renewcommand\chapter{\if@openright\cleardoublepage\else\clearpage\fi
+                   \thispagestyle{fancy}%！注意，就是这一行决定了首页不要页眉！
+                   \global\@topnum\z@
+                   \@afterindentfalse
+                   \secdef\@chapter\@schapter}
+
 \def\headrule{{\if@fancyplain\let\headrulewidth\plainheadrulewidth\fi%
 	\hrule\@height 1.0pt \@width\headwidth\vskip1.0pt%
 		  \hrule\@height 1.0pt\@width\headwidth%
 		   \vskip-2\headrulewidth\vskip-1pt}}%\vspace{1cm}}
-	\makeatother
+\makeatother
+
 \setlength{\headheight}{15pt}
 \fancyhead[EC]{\lfive 西安交通大学本科生毕业设计（论文）}
 \fancyhead[OC]{\lfive \leftmark}
