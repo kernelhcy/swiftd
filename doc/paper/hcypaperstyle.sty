@@ -5,13 +5,32 @@
 
 \ProvidesPackage{hcypaperstyle}
 
-\usepackage{fontspec, xunicode, xltxtra}
+%设置字体。
+\usepackage{fontspec}
+\usepackage{xunicode}
+\usepackage{xltxtra}
+
 \usepackage{hyperref}
+
+%插入图片
+\usepackage{graphicx}
+%用如下形式插入图片
+%\begin{figure}[htbp]
+%\centering
+%\caption{测试图片}
+%\includegraphics[height=5cm, width=16cm]{test.eps}
+%\end{figure}
+
+%设置页边距。
+%上、下、左、右、装订线的页边距：3.0cm, 2.5cm, 2.6cm, 2.6cm, 0cm
+\usepackage[top=3cm, bottom=2.5cm, left=2.5cm, right=2.5cm,% 
+	headsep=1.2cm,footskip=0.75cm,%
+	twoside,a4paper]{geometry}
 
 %中英混排
 \usepackage{xeCJK}
-\setmainfont{Times New Roman} 		%默认字体，默认英文字体。
-\setCJKmainfont{SimSun} 			%中文默认字体
+\setmainfont{Courier 10 Pitch} 		%默认字体，默认英文字体。
+\setCJKmainfont{WenQuanYi Zen Hei}	%中文默认字体
 \CJKsetecglue{}						%中英间隔
 
 %字体大小
@@ -24,41 +43,46 @@
 \newcommand{\lfive}{\fontsize{9pt}{13.5pt}\selectfont}		%小五
 
 %字体命令
-\newcommand{\song}{\fontspec{SimSun}}
-\newcommand{\kai}{\fontspec{KaiTi}}
-\newcommand{\cp}{\fontspec{Courier 10 Pitch}}
+%\newcommand{\song}{\fontspec{SimSun}}
+%\newcommand{\kai}{\fontspec{KaiTi}}
+%\newcommand{\cp}{\fontspec{Courier 10 Pitch}}
 \newcommand{\cn}{\fontspec{Courier New}}
-\newcommand{\tnr}{\fontspec{Times New Roman}}
+%\newcommand{\tnr}{\fontspec{Times New Roman}}
 
 \XeTeXlinebreaklocale "zh"  % 表示用中文的断行
 \XeTeXlinebreakskip = 0pt plus 1pt % 多一点调整的空间
 
 %%摘要格式
 %中文格式
-\newcommand {\zhabstract}{\section*{\rm 摘\quad 要}\sectionmark{摘\quad 要}}
-\newcommand {\zhkeywords}{~\\\hspace{-2em}\five\textbf{关键字：}}
+\newcommand{\zhabstract}{\section*{\rm 摘\quad 要}\sectionmark{摘\quad 要}}
+\newcommand{\zhkeywords}{~\\\hspace{-2em}\five\textbf{关键字：}}
 %英文格式
-\newcommand {\enabstract}{\section*{ABSTRACT}\sectionmark{ABSTRACT}}
-\newcommand {\enkeywords}{\five\textbf{KEY WORDS: }}
+\newcommand{\enabstract}{\section*{ABSTRACT}\sectionmark{ABSTRACT}}
+\newcommand{\enkeywords}{\five\textbf{KEY WORDS: }}
+
+%段落首行缩进
+\makeatletter
+\let\@afterindentfalse\@afterindenttrue
+\@afterindenttrue
+\makeatother
+\setlength{\parindent}{2em}
 
 %标题格式
-\usepackage[raggedleft]{titlesec}	
-%\titleformat {\section}{\centering\sanhao\bf}{第\thesection 章}{1em}{}
-\titleformat {\section}{\center\three\bf}{\thesection}{1em}{}
-\titleformat {\subsection}{\four\bf}{\thesubsection}{1em}{}
-\titleformat {\subsubsection}{\lfour\bf}{\thesubsubsection}{1em}{}
-%\titlespacing* {\section}{}{2cm}{1cm}
-%\titlespacing* {\subsection}{}{1\baselineskip}{0.5\baselineskip}
-%\titlespacing* {\subsubsection}{1em}{0.5\baselineskip}{0}
-\titlespacing {\section}{}{3ex}{*4}
-\titlespacing {\subsection}{}{*2}{*1}
-\titlespacing {\subsubsection}{1em}{*1}{0}
+\usepackage[raggedleft]{titlesec}
+\titleformat{\chapter}{\center \three \bf}{第 \thechapter{} 章}{1em}{}
+\titleformat{\section}{\lthree \bf}{\thesection}{1em}{}
+\titleformat{\subsection}{\four \bf}{\thesubsection}{1em}{}
+\titleformat{\subsubsection}{\four \bf}{\thesubsubsection}{1em}{}
+\titlespacing{\section}{0em}{3ex}{*4}
+\titlespacing{\subsection}{2em}{*2}{*1}
+\titlespacing{\subsubsection}{4em}{*1}{0}
+
 
 %目录格式
 \usepackage{titletoc}	
-\titlecontents{section}[0em]{\rm\vspace{0.3\baselineskip}}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
-\titlecontents{subsection}[0.5em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
-\titlecontents{subsubsection}[1em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+%\titlecontents{section}[0em]{\rm\vspace{0.3\baselineskip}}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+%\titlecontents{subsection}[0.5em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+%\titlecontents{subsubsection}[1em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
 
 
 \renewcommand {\today}{\number\year 年\number\month 月\number\day 日}
@@ -76,6 +100,19 @@
 \usepackage{booktabs}
 \renewcommand {\heavyrulewidth}{2.25pt}	%表格外线宽
 \renewcommand {\lightrulewidth}{1pt}	%表格内线宽
+%用如下形式插入三线表
+%\begin{table}[htbp]
+%\caption{表格测试}
+%\centering
+%\begin{tabularx}{\textwidth}{XXXXl} %最后一列是空的。这样可以是倒数第二列居中，否则会报错或不居中。
+%\toprule
+%\centering 名称 & \centering  模块1 & \centering  模块2 &\centering 模块3&\\
+%\midrule
+%\centering PLUGIN\_FUNC\_UNSET &\centering  p1 &\centering  p2 &\centering  p3&\\
+%\centering PLUGIN\_URI\_CLEAN &\centering  p1 &\centering  p2 &\centering  p3&\\
+%\bottomrule
+%\end{tabularx}
+%\end{table}
 
 \usepackage{fancyhdr}	%页眉页脚
 \pagestyle{fancy}
