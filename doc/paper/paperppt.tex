@@ -1,4 +1,4 @@
-\documentclass[12pt,dvipdfm]{beamer}
+\documentclass[10pt,dvipdfm]{beamer}
 
 \usepackage{hcystyle}
 
@@ -27,46 +27,68 @@
 \begin{frame}
 	\frametitle{课题名称}
 	
+	\begin{block}{}
 	\begin{center}
 	{\Large
 			基于动态链接技术的web服务器动态扩展功能\\
 				接口的设计与实现
 	}
 	\end{center}
+	\end{block}
+	
 \end{frame}
 
 \section{背景和意义}
+
 \begin{frame}
 	\frametitle{背景和意义}
-	\begin{itemize}
-		\item Web服务器：
-			\begin{itemize}
-				\item[-] 互联网的核心组成部分，支撑整个互联网应用服务。
-				\item[-] 适应互联网应用的不断更新变化。
-				\item[-] 必须保证7*24小时的运行。
-			\end{itemize}
-		\pause
-		\item {\cp Web}服务器现状：
-			\begin{itemize}
-				\item[-] 大部分都不支持功能的动态增加。
-				\item[-] 必须重启或重新编译。
-			\end{itemize}
-	\end{itemize}
+	\begin{center}
+	{\Large
+		一、背景和意义
+	}
+	\end{center}
 \end{frame}
 
 \begin{frame}
 	\frametitle{背景和意义}
+	\begin{block}{Web服务器：}
+		\begin{itemize}
+			\item[-] 互联网的核心组成部分，支撑整个互联网应用服务。
+			\item[-] 适应互联网应用的不断更新变化。
+			\item[-] 必须保证7*24小时的运行。
+		\end{itemize}
+	\end{block}
+	
+	\pause
+	
+	\begin{block}{Web服务器现状：}
+		\begin{itemize}
+			\item[*] 大部分都不支持功能的动态增加。
+			\item[*] 必须重启或重新编译。
+		\end{itemize}
+	\end{block}
+	
+\end{frame}
+
+\begin{frame}
+	\frametitle{背景和意义}
+	\begin{block}{}
 	\begin{itemize}
 		\item 针对以上问题，本课题将基于动态链接库技术，使服务器在运行期间，可以动态的获知模块的增加并加载模块。
-		\pause
 		\item 本系统实现了服务器的基本功能，重点实现模块动态加载特性。
 	\end{itemize}
+	\end{block}
 \end{frame}
 
 \section{HTTP协议分析}
 
 \begin{frame}
-	\frametitle{test}
+	\frametitle{HTTP协议分析}
+	\begin{center}
+	{\Large
+		二、HTTP协议分析
+	}
+	\end{center}
 \end{frame}
 
 \begin{frame}
@@ -74,7 +96,9 @@
 	
 HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属于应用层的面向对象的协议。它于1990年提出。主要用于从WWW服务器传输超文本到本地浏览器的传送协议。
 
-HTTP协议具有如下特点：
+ 	\pause
+
+\begin{block}{HTTP协议具有如下特点：}
 \five{
 	\begin{enumerate}
 		\item 支持客户/服务器模式。
@@ -84,36 +108,266 @@ HTTP协议具有如下特点：
 		\item 无状态：协议对于事务处理没有记忆能力。
 	\end{enumerate}
 }
+\end{block}
 \end{frame}
 
 \begin{frame}
 	\frametitle{HTTP协议处理过程}
 	\begin{figure}[htbp]
 	\centering
-	\caption{HTTP协议处理过程}
 	\includegraphics[height=6cm, width=7cm]{http.eps}
 	\end{figure}
 \end{frame}
 
-\begin{frame}
-	\frametitle{HTTP协议格式}
-\end{frame}
+%要使用verbatim环境，必须是这个格式。begin{frame}不可以。
+\frame[containsverbatim]{
+	\frametitle{Request格式}
+	
+	{\scriptsize
+	\begin{verbatim}
+        ---------------------------------------
+        | Methods |sp| URL |sp| Version |cr|lf|  -----> Request line
+        ---------------------------------------
+        | Header Field Name: |sp| Value |cr|lf|  -]
+        ---------------------------------------   |
+        |   ... (more headers)                |   |---> Header lines
+        ---------------------------------------   |
+        | Header Field Name: |sp| Value |cr|lf|  -]
+        ---------------------------------------
+        |cr|lf|                                  -----> a blank line
+        ---------------------------------------
+        |                                     |
+        | Data...                             |  -----> Entity body
+        |                                     |
+        ---------------------------------------
+        cr = \r ; lf = \n ; sp = blankspace
+ 	\end{verbatim}
+ 	}%\scriptsize
+ 	
+ 	\begin{block}{}
+ 	此格式规定了HTTP协议中每一个Request中数据的意义。服务器根据此格式理解请求的内容。
+ 	\end{block}
+}
 
 \begin{frame}
 	\frametitle{需要处理的HEADERS}
+	\begin{block}{HEADERS:}
+	\begin{enumerate}[(a)]
+		\item Connection: 标记是否保持连接。
+		\item Content-Length: POST数据的长度。
+		\item Content-Type: POST数据的格式。
+		\item Host: 主机名。HTTP/1.1要求必须有主机名。
+		\item If-Modifice-Since: 用于缓存。
+		\item If-None-Match: 用于缓存。
+	\end{enumerate}
+	\end{block}
 \end{frame}
 
-\section{接口设计}
+\section{插件接口设计}
+
+\begin{frame}
+	\frametitle{插件接口设计}
+	\begin{center}
+	{\Large
+		三、插件接口设计
+	}
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{插件动态加载过程}
+	
+	服务器通过实时监测插件配置文件是否修改。一旦监测到修改，立即加载（卸载）插件。
+	
+	\pause
+	
+	\begin{block}{处理过程如下：}
+	\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=5cm, width=9cm]{loadplugin.eps}
+	\end{figure}
+	\end{block}
+\end{frame}
+
+\begin{frame}
+	\frametitle{插件调用过程}
+	服务器对HTTP协议Request数据进行解析。	在解析的过程中调用插件对Request进行处理。
+	
+	\pause
+	
+	\begin{block}{处理过程如下：}
+	\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=5cm, width=8cm]{httpplugin.eps}
+	\end{figure}
+	\end{block}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{插件接口定义：}
+	接口通过定义一些列函数原型。所有函数都有明确的定义和调用时机。
+	
+	插件选择性的实现这些函数。服务器在确定的时机调用所有插件的对应函数。
+	
+	\pause
+	
+	\begin{block}{接口定义：}
+	\begin{itemize}
+		\item[-] init: 初始化插件。
+		\item[-] set\_default: 设置插件的配置为默认值。
+		\item[-] cleanup: 清理插件。
+		\item[-] trigger: 每秒钟调用一次。相当于计时器。
+		\item[-] sighup: 处理挂断信号。
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}
+	\frametitle{插件接口定义：}
+	\begin{block}{接口定义（续）：}
+	\begin{itemize}
+		\item[-] url\_raw: 获得未解码的URL地址后调用。
+		\item[-] url\_clean: 获得已解码的URL地址后调用。
+		\item[-] docroot: 设置插件工作的根目录 。
+		\item[-] physical: 获得请求资源对应的物理地址后调用。
+		\item[-] connection\_close: 连接关闭时调用。
+		\item[-] connection\_reset: 连接重置时调用。
+		\item[-] joblist: 连接被加入joblist时调用嗯。
+		\item[-] subrequest\_start: 子请求开始。
+		\item[-] handle\_subrequest: 处理子请求。
+		\item[-] subrequest\_end: 子请求结束。
+	\end{itemize}
+	\end{block}
+\end{frame}
+
 \section{服务器设计}
-\section{接口实现}
+
+\begin{frame}
+	\frametitle{服务器设计}
+	\begin{center}
+	{\Large
+		四、服务器设计
+	}
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{IO设计}
+	\begin{columns}
+		\begin{column}{0.25\textwidth}
+			\begin{alertblock}{}
+				Nonblocking IO
+			\end{alertblock}
+			
+		\end{column}
+		
+		\begin{column}{0.02\textwidth}
+			\begin{alertblock}{}
+				+
+			\end{alertblock}
+		\end{column}
+		
+		\begin{column}{0.28\textwidth}
+			\begin{alertblock}{}
+				IO multiplexing
+			\end{alertblock}
+			
+		\end{column}
+		
+		\begin{column}{0.02\textwidth}
+			\begin{alertblock}{}
+				+
+			\end{alertblock}
+		\end{column}
+		
+		\begin{column}{0.22\textwidth}
+			\begin{alertblock}{}
+				Thread pool
+			\end{alertblock}
+		\end{column}
+	\end{columns}
+	\pause
+	\begin{block}{IO结构图：}
+	\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=5cm, width=10cm]{IO.eps}
+	\end{figure}
+	\end{block}
+	
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{连接处理：状态机}
+	使用状态机对连接进行处理。
+	
+	对连接定义一系列状态。在整个生命周期中，连接处于某一个状态。根据连接的当前状态和所发生的事件，使连接进入下一状态。
+	
+	\pause
+	
+	\begin{example}{例如：}
+		\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=3cm, width=4cm]{statemachine.eps}
+	\end{figure}
+	\end{example}
+\end{frame}
+
+\section{插件接口实现}
+
+\begin{frame}
+	\frametitle{插件接口实现}
+	\begin{center}
+	{\Large
+		五、插件接口实现
+	}
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{接口实现}
+\end{frame}
+
 \section{服务器实现}
+
+\begin{frame}
+	\frametitle{服务器实现}
+	\begin{center}
+	{\Large
+		六、服务器实现
+	}
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{IO实现}
+\end{frame}
+
+\begin{frame}
+	\frametitle{连接处理的状态机}
+\end{frame}
+
 \section{运行结果}
+
+\begin{frame}
+	\frametitle{运行结果}
+	\begin{center}
+	{\Large
+		七、运行结果
+	}
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{运行结果}
+\end{frame}
 
 \begin{frame}
 	\frametitle{结束}
 	\begin{center}
 	{\Huge
-		\textsl{That's all!}
+		That's all!
 	}
 	\end{center}
 \end{frame}
