@@ -1,7 +1,10 @@
 % hcy style
 \ProvidesPackage{hcystyle}
 
+%设置字体。
 \usepackage{fontspec}
+\usepackage{xunicode}
+\usepackage{xltxtra}
 \usepackage{hyperref}
 
 \mode<presentation>
@@ -11,33 +14,40 @@
   	\setbeamercovered{transparent}
 }
 
-
 %中英混排
-%\usepackage{zhspacing}
+\usepackage[slantfont,boldfont]{xeCJK}
+\setCJKmainfont{WenQuanYi Zen Hei}  %中文默认字体
+\setsansfont{Courier 10 Pitch} 		%默认字体，默认英文字体。使用setmainfont不行。。。
+\CJKsetecglue{}						%中英间隔
 
-%\zhspacing
+%段落首行缩进
+\makeatletter
+\let\@afterindentfalse\@afterindenttrue
+\@afterindenttrue
+\makeatother
+\setlength{\parindent}{2em}
+
 %字体大小
-\newcommand {\ltwo}{\fontsize{18pt}{27pt}\selectfont} 		%小二
-\newcommand {\three}{\fontsize{16pt}{24pt}\selectfont}		%三号
-\newcommand {\lthree}{\fontsize{15pt}{22.5pt}\selectfont}	%小三
-\newcommand {\four}{\fontsize{14pt}{21pt}\selectfont}		%四号
-\newcommand {\lfour}{\fontsize{12pt}{18pt}\selectfont}		%小四
-\newcommand {\five}{\fontsize{10.5pt}{15.75pt}\selectfont}	%五号
-\newcommand {\lfive}{\fontsize{9pt}{13.5pt}\selectfont}		%小五
+\newcommand{\ltwo}{\fontsize{18pt}{27pt}\selectfont} 		%小二
+\newcommand{\three}{\fontsize{16pt}{24pt}\selectfont}		%三号
+\newcommand{\lthree}{\fontsize{15pt}{22.5pt}\selectfont}	%小三
+\newcommand{\four}{\fontsize{14pt}{21pt}\selectfont}		%四号
+\newcommand{\lfour}{\fontsize{12pt}{18pt}\selectfont}		%小四
+\newcommand{\five}{\fontsize{10.5pt}{15.75pt}\selectfont}	%五号
+\newcommand{\lfive}{\fontsize{9pt}{13.5pt}\selectfont}		%小五
 
-%\renewcommand*\ttdefault{lcmtt}
-%\renewcommand*\ttdefault{lmvtt}
-%\renewcommand*\ttdefault{cmvtt}
+%插入图片
+\usepackage{graphicx}
+%用如下形式插入图片
+%\begin{figure}[htbp]
+%\centering
+%\caption{测试图片}
+%\includegraphics[height=5cm, width=16cm]{test.eps}
+%\end{figure}
 
-\newcommand{\song}{\fontspec{宋体}}
 \newcommand{\wqy}{\fontspec{文泉驿正黑}}
-\newcommand{\fsong}{\fontspec{仿体}}
-\newcommand{\kai}{\fontspec{楷体}}
 \newcommand{\cp}{\fontspec{Courier 10 Pitch}}
-\newcommand{\cn}{\fontspec{Courier New}}
 
-\setsansfont{文泉驿正黑}
-\setromanfont{Courier 10 Pitch}
 
 \XeTeXlinebreaklocale "zh"  % 表示用中文的断行
 \XeTeXlinebreakskip = 0pt plus 1pt % 多一点调整的空间
