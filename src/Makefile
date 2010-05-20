@@ -3,7 +3,9 @@ OBJS=${OBJSPATH}/buffer.o ${OBJSPATH}/log.o  ${OBJSPATH}/chunk.o ${OBJSPATH}/con
 	 ${OBJSPATH}/fde_epoll.o ${OBJSPATH}/joblist.o ${OBJSPATH}/main.o ${OBJSPATH}/network.o\
 	 ${OBJSPATH}/base.o ${OBJSPATH}/request.o ${OBJSPATH}/plugin.o ${OBJSPATH}/response.o ${OBJSPATH}/network_write.o\
 	 ${OBJSPATH}/data_string.o ${OBJSPATH}/data_integer.o ${OBJSPATH}/data_array.o ${OBJSPATH}/keyvalue.o
-FLAGS=-g
+
+FLAGS=-ggdb -D HAVE_SYS_EPOLL_H
+
 OBJSPATH=../objects
 
 
