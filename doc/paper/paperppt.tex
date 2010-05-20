@@ -395,7 +395,7 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	\pause
 	
 	\begin{block}{}
-	动态库文件的名称为： \textcolor{read}{插件名称 + .so}。\\
+	动态库文件的名称为： \textcolor{red}{插件名称 + .so}。\\
 	服务器通过监测这个配置文件，确定是否有插件需要加载或删除。
 	\end{block}
 \end{frame}
@@ -513,6 +513,39 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	
 \end{frame}
 
+\frame[containsverbatim]{
+	\frametitle{连接处理的状态机}
+	\begin{block}{}
+	状态机的关键函数就是下面的connection\_state\_machine函数。
+	\end{block}
+	{\scriptsize
+	\begin{verbatim}
+    int connection_state_machine(server * srv, connection * con)
+    {
+        int done = 0, r;
+        while (done == 0)
+        {
+            size_t ostate = con -> state;
+            switch (con->state)
+            { 
+                case CON_STATE_REQUEST_START: 
+                case CON_STATE_REQUEST_END: 
+                case CON_STATE_HANDLE_REQUEST:
+                 /* more case... */
+                default:
+                    break;
+            }
+            if ( ostate == con->state)
+            {
+                done = 1;
+            }
+        } 
+        return 0;
+    }
+	\end{verbatim}
+	}
+}
+
 \section{运行结果}
 
 \begin{frame}
@@ -525,13 +558,77 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 \end{frame}
 
 \begin{frame}
-	\frametitle{运行结果}
+	\frametitle{启动和访问}
+	\begin{columns}
+		\begin{column}{0.4\textwidth}
+			\begin{block}{启动：}
+			\begin{figure}[htbp]
+			\centering
+			\includegraphics[height=3cm, width=4.5cm]{startup.eps}
+			\end{figure}
+			\end{block}
+		\end{column}
+		
+		\begin{column}{0.5\textwidth}
+			\begin{block}{正常访问：}
+			\begin{figure}[htbp]
+			\centering
+			\includegraphics[height=5cm, width=6cm]{works.eps}
+			\end{figure}
+			\end{block}
+		\end{column}
+	\end{columns}
 \end{frame}
 
 \begin{frame}
 	\frametitle{运行结果}
+	\begin{columns}
+		\begin{column}{0.6\textwidth}
+			\begin{block}{注释掉插件配置：}
+			\begin{figure}[htbp]
+			\centering
+			\includegraphics[height=3cm, width=4.5cm]{complugin.eps}
+			\end{figure}
+			\end{block}
+		\end{column}
+		
+		\begin{column}{0.3\textwidth}
+			\textcolor{red}{服务器不需要重启！}
+		\end{column}
+	\end{columns}
+	
+	\begin{block}{访问失败：}
+	\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=3cm, width=6cm]{nodirindex.eps}
+	\end{figure}
+	\end{block}
 \end{frame}
 
+\begin{frame}
+	\frametitle{运行结果}
+	\begin{columns}
+		\begin{column}{0.6\textwidth}
+			\begin{block}{重新掉插件配置：}
+			\begin{figure}[htbp]
+			\centering
+			\includegraphics[height=3cm, width=4.5cm]{uncomplugin.eps}
+			\end{figure}
+			\end{block}
+		\end{column}
+		
+		\begin{column}{0.3\textwidth}
+			\textcolor{green}{服务器同样不需要重启！}
+		\end{column}
+	\end{columns}
+	
+	\begin{block}{访问成功：}
+	\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=3cm, width=6cm]{dirindex.eps}
+	\end{figure}
+	\end{block}
+\end{frame}
 \begin{frame}
 	\frametitle{结束}
 	\begin{center}
