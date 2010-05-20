@@ -65,11 +65,16 @@ static int plugin_read_name_path(server *srv, plugin_name_path * pnp)
 	//log_error_write(srv, __FILE__, __LINE__, "sb", "Plugin configure file :", namefile);
 	
 	size_t i;
+	/*
 	for (i = 0; i < pnp -> used; ++i)
 	{
 		buffer_free(pnp -> name[i]);
+		pnp -> name[i] = NULL;
 		buffer_free(pnp -> path[i]);
+		pnp -> path[i] = NULL;
 	}
+	*/
+	
 	pnp -> used = 0;
 	
 	char *name = NULL, *path = NULL; //分别指向名称和路径。	
@@ -328,7 +333,9 @@ int plugin_load(server *srv)
 		}
 
 		buffer_free(srv -> plugins_np -> path[i]);
+		srv -> plugins_np -> path[i] = NULL;
 		buffer_free(srv -> plugins_np -> name[i]);
+		srv -> plugins_np -> name[i] = NULL;
 		
 	}
 	
