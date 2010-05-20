@@ -206,7 +206,7 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 
 \begin{frame}
 	\frametitle{插件接口定义：}
-	接口通过定义一些列函数原型。所有函数都有明确的定义和调用时机。
+	接口定义一些列函数原型。所有函数都有明确的定义和调用时机。
 	
 	插件选择性的实现这些函数。服务器在确定的时机调用所有插件的对应函数。
 	
@@ -307,7 +307,7 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	\pause
 	
 	\begin{example}{例如：}
-		\begin{figure}[htbp]
+	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=3cm, width=4cm]{statemachine.eps}
 	\end{figure}
@@ -325,8 +325,90 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	\end{center}
 \end{frame}
 
+\frame[containsverbatim]{
+	\frametitle{接口实现}
+	\begin{block}{主要的数据结构：}
+		\begin{enumerate}
+			\item plugin\_slot\_t枚举类型
+			\item plugin结构体
+			\item plugin\_slot结构体。
+		\end{enumerate}
+	\end{block}
+	plugin\_slot\_t枚举类型用于定义接口函数的类型。与接口函数一一对应。
+	\begin{example}
+	\begin{verbatim}
+	PLUGIN_SLOT_SET_DEFAULT
+	PLUGIN_SLOT_CLEANUP
+	PLUGIN_SLOT_TRIGGER
+	PLUGIN_SLOT_URL_RAW
+	PLUGIN_SLOT_URL_CLEAN
+	...
+	\end{verbatim}
+	\end{example}
+}
+
 \begin{frame}
 	\frametitle{接口实现}
+	plugin结构体包含一个插件的所有信息。包括版本，名称以及一系列接口函数的地址。plugin结构体类似于一个类。服务器通过调用其成员方法（函数指针）来执行插件的功能。
+	
+	定义如下：
+	\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=4cm, width=8cm]{plugin_s.eps}
+	\end{figure}
+\end{frame}
+
+\begin{frame}
+	\frametitle{接口实现}
+	plugin\_slot是一个二维数组。相当于plugin的登记表。服务器通过这个表中的信息对插件进行调用。
+	表的形式如下：
+	\begin{table}[htbp]
+	\caption{plugin\_slot示例：}
+	\centering
+	\begin{tabular}{cccc} %最后一列是空的。这样可以是倒数第二列居中，否则会报错或不居中。
+	\toprule
+	\centering 名称 & 插件1 & 插件2 &插件3\\
+	\midrule
+	\centering PLUGIN\_SLOT\_URL\_RAW & p1 &  p2 & p3\\
+	\centering PLUGIN\_SLOT\_URL\_CLEAN &  p1 &  NULL & p3\\
+	\centering PLUGIN\_SLOT\_DOCROOT & p1 & NULL & NULL\\
+	\bottomrule
+	\end{tabular}
+	\end{table}
+	\begin{block}{}
+		表中存放的是plugin结构体指针。NULL表示此插件没有实现这个函数。
+	\end{block}
+\end{frame}
+
+\begin{frame}
+	\frametitle{接口实现}
+	服务器中包含一个定义插件的配置文件： swiftd-plugin.conf。
+	
+	\begin{block}{配置文件的形式如下：}	
+		\#swiftd-plugin.conf
+		\#配置文件的形式为  -- 插件名称：插件动态库文件所在目录\$\\
+		\#每个插件一行，每个插件配置信息必须以"\$"结尾。\\
+		dir\_index:/home/hcy/plugins/\$\\
+		...
+	\end{block}
+	
+	\pause
+	
+	\begin{block}{}
+	动态库文件的名称为： \textcolor{read}{插件名称 + .so}。\\
+	服务器通过监测这个配置文件，确定是否有插件需要加载或删除。
+	\end{block}
+\end{frame}
+
+\begin{frame}
+	\frametitle{接口实现}
+	服务器使用inotify监测插件配置文件。inotify产生一个文件描述符，通过监测这个文件描述符是否有数据可读即可监测到文件的改变。
+	\begin{block}{监测的过程如下：}
+	\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=5cm, width=9cm]{inotify.eps}
+	\end{figure}
+	\end{block}
 \end{frame}
 
 \section{服务器实现}
@@ -342,10 +424,91 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 
 \begin{frame}
 	\frametitle{IO实现}
+	使用epoll对文件描述符的IO事件进行监测。
+	
+	
+	每个文件描述符都有一个对应的IO事件处理函数。一旦有IO事件发生，申请一个线程，在线程中调用这个函数处理IO事件。
+	\pause
+	\begin{block}{IO事件处理过程：}
+	\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=5cm, width=9cm]{epoll.eps}
+	\end{figure}
+	\end{block}
+	
+\end{frame}
+
+\begin{frame}
+	\frametitle{IO实现}
+	\begin{block}{Queue}
+		每个连接对应三个队列。用来存储数据：
+		\begin{enumerate}
+			\item read\_queue : 读取的数据，要加锁。
+			\item write\_queue : 发送的数据
+			\item requet\_content\_queue : POST数据
+		\end{enumerate}
+	\end{block}
+	\pause
+	\begin{block}{线程池}
+		每个线程的主循环中，调用传递进来的函数。（包括参数）\\
+		使用pthread的条件变量对线程进行唤醒和睡眠操作。\\
+		预先创建线程。提高效率。
+	\end{block}
 \end{frame}
 
 \begin{frame}
 	\frametitle{连接处理的状态机}
+	对于每个连接，在其生存周期中，共定义了11个状态。
+	
+	
+	\begin{block}{连接状态：}
+		\begin{itemize}
+			\item connect: 标记connection结构体可用。
+			\item requeststart: 请求开始。
+			\item read: 读取Request数据。
+			\item handlerequest: 解析Request数据。
+			\item requestend: 解析结束。
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}
+	\frametitle{连接处理的状态机}
+	\begin{block}{连接状态（续）：}
+		\begin{itemize}
+			\item readpost: 读取POST数据。
+			\item responsestart: 处理请求。在这个状态中调用插件。
+			\item write: 发送数据回client。
+			\item responseend: 处理结束。
+			\item error: 出错。
+			\item close: 连接关闭。
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}
+	\begin{columns}
+	
+	\begin{column}{0.6\textwidth}
+		\frametitle{连接处理的状态机}
+		\begin{figure}[htbp]
+		\centering
+		\includegraphics[height=8cm, width=6cm]{state.eps}
+		\end{figure}
+	\end{column}
+	
+	\begin{column}{0.3\textwidth}
+		\begin{block}{}
+			\textcolor{green}{绿色路径}为一个正常的处理路径。\\
+			
+			\textcolor{red}{红色路径}为出错路径。\\
+			
+			\textcolor{blue}{蓝色路径}，HTTP/1.1中保持连接。
+		\end{block}
+	\end{column}
+	
+	\end{columns}
+	
 \end{frame}
 
 \section{运行结果}
@@ -357,6 +520,10 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 		七、运行结果
 	}
 	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{运行结果}
 \end{frame}
 
 \begin{frame}
