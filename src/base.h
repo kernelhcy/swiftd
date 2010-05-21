@@ -461,6 +461,52 @@ typedef struct server
 
 }server;
 
+//这一些列server_get_xxx函数，用来获得server结构体的信息。很多信息需要加锁。因此，调用这些函数可以避免手动加锁
+//的麻烦。函数中会自动加锁。
+int server_get_max_fds(server *srv);
+int server_get_cur_fds(server *srv);
+int server_get_want_fds(server *srv);
+int server_get_max_cons(server *srv);
+int server_is_daemon(server *srv);
+int server_get_errorlog_fd(server *srv);
+
+/*
+ * mode必须非NULL。存储错误日志的模式。
+ */
+int server_get_errorlog_mode(server *srv, buffer *mode);
+
+int server_get_plugin_cnt(server *srv);
+
+/*
+ * info必须非NULL。以下面的格式存储插件的信息。
+ * 
+ * 插件名称;版本\n
+ */
+int server_get_plugin_info(server *srv, buffer *info);
+
+/*
+ * slotstring必须非NULL。存储各个插件slot的信息。格式如下：
+ *
+ * 插件名称;slot1名称;slot2名称;...\n
+ *
+ * 每个插件都有上面的信息，每个插件一行。
+ */
+int server_get_plugin_slot_string(server *srv, buffer *slotstring);
+
+int server_get_cur_ts(server *srv);
+int server_get_startup_ts(server *srv);
+int server_get_conns_cnt(server *srv);
+
+/*
+ * connsinfo必须非NULL。存储连接的信息。存储的格式如下：
+ *
+ * 描述符;开始时间;ip地址;请求方法;请求资源;协议版本\n
+ * 
+ * 每个连接都有上面的信息，每个连接一行。
+ */
+int server_get_conns_info(server *srv, buffer *connsinfo);
+int server_get_joblist_len(server *srv);
+
 //获得一个job环境
 //仅由主线程调用。
 job_ctx* job_ctx_get_new(server *srv);

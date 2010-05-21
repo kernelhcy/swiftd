@@ -70,3 +70,92 @@ void job_ctx_free(server *srv, job_ctx *jc)
 	pthread_mutex_unlock(&srv -> jc_lock);
 }
 
+int server_get_max_fds(server *srv)
+{
+	return -1;
+}
+int server_get_cur_fds(server *srv)
+{
+	return -1;
+}
+int server_get_want_fds(server *srv)
+{
+	return -1;
+}
+int server_get_max_cons(server *srv)
+{
+	return -1;
+}
+int server_is_daemon(server *srv)
+{
+	return -1;
+}
+int server_get_errorlog_fd(server *srv)
+{
+	return -1;
+}
+
+/*
+ * mode必须非NULL。存储错误日志的模式。
+ */
+int server_get_errorlog_mode(server *srv, buffer *mode)
+{
+	return -1;
+}
+
+int server_get_plugin_cnt(server *srv)
+{
+	return -1;
+}
+
+/*
+ * info必须非NULL。以下面的格式存储插件的信息。
+ * 
+ * 插件名称;版本\n
+ */
+int server_get_plugin_info(server *srv, buffer *info)
+{
+	return -1;
+}
+
+/*
+ * slotstring必须非NULL。存储各个插件slot的信息。格式如下：
+ *
+ * 插件名称;slot1名称;slot2名称;...\n
+ *
+ * 每个插件都有上面的信息，每个插件一行。
+ */
+int server_get_plugin_slot_string(server *srv, buffer *slotstring)
+{
+	return -1;
+}
+
+int server_get_cur_ts(server *srv)
+{
+	return -1;
+}
+int server_get_startup_ts(server *srv)
+{
+	return -1;
+}
+int server_get_conns_cnt(server *srv)
+{
+	return -1;
+}
+
+/*
+ * connsinfo必须非NULL。存储连接的信息。存储的格式如下：
+ *
+ * 描述符;开始时间;ip地址;请求方法;请求资源;协议版本\n
+ * 
+ * 每个连接都有上面的信息，每个连接一行。
+ */
+int server_get_conns_info(server *srv, buffer *connsinfo)
+{
+	return -1;
+}
+int server_get_joblist_len(server *srv)
+{
+	return -1;
+}
+
