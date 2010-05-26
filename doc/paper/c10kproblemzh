@@ -68,8 +68,45 @@ C10K 问题
 	（a）传统的select().
 	不幸的是，select()的FD_SETSIZE有限制。这个限制被编译到标准库和用户程序中。（一些版本的C库可以让你在用户程序编译期间提高这个限制。）请查看Poller_select(cc,h)关于如何使用select()和其他就绪通知方案互换的例子。
 	（b）传统的poll()
-	没有关于poll()所能处理的文件描述符的数量的硬编码的限制，但是由于在某一时间上，大多数的文件描述符处于等待状态并且扫描上千的文件描述符需要花费很多时间，当描述符的数量上千之后，它开始变慢。一些操作系统通过使用一些技术，比如轮询示意来提高poll()的速度。轮询示意在1999年被Niels Provos为Linux实现并成为标准。请查看Poller_select(cc,h)关于如何使用poll()和其他就绪通知方案互换的例子。
+	没有关于poll()所能处理的文件描述符的数量的硬编码的限制，但是由于在某一时间上，大多数的文件描述符处于等待状态并且扫描上千的文件描述符需要花费很多时间，当描述符的数量上千之后，它开始变慢。一些操作系统通过使用一些技术，比如轮询示意来提高poll()的速度。轮询示意在1999年被Niels Provos为Linux实现并成为标准。请查看Poller_poll(cc,h)关于如何使用poll()和其他就绪通知方案互换的例子。
+	（c）/dev/poll
+	这个是Solaris建议的poll的替代品。
+	/dev/poll背后的思想是充分利用poll()经常被以相同的参数调用很多次的事实。通过/dev/poll，你得到一个打开的句柄。通过向这个句柄写数据，你只需要告诉操作系统一次你对什么文件感兴趣。之后，你只需要从那个句柄读一个当前就绪的文件描述符的集合。
+	/dev/poll在Solaris7中悄然出现（查看106541补丁）。但是在Solaris8中才第一次公开出现。根据Sun的说法，在有750哥客户端时，/dev/poll比poll()有10%的效率提升。
+	/dev/poll的不同实现都在Linux上试验过，但是没有一个性能可以epoll相当，并且没有一个实现真正完成。/dev/poll不建议在Linux上使用。
+	请查看Poller_devpoll(cc, h 基准)关于如何使用/dev/poll和其他就绪通知方案互换的例子。（注意：这个例子是在Linux的/dev/poll，可能在Solaris下不能正确工作）。
+	（d）kqueue()
+	这个是FreeBSD建议的poll的替代品。（并且，也是NetBSD的）。下面指出，kqueue()可以设置成边际触发或者水平触发。
+
+4.2. 每一个线程处理多个客户端，使用非阻塞I/O和就绪通知机制。
+
+	就绪通知机制（或者边际触发就绪通知机制）表示你给内核一个文件描述符，之后，当这个描述符从没有就绪转换成就绪，内核在某个时候通知你。然后，操作系统内核就假设你已经知道那个文件描述符已经就绪。内核将不再发送那种类型的关于那个文件描述符的更多的就绪通知给你，直到你做了一些事情使文件描述符编程不就绪。（例如，直到你接受到一个EWOULDBLOCK错误在send，recv或者accept调用上，或者一次send或者recv传送的数据小于需要传送的字节数。）
+	当你使用就绪改变通知机制时，你必须为假事件做好准备。因为一个通常的实现是当任何接受到数据包时就发送就绪信号，不管这个文件描述符是否就绪。
+	这是“水平触发”就绪通知机制的对立面。由于你错过了仅仅一个事件，那么这个事件所对应的连接将永远处于等待状态，这是一个微小的编程错误疏忽。尽管如此，我发现边际触发就绪通知机制是使用OpenSSL的非阻塞客户端编程变得容易，因此，这值得去尝试。
+	[Banga, Mogul, Drusha '99]在1999年描述了这种方案。
+	有几种API可以是程序获得“文件描述符就绪”的通知：
+	（a）kqueue()
+	这是FreeBSD推荐的边际触发poll的替代品。（同样，很快也是NetBSD的）。
+	FreeBSD4.3以及后续版本和NetBSD 2002年10月份的当前版本支持一个通用的poll()的候选者叫kqueue()/kevents()。支持边际触发和水平触发。（参见Jonathan Lemon's的主页和他的关于kqueue()的BSDCon 2000 论文。）
+	和/dev/poll类似，你分配一个监听对象，但是不是通过打开文件/dev/poll，而是调用kqueue()去分配一个。为了改变你正在监听的事件，或者得到当前事件的列表，你在kqueue()返回的描述符上调用kevent()。它不仅可以监听套接字的就绪，还可以监听普通的文件描述符，信号，甚至I/O完成。
+	注意：在2000年10月，FreeBSD的线程库不能很好的同kqueue()交互。显然，当kqueue()阻塞，整个进程阻塞，而不是调用的线程。
+	参见Poller_kqueue（cc， h，基准）关于如何使用kqueue()和其他就绪通知机制互换的例子。
+	使用kqueue()的例子和库：
+	（1）PyKQueue--一个Python的kqueue()包转。
+	（2）Ronald F. Guilmette的echo服务器的例子。参见他的2000年9月28日在freebsd.questions上的帖子。
 	
+	（b）epoll
+	这是Linux 2.6内核推荐的边际触发poll的替代品。
+	在2001年7月11日，Davide Libenzi建议了一个实时信号的候选者。他的补丁提供了他所谓的/dev/epoll www.xmailserver.org/linux-patches/nio-improve.html。这和实时信号就绪通知机制类似，但是他能合并冗余事件，并且有更高效的对付大批事件获得的机制。
+	Epoll在他的接口从一个特殊的/dev中的文件改变成校内他调用，sys_epoll之后，以2.5.46合并到2.5内核树中。另外有为2.4内核提供的旧版本的epoll的补丁。
+	2002年在linux内核邮件列表中，围绕Halloween有一个关于同一epoll，aio和其他别的事件资源的长时间的讨论。讨论也许不会在发生，但是Davide一直努力坚定epoll为通常情况下的首选。
+
+	（c）
+ 
+
+
+
+
 	(c)/dev/poll
 	This is the recommended poll replacement for Solaris.
 	The idea behind /dev/poll is to take advantage of the fact that often poll() is called many times with the same 
