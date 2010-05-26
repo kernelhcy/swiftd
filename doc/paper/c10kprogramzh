@@ -1,15 +1,21 @@
 C10K 问题
 
 	现在的web服务器同时要处理上万个客户端，你不这样认为么？毕竟，现在互联网是一个强大的地方。
+	
 	计算机也同样强大。你可以花1200美元购买一台有1000MHz的CPU，2GB内存和1000Mbit/秒以太网卡的机器。让我们来看，有20000个客户端，每个客户端可以得到50Hz的CPU，100Kbytes的内存和50Kbits每秒的带宽。这不会消耗太多的时间为20000个客户端中的每一个客户端每一秒从磁盘读取4Kbytes的数据然后通过网络发送给她们。（顺便说一句，每个客户端花费0.08美元。一些操作系统费用中，每个客户端100美元的许可费用看起来有点重了！）因此，硬件已经不是瓶颈。
+	
 	1999年，一个最繁忙的ftp站点，cdrom.com，确实同时处理10000个客户端通过一个万兆以太网络。到了2001年，多个ISP服务商提供同样的速度，期望cdrom.com能够持续增长，以成为她们的大商业客户。
+	
 	这时，瘦客户端的计算模型似乎以某种形式回来了---在互联网上，服务器为成千上万的客户端同时提供服务。
+	
 	考虑到这一点，在如何配置操作系统和如何编写代码来支持成千上万的客户端，这里有一些札记。由于是我感兴趣的领域，这些讨论围绕类Unix操作系统，当然，Windows也会提及一点。	
 
 1 相关的网站
+
 	在2003年十月，Felix von Leitner集中了一个优秀的网页并展示了关于网络的可扩展性，完成了比较不同网络系统调用和操作系统的基准。他的其中之一的结论就是Linux2.6内核完全击败了Linux2.4内核，同样，也有许多好的图表可以提供给操组系统开发者很好的思想源泉。（参看Slashdot的注解。看看一些人是怎样做后续基准程序来提高Felix的结果是非常有意思的。）
 
 2 要先看的书。
+
 	如果你还没有读过W. Richard Stevens的Unix网络编程：网络API：套接字联网（卷一），去读一遍吧。书中描述了很多关于编写高性能服务器的I/O策略和陷阱。书中甚至讨论'thundering herd'问题。如果你读完了，去看Jeff Darcy关于高性能服务器设计的札记。
 （另一本Cal Henderson的构建可扩展的web站点（Building Scalable Web Sites）对那些用web服务器而不是写服务器的人更有帮助。）
 
@@ -21,70 +27,49 @@ C10K 问题
 	（4）我自己的轻量级框架的尝试（很遗憾，没有持续更新）：
 		（a）Poller是一个轻量级的C++ I/O框架，实现了使用任何你想要的依赖就绪API（poll，select，/dev/poll，kqueue或者sigio）的水平触发就绪API。它对于比较不同API的表现的基准很有用处。下面这个连接到Poller子类的文档展示了如何使用每一个就绪API。
 		（b）rn是一个轻量级的C I/O框架，是我在Poller之后的第二次尝试。它是LGPL（因此更容易在社区程序中使用），用C编写（因此易于在非C++的程序中使用。）它在一些社区项目中被使用。
+	（5）Matt Welsh在2000年四月份写了一篇关于在构建可扩展服务器是平衡工作线程和事件驱动技术的使用的论文。论文中涉及了Sandstorm I/O框架的一部分。
+	（6）Cory Nelson's Scale!库--一个Windows上的非同步套接字，文件和管道的I/O库。
 
-Matt Welsh wrote a paper in April 2000 about how to balance the use of worker thread and event-driven techniques when building scalable servers. The paper describes part of his Sandstorm I/O framework.
-Cory Nelson's Scale! library - an async socket, file, and pipe I/O library for Windows
+4 I/O策略
+网络软件设计人员有很多选择。下面就是一些：
+	（1）在一个单独的线程中是否处理多个I/O调用并且怎样处理。
+		（a）绝对。始终使用阻塞/同步调用，并且可能的话，使用多线程或多进程实现并发。
+		（b）使用非阻塞调用（例如：write()一个套接字时设置为O_NONBLOCK）来启动I/O，并且使用就绪通知机制（例如：poll()或者/dev/poll）来获得在那个通道上什么时候可以开始下一个I/O。
+		（c）使用异步调用（例如：aio_write()）来开始I/O，并且使用完全通知机制（例如：信号或者完成端口）来获得I/O完成的时间。同时适用于网络和磁盘I/O。
+	（2）怎样控制为每个客户端提供服务的代码。
+		（a）每个客户端一个进程（典型的Unix解决方案，从1980年开始使用）
+		（b）一个操作系统层面的线程处理很多客户端。每个客户端的控制者为：
+			@ 一个用户层面的线程（例如：GNU状态线程，经典的Java绿色线程）
+			@ 一个状态机（有点深奥，但是在一些地方很流行。我的最爱。）。
+			@ 一个续集（有点深奥，但是同样在一些地方很流行）。
+		（c）每个客户端一个操作系统层面的线程（例如：经典的Java本地线程）。
+		（d）每个活动的客户端一个操作系统层面的线程（例如：Tomcat的apache前端，NT完成端口，线程池）。
+	（3）是否使用标准的操作系统服务，或者把一些代码放到内核中。（例如：在一个第三方驱动，内核模块或者虚拟设备驱动（VxD））
 
-4 I/O Strategies
+下面的五种则和很流行：
+	一个线程处理多个客户端，使用非阻塞I/O和水平触发就绪通知机制。
+	一个线程处理多个客户端，使用非阻塞I/O和就绪状态改变通知机制。
+	多个线程处理多个客户端，使用异步I/O。
+	每个线程处理一个客户端，使用阻塞I/O。
+	把服务器代码加到内核中。
+	
+4.1. 一个线程处理多个客户端，使用非阻塞I/O和水平触发就绪通知机制。
 
-Designers of networking software have many options. Here are a few:
-	(1) Whether and how to issue multiple I/O calls from a single thread
-		(a) Don't; use blocking/synchronous calls throughout, and possibly use multiple threads or processes to 
-		    achieve concurrency
-		(b) Use nonblocking calls (e.g. write() on a socket set to O_NONBLOCK) to start I/O, and readiness 
-		    notification (e.g. poll() or /dev/poll) to know when it's OK to start the next I/O on that channel. 
-		    Generally only usable with network I/O, not disk I/O.
-		(c) Use asynchronous calls (e.g. aio_write()) to start I/O, and completion notification (e.g. signals or 
-			completion ports) to know when the I/O finishes. Good for both network and disk I/O.
-	(2) How to control the code servicing each client
-		(a) one process for each client (classic Unix approach, used since 1980 or so)
-		(b) one OS-level thread handles many clients; each client is controlled by:
-			@ a user-level thread (e.g. GNU state threads, classic Java with green threads)
-			@ a state machine (a bit esoteric, but popular in some circles; my favorite)
-			@ a continuation (a bit esoteric, but popular in some circles)
-		(c) one OS-level thread for each client (e.g. classic Java with native threads)
-		(d) one OS-level thread for each active client (e.g. Tomcat with apache front end; NT completion ports; 
-			thread pools)
-	(3) Whether to use standard O/S services, or put some code into the kernel (e.g. in a custom driver, kernel 
-		module, or VxD)
+	将所有网络句柄设置成非阻塞模式，使用select()或者poll()来获知那个网络句柄有数据可读。这个是经典的传统模式。使用这种方案，操作系统内核告诉你那个文件描述符已经就绪，并且告诉你从最后一次内核告诉你这个事件是否你已经做了一些操作在那个文件描述符上。（名词“水平触发”来自计算机硬件设计。和“边际触发”相对。Jonathon Lemon在他的关于kqueue()的BSDCON 2000论文中介绍了这些。）
+	
+	注意：记住内核所发出的就绪通知仅仅是一个示意是很重要的。在你尝试从文件描述符读数据的时候，它可能压根就没有就绪。这就是为什么当使用就绪通知机制时使用非阻塞模式非常重要。
+	这种方法的一个重要瓶颈是当请求的页此时不在核心上，read()或者sendfile()磁盘阻塞。将磁盘文件描述符设置成非阻塞没有什么作用。使用内存映射磁盘文件也一样。服务器第一次需要磁盘I/O时，它阻塞了，所有的客户端必须等待，这样原生非线程效率就被浪费了。
+	
+	这就是异步I/O要去解决的问题。但是在没有异步I/O的系统上，工作线程或进程进行磁盘I/O是依然会遇到这个瓶颈。一个解决方案是使用内存映射文件，如果mincore()标明需要I/O，调用一个工作线程去处理I/O，同时急促处理网络传输。Jef Poskanzer指出Pai, Druschel, 和Zwaenepoel的1999 Flash 网络服务器使用了这个方案。在Usenix '99他们有一个关于这个的讨论。似乎mincore()在一些BSD驱动的Unix，比如FreeBSD和Solaris上已经提供，但mincore()不是单一Unix标注的一部分。多亏Chuck Lever，mincore()作为Linux2.3.51内核的一部分提供。
+	
+	但是2003年11月在freebsd黑客列表中，Vivek Pei et al上报了一个不错的成果，他们利用系统剖析工具剖析它们的Flash Web服务器，然后再攻击其瓶颈。mincore是他们发现的其中之一的瓶颈（试想对所有情况那并不都是一个好办法）。另一个则是sendfile阻塞在磁盘访问上的事实。他们通过引进一个修改版的sendfile()来提高性能，这个修改版的sendfile()在当所需要获取的磁盘页不在核心上时，返回类似于EWOULDBLOCK的信息。（不能确定你如何告诉用户那个也现在在核心中了。。。在我看来，这里真正需要的是aio_sendfile()。）他们优化的结果是在一个1GHz/1GB FreeBSD盒子中，获得了SpecWeb99的800分。这要优于spec.org上其他任何在文件上的方案。
 
-The following five combinations seem to be popular:
-
-	Serve many clients with each thread, and use nonblocking I/O and level-triggered readiness notification
-	Serve many clients with each thread, and use nonblocking I/O and readiness change notification
-	Serve many clients with each server thread, and use asynchronous I/O
-	serve one client with each server thread, and use blocking I/O
-	Build the server code into the kernel
-
-4.1. Serve many clients with each thread, and use nonblocking I/O and level-triggered readiness notification
-
-... set nonblocking mode on all network handles, and use select() or poll() to tell which network handle has data waiting. This is the traditional favorite. With this scheme, the kernel tells you whether a file descriptor is ready, whether or not you've done anything with that file descriptor since the last time the kernel told you about it. (The name 'level triggered' comes from computer hardware design; it's the opposite of 'edge triggered'. Jonathon Lemon introduced the terms in his BSDCON 2000 paper on kqueue().)
-
-Note: it's particularly important to remember that readiness notification from the kernel is only a hint; the file descriptor might not be ready anymore when you try to read from it. That's why it's important to use nonblocking mode when using readiness notification.
-
-An important bottleneck in this method is that read() or sendfile() from disk blocks if the page is not in core at the moment; setting nonblocking mode on a disk file handle has no effect. Same thing goes for memory-mapped disk files. The first time a server needs disk I/O, its process blocks, all clients must wait, and that raw nonthreaded performance goes to waste. 
-This is what asynchronous I/O is for, but on systems that lack AIO, worker threads or processes that do the disk I/O can also get around this bottleneck. One approach is to use memory-mapped files, and if mincore() indicates I/O is needed, ask a worker to do the I/O, and continue handling network traffic. Jef Poskanzer mentions that Pai, Druschel, and Zwaenepoel's 1999 Flash web server uses this trick; they gave a talk at Usenix '99 on it. It looks like mincore() is available in BSD-derived Unixes like FreeBSD and Solaris, but is not part of the Single Unix Specification. It's available as part of Linux as of kernel 2.3.51, thanks to Chuck Lever.
-
-But in November 2003 on the freebsd-hackers list, Vivek Pei et al reported very good results using system-wide profiling of their Flash web server to attack bottlenecks. One bottleneck they found was mincore (guess that wasn't such a good idea after all) Another was the fact that sendfile blocks on disk access; they improved performance by introducing a modified sendfile() that return something like EWOULDBLOCK when the disk page it's fetching is not yet in core. (Not sure how you tell the user the page is now resident... seems to me what's really needed here is aio_sendfile().) The end result of their optimizations is a SpecWeb99 score of about 800 on a 1GHZ/1GB FreeBSD box, which is better than anything on file at spec.org.
-
-There are several ways for a single thread to tell which of a set of nonblocking sockets are ready for I/O:
-
-	(a) The traditional select() 
-	Unfortunately, select() is limited to FD_SETSIZE handles. This limit is compiled in to the standard library and 
-	user programs. (Some versions of the C library let you raise this limit at user app compile time.)
-	See Poller_select (cc, h) for an example of how to use select() interchangeably with other readiness 
-	notification schemes.
-
-	(b) The traditional poll() 
-	There is no hardcoded limit to the number of file descriptors poll() can handle, but it does get slow about a 
-	few thousand, since most of the file descriptors are idle at any one time, and scanning through thousands of 
-	file descriptors takes time.
-	Some OS's (e.g. Solaris 8) speed up poll() et al by use of techniques like poll hinting, which was implemented 
-	and benchmarked by Niels Provos for Linux in 1999.
-
-	See Poller_poll (cc, h, benchmarks) for an example of how to use poll() interchangeably with other readiness 
-	notification schemes.
-
+对于一个单线程，有多种方法可以获知在一个非阻塞的套接字集合中，那个套接字已经有I/O就绪：
+	（a）传统的select().
+	不幸的是，select()的FD_SETSIZE有限制。这个限制被编译到标准库和用户程序中。（一些版本的C库可以让你在用户程序编译期间提高这个限制。）请查看Poller_select(cc,h)关于如何使用select()和其他就绪通知方案互换的例子。
+	（b）传统的poll()
+	没有关于poll()所能处理的文件描述符的数量的硬编码的限制，但是由于在某一时间上，大多数的文件描述符处于等待状态并且扫描上千的文件描述符需要花费很多时间，当描述符的数量上千之后，它开始变慢。一些操作系统通过使用一些技术，比如轮询示意来提高poll()的速度。轮询示意在1999年被Niels Provos为Linux实现并成为标准。请查看Poller_select(cc,h)关于如何使用poll()和其他就绪通知方案互换的例子。
+	
 	(c)/dev/poll
 	This is the recommended poll replacement for Solaris.
 	The idea behind /dev/poll is to take advantage of the fact that often poll() is called many times with the same 
@@ -537,3 +522,4 @@ Copyright 1999-2006 Dan Kegel
 dank@kegel.com
 Last updated: 2 Sept 2006
 [Return to www.kegel.com]
+
