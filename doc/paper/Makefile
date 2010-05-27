@@ -5,9 +5,9 @@ midppt:midcheckppt.tex
 	acroread 中期检查PPT.pdf &
 
 paper:mypaper.tex
-	xelatex -output-directory=./tempfiles mypaper.tex &&\
-	xelatex -output-directory=./tempfiles mypaper.tex &&\
-	mv ./tempfiles/mypaper.pdf 毕业设计论文.pdf &&\
+	xelatex -output-directory=./tempfiles mypaper.tex
+	xelatex -output-directory=./tempfiles mypaper.tex
+	mv ./tempfiles/mypaper.pdf 毕业设计论文.pdf
 	acroread 毕业设计论文.pdf &
 	
 paperppt:paperppt.tex
