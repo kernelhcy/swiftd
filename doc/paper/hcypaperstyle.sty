@@ -43,22 +43,26 @@
 \newcommand{\lfive}{\fontsize{9pt}{13.5pt}\selectfont}		%小五
 
 %字体命令
-%\newcommand{\song}{\fontspec{SimSun}}
+\newcommand{\song}{\fontspec{SimSun}}
 %\newcommand{\kai}{\fontspec{KaiTi}}
 %\newcommand{\cp}{\fontspec{Courier 10 Pitch}}
 \newcommand{\cn}{\fontspec{Courier New}}
-%\newcommand{\tnr}{\fontspec{Times New Roman}}
+\newcommand{\tnr}{\fontspec{Times New Roman}}
 
 \XeTeXlinebreaklocale "zh"  % 表示用中文的断行
 \XeTeXlinebreakskip = 0pt plus 1pt % 多一点调整的空间
 
 %%摘要格式
 %中文格式
-\newcommand{\zhabstract}{\sectionmark{摘\quad 要} {\three \center 摘\quad 要 \\}}
+\newcommand{\zhabstract}{\chapter*{摘\quad 要} \chaptermark{摘\quad 要}}
 \newcommand{\zhkeywords}{~\\\hspace{-2em} \five\textbf{关键字：}}
 %英文格式
-\newcommand{\enabstract}{\section*{ABSTRACT}\sectionmark{ABSTRACT}}
+\newcommand{\enabstract}{\chapter*{ABSTRACT}\chaptermark{ABSTRACT}}
 \newcommand{\enkeywords}{\five\textbf{KEY WORDS: }}
+
+%1.2倍行距
+\linespread{1.2}
+
 
 %段落首行缩进
 \makeatletter
@@ -69,28 +73,31 @@
 
 %标题格式
 \usepackage[raggedleft]{titlesec}
-\titleformat{\chapter}{\center \three \bf}{第 \thechapter{} 章}{1em}{}
+\titleformat{\chapter}{\center \three \bf}{\thechapter{}}{1em}{}
 \titleformat{\section}{\lthree \bf}{\thesection}{1em}{}
 \titleformat{\subsection}{\four \bf}{\thesubsection}{1em}{}
 \titleformat{\subsubsection}{\four \bf}{\thesubsubsection}{1em}{}
-\titlespacing{\section}{0em}{3ex}{*4}
+\titlespacing{\section}{0em}{*4}{*2}
 \titlespacing{\subsection}{2em}{*2}{*1}
 \titlespacing{\subsubsection}{4em}{*1}{*1}
 
 
 %目录格式
-\usepackage{titletoc}	
-\titlecontents{section}[0em]{\rm\vspace{0.3\baselineskip}}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
-\titlecontents{subsection}[0.5em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
-\titlecontents{subsubsection}[1em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[0.6pc]{$\cdot$}\rm\contentspage}
+\usepackage{titletoc}
+%\dottedcontents{chapter}[0em]{}{1em}{0.5pc}
+%\dottedcontents{section}[1em]{}{2em}{0.5pc}
+%\dottedcontents{subsection}[2em]{}{3em}{0.5pc}
+\titlecontents{chapter}[0em]{\rm\vspace{0.3\baselineskip}}{\rm\thecontentslabel\quad}{}{\titlerule*[1pc]{\ldots}\rm\contentspage}
+\titlecontents{section}[0.5em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[1pc]{\ldots}\rm\contentspage}
+\titlecontents{subsection}[1em]{\rm}{\rm\thecontentslabel\quad}{}{\titlerule*[1pc]{\ldots}\rm\contentspage}
 
 
 \renewcommand {\today}{\number\year 年\number\month 月\number\day 日}
 
 \renewcommand {\contentsname}{目\quad 录}
-%\renewcommand {\appendixtocname}{附\quad 录}
-%\renewcommand {\appendixpagename}{附\quad 录}
-%\renewcommand {\refname}{参考文献}
+\newcommand {\appendixtocname}{附\quad 录}
+\newcommand {\appendixpagename}{附\quad 录}
+\newcommand {\refname}{参考文献}
 
 \renewcommand {\figurename}{\five 图}
 \renewcommand {\thefigure}{\arabic{section}-\arabic{figure}}
@@ -98,10 +105,12 @@
 \renewcommand {\tablename}{\five 表}
 \renewcommand {\thetable}{\arabic{section}-\arabic{table}}
 \usepackage{booktabs}
-\renewcommand {\heavyrulewidth}{2.25pt}	%表格外线宽
+\renewcommand {\heavyrulewidth}{1.5pt}	%表格外线宽
 \renewcommand {\lightrulewidth}{1pt}	%表格内线宽
 %用如下形式插入三线表
 %\begin{table}[htbp]
+%\setlength{\abovecaptionskip}{0pt} %设置标题上下的宽度。图片也一样 
+%\setlength{\belowcaptionskip}{10pt} 
 %\caption{表格测试}
 %\centering
 %\begin{tabularx}{\textwidth}{XXXXl} %最后一列是空的。这样可以是倒数第二列居中，否则会报错或不居中。
