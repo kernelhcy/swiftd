@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://web.resource.org/cc/"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   width="244.42021"
+   height="347.46429"
+   id="svg2211"
+   sodipodi:version="0.32"
+   inkscape:version="0.45.1"
+   sodipodi:docname="Finite_state_machine_example_with_comments.svg"
+   sodipodi:docbase="/home/hal/Desktop/Wikipedia FSM"
+   inkscape:output_extension="org.inkscape.output.svg.inkscape">
+  <metadata
+     id="metadata53">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <sodipodi:namedview
+     inkscape:window-height="666"
+     inkscape:window-width="847"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     guidetolerance="10.0"
+     gridtolerance="10.0"
+     objecttolerance="10.0"
+     borderopacity="1.0"
+     bordercolor="#666666"
+     pagecolor="#ffffff"
+     id="base"
+     inkscape:zoom="3.5409848"
+     inkscape:cx="131.40841"
+     inkscape:cy="224.97102"
+     inkscape:window-x="565"
+     inkscape:window-y="278"
+     inkscape:current-layer="svg2211" />
+  <defs
+     id="defs2214">
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       style="overflow:visible"
+       id="Arrow2Lend">
+      <path
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.97309,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="matrix(-1.1,0,0,-1.1,-1.1,0)"
+         style="font-size:12px;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         id="path3204" />
+    </marker>
+    <marker
+       refX="0"
+       refY="0"
+       orient="auto"
+       style="overflow:visible"
+       id="Arrow2Lstart">
+      <path
+         d="M 8.7185878,4.0337352 L -2.2072895,0.016013256 L 8.7185884,-4.0017078 C 6.97309,-1.6296469 6.9831476,1.6157441 8.7185878,4.0337352 z "
+         transform="matrix(1.1,0,0,1.1,1.1,0)"
+         style="font-size:12px;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+         id="path3201" />
+    </marker>
+  </defs>
+  <path
+     d="M 78.270614,21.267687 L 117.55292,31.356585"
+     style="fill:#0000ff;fill-opacity:1;fill-rule:evenodd;stroke:#0000ff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="path3303" />
+  <g
+     transform="translate(-4.8907142,-56.071428)"
+     id="g2260">
+    <g
+       id="g2246">
+      <g
+         id="g2236">
+        <path
+           d="M 214.92857 106.25 A 47.964287 47.964287 0 1 1  118.99999,106.25 A 47.964287 47.964287 0 1 1  214.92857 106.25 z"
+           transform="translate(0,-1.214285)"
+           style="color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+           id="path2224" />
+        <path
+           d="M 125.0048,105.03571 L 208.92375,105.03571"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.92369175px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           id="path2234" />
+      </g>
+      <text
+         x="167.24162"
+         y="75.285721"
+         style="font-size:16px;font-style:normal;font-weight:bold;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Helvetica"
+         id="text2240"
+         xml:space="preserve"><tspan
+           x="167.24162"
+           y="75.285721"
+           id="tspan2242">1</tspan><tspan
+           x="167.24162"
+           y="95.285721"
+           id="tspan2244">Opened</tspan></text>
+    </g>
+    <text
+       x="131.47112"
+       y="126.28571"
+       style="font-size:12px;font-style:normal;font-weight:bold;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Helvetica"
+       id="text2254"
+       xml:space="preserve"><tspan
+         x="131.47112"
+         y="126.28571"
+         id="tspan2256">E: <tspan
+   style="font-size:12px;font-style:italic;font-weight:normal"
+   id="tspan2258">open door</tspan></tspan></text>
+  </g>
+  <g
+     transform="translate(-4.8907142,193.46428)"
+     id="g2294">
+    <g
+       id="g2296">
+      <g
+         id="g2298">
+        <path
+           d="M 214.92857 106.25 A 47.964287 47.964287 0 1 1  118.99999,106.25 A 47.964287 47.964287 0 1 1  214.92857 106.25 z"
+           transform="translate(0,-1.214285)"
+           style="color:#000000;fill:#ffffff;fill-opacity:1;fill-rule:nonzero;stroke:#000000;stroke-width:2;stroke-linecap:butt;stroke-linejoin:miter;marker:none;marker-start:none;marker-mid:none;marker-end:none;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;visibility:visible;display:inline;overflow:visible;enable-background:accumulate"
+           id="path2300" />
+        <path
+           d="M 125.0048,105.03571 L 208.92375,105.03571"
+           style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:0.92369175px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+           id="path2302" />
+      </g>
+      <text
+         x="167.24162"
+         y="75.285721"
+         style="font-size:16px;font-style:normal;font-weight:bold;text-align:center;text-anchor:middle;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Helvetica"
+         id="text2304"
+         xml:space="preserve"><tspan
+           x="167.24162"
+           y="75.285721"
+           id="tspan2306">2</tspan><tspan
+           x="167.24162"
+           y="95.285721"
+           id="tspan2308">Closed</tspan></text>
+    </g>
+    <text
+       x="131.47112"
+       y="126.28571"
+       style="font-size:12px;font-style:normal;font-weight:bold;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Helvetica"
+       id="text2310"
+       xml:space="preserve"><tspan
+         x="131.47112"
+         y="126.28571"
+         id="tspan2312">E: <tspan
+   style="font-style:italic;font-weight:normal"
+   id="tspan2201">close </tspan><tspan
+   style="font-size:12px;font-style:italic;font-weight:normal"
+   id="tspan2314">door </tspan></tspan></text>
+  </g>
+  <text
+     x="46.057198"
+     y="22.857145"
+     style="font-size:14px;font-style:italic;font-weight:normal;fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Helvetica"
+     id="text2328"
+     xml:space="preserve"><tspan
+       x="46.057198"
+       y="22.857145"
+       id="tspan2330">state</tspan></text>
+  <text
+     x="24.176947"
+     y="108.41861"
+     style="font-size:14px;font-style:italic;font-weight:normal;fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Helvetica"
+     id="text3305"
+     xml:space="preserve"><tspan
+       x="24.176947"
+       y="108.41861"
+       id="tspan3307">transition</tspan></text>
+  <path
+     d="M 82.547782,104.10947 L 133.96285,118.95279"
+     style="fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:0.96803981px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="path3309" />
+  <text
+     x="-0.294"
+     y="224.3336"
+     style="font-size:14px;font-style:italic;font-weight:normal;fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Helvetica"
+     id="text3311"
+     xml:space="preserve"><tspan
+       x="-0.294"
+       y="224.3336"
+       id="tspan3313">transition condition</tspan></text>
+  <path
+     d="M 67.967058,209.73689 L 106.60539,172.81582"
+     style="fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="path3315" />
+  <g
+     transform="translate(-2.1268554,-65.516354)"
+     id="g3353">
+    <text
+       x="80.711189"
+       y="232.97935"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Monaco CY"
+       id="text3317"
+       xml:space="preserve"><tspan
+         x="80.711189"
+         y="232.97935"
+         style="font-family:Monospace"
+         id="tspan3319">close_door</tspan></text>
+    <text
+       x="182.0295"
+       y="232.94713"
+       style="font-size:12px;font-style:normal;font-weight:normal;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Monospace"
+       id="text3321"
+       xml:space="preserve"><tspan
+         x="182.0295"
+         y="232.94713"
+         id="tspan3323">open_door</tspan></text>
+  </g>
+  <g
+     id="g2214">
+    <path
+       style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 185.21875,94.0625 L 184.28125,94.4375 L 208.75,156.6875 L 209.6875,156.3125 L 185.21875,94.0625 z "
+       id="path2207" />
+    <path
+       id="path2220"
+       style="font-size:12px;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+       d="M 184.5223,105.82384 L 184.23844,93.021695 L 192.74851,102.59009 C 189.61769,101.75775 186.29929,103.07411 184.5223,105.82384 z " />
+  </g>
+  <path
+     d="M 144.3851,93.821892 L 118.62621,156.07254"
+     style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="path3380" />
+  <path
+     d="M 183.45275,254.81495 L 209.21164,172.81582"
+     style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="path3382" />
+  <g
+     id="g2206">
+    <path
+       style="fill:#000000;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       d="M 118.25,173.53125 L 117.28125,173.8125 L 142.1875,252.8125 L 143.15625,252.53125 L 118.25,173.53125 z "
+       id="path3384" />
+    <path
+       id="path2212"
+       style="font-size:12px;fill-rule:evenodd;stroke-width:0.625;stroke-linejoin:round"
+       d="M 143.68575,241.13852 L 143.08388,253.92966 L 135.25566,243.79583 C 138.32146,244.84262 141.72291,243.75882 143.68575,241.13852 z " />
+  </g>
+  <text
+     x="26.323519"
+     y="340.67789"
+     style="font-size:14px;font-style:italic;font-weight:normal;fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;font-family:Helvetica"
+     id="text3386"
+     xml:space="preserve"><tspan
+       x="26.323519"
+       y="340.67789"
+       id="tspan3388">entry action</tspan></text>
+  <path
+     d="M 101.0243,334.66751 C 125.49525,315.34834 125.49525,315.34834 125.49525,315.34834"
+     style="fill:none;fill-rule:evenodd;stroke:#0000ff;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+     id="path3390" />
+</svg>
