@@ -39,24 +39,94 @@ I will translate it later...
 	目前，主流的web服务器包括Apache，Lighttpd和Nginx。
 	\begin{itemize}
 		\item Apache是世界排名第一的web服务器，是Apache软件基金会的一个开放源码的web服务器。Apache可以运行在几乎所有的计算机平台上，如，Linux，Windows，Unix等。Apache快速、可靠并且可通过简单的API扩充。Apache web服务器具有如下特点：
-		\begin{enumerate}
-			\item 支持最新的HTTP/1.1通信协议
-　　			\item 拥有简单而强有力的基于文件的配置过程
-　　			\item 支持通用网关接口和FastCGI
-　　			\item 支持基于IP和基于域名的虚拟主机
-　　			\item 支持多种方式的HTTP认证
-　　			\item 集成Perl处理模块
+		\begin{itemize}
+			\item 支持通用网关接口和FastCGI
+　　			 \item 支持多种方式的HTTP认证
 　　			\item 支持实时监视服务器状态和定制服务器日志
 　　			\item 支持服务器端包含指令(SSI)
 　　			\item 支持安全Socket层(SSL)
 　　			\item 提供用户会话过程的跟踪
 　　			\item 通过第三方模块可以支持Java Servlets
-		\end{enumerate}
-		\item Lighttpd是一个德国人领导的开源软件，根本在于提供一个专门针对高性能网站，安全、快速、兼容性好并且灵活的web服务器。Lighttpd具有非常低的内存开销，cpu占用率低，较好的性能以及丰富的模块。Lighttpd主要针对Unix/Linux平台，通过Cygwin也可以运行在Windows平台上，具有较好的夸平台特性。
-		\item Nignx
+		\end{itemize}
+		\item Lighttpd是一个德国人领导的开源软件，根本在于提供一个专门针对高性能网站，安全、快速、兼容性好并且灵活的web服务器。Lighttpd具有非常低的内存开销，cpu占用率低，较好的性能以及丰富的模块。Lighttpd主要针对Unix/Linux平台，通过Cygwin也可以运行在Windows平台上，具有较好的夸平台特性。Lighttpd具有如下特性：
+		\begin{itemize}
+			\item 虚拟主机
+　　			\item virtual directory listings URL-Rewriting,HTTP-Redirects
+　　			\item automatic expiration offiles
+　　			\item 大文件支持(64bit file offsets)
+　　			\item 断点续传(start-end,start-,-end,multipleranges)
+　　			\item 压缩输出(支持deflate,gzip,bzip2)
+　　			\item CGI, FastCGI
+		\end{itemize}
+		\item Nignx("engine x")是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/SMTP代理服务器。 Nginx是由Igor Sysoev为俄罗斯访问量第二的Rambler.ru站点开发的，它已经在该站点运行超过两年半了。Igor将源代码以类BSD许可证的形式发布。尽管还是测试版，但是Nginx已经因为它的稳定性、丰富的功能集、示例配置文件和低系统资源的消耗而闻名了。Nginx具有如下特点：
+		\begin{itemize}
+			\item 处理静态文件，索引文件以及自动索引
+　　			\item 反向代理加速(无缓存)，简单的负载均衡和容错
+　　			\item FastCGI，简单的负载均衡和容错
+　　			\item 模块化的结构
+　　			\item SSL和TLS SNI支持
+　　			\item IMAP/POP3代理服务功能
+　　			\item 使用外部 HTTP认证服务器重定向用户到IMAP/POP3后端
+　　			\item 使用外部 HTTP认证服务器认证用户后连接重定向到内部的SMTP后端
+		\end{itemize}
 	\end{itemize}
+	
+	在这三个主流服务器的当前版本中，对于新的功能模块，都必须重启服务器才能是模块生效。然而有些时候，在怎加服务器功能的时候，不能对服务器进行重启，否则将会造成客户端当前状态的丢失，致使客户端当前正在进行的所有操作都将变的无效。比如，服务器和客户端保持了一个持久的连接，服务器不断的处理来自客户端的请求，而每个请求之间又保持着某种数据上的联系。也就是，前一个请求的处理结果影响下一个请求的处理结果。这时候，如果需要增加服务器的功能，同时增加的功能要立刻应用到当前的连接中，那么，服务器就不能进行重启。一旦服务器进行重启，由于HTTP协议不记录连接的状态，当前连接的所有状态都将丢失，那么，客户端的所有请求都将作废并重新开始。在一些场合，这将造成很严重的后果。
+	
 \subsection{动态链接技术背景}
 
+	\subsubsection{动态链接技术简介}
+	动态链接技术是指，在程序的链接阶段，不对一些目标文件进行链接，等到程序运行时，再对这些目标文件进行链接的技术。也就是说，对于一些目标文件，把链接的过程推迟到了运行时在进行。
+	
+	动态链接相对于静态链接有很多优点。对于静态链接，存在很严重的内存和磁盘空间的浪费，模块的更新也很困难。对于多个使用同一个库的程序，如果使用静态链接，那么每个程序的目标文件中都保存有这个库的一个副本。在程序运行的时候，每个程序在内存中也都有一个这个库的副本，这就对内存造成了很大的浪费。比如，在Linux系统中，一个普通的程序会使用到的C语言静态库至少在1MB以上，那么，如果在机器中有100个这样的程序，就要浪费掉近100MB的内存。如果磁盘中有2000个这样的程序，就要浪费近2GB的磁盘空间，很多Linux系统中，\verb|/usr/bin|下就有数千个可执行程序。另外，由于库是直接链接到程序的目标文件中的，一旦对库进行更新，将不会影响到程序中的副本，除非对程序进行重新编译。如果要对系统中所有使用这个库的程序进行重新编译，将是一个非常巨大的工作，很多情况下是不可能完成的（比如，没有程序的源文件）。比如，更新了Linux系统中的C语言静态库，那么就要对\verb|/usr/bin|下的那数千的程序进行重新链接。这将是一个繁重的工作。如果更新的是Windows系统中的库，由于很多程序无法获得源代码，也就无法进行重新链接，那么也就无法进行更新。
+	
+	动态链接则可以很好的解决上面的两个问题。当库是以动态链接的方式链接到程序中时，程序的目标文件中不包含有库的副本，仅仅是在调用库的地方做一个标记，同时在目标文件中记录所依赖的动态库。在程序运行时，操作系统从程序的目标文件中获知程序所依赖的动态库，然后在系统中查找这些动态库。接着，判断这些库是否已经加载到内存中，如果加载了，怎不需要在加载库，否则将库加载到内存中。如果有另一个程序需要同样的动态库，则不需要在将库加载到内存中，可以共享的使用内存中的副本。此时无论系统中运行了多少程序，所有的共享库在内存中只有一个副本，这就大大的提高了内存的使用效率。当需要对库进行升级的时候，仅仅需要将旧的库文件用新的覆盖掉，然后，重启系统中所有使用这个库的程序，那么所有程序都将使用新版的库。这就避免了对程序进行重新的链接。程序重启之后，库的更新工作急完成了。
+	
+	由于动态链接技术的这些特点，使得动态链接还具有另外一个特点：在程序运行时可以动态地选择加载各种程序模块。这个优点就可以用来制作程序的插件（Plug-in）。
+	
+	\subsubsection{动态链接的基本实现}
+	动态链接设计运行时的链接及多个文件的加载，必须要有操作系统的支持，因为动态链接的情况下，进程的虚拟地址空间的分部会比静态链接情况下更为复杂。目前主流的操组系统的几乎都支持动态链接这种方式，在Linux系统中，ELF动态链接文件被称为动态共享对像（DSO，Dynamic Shared Objects），简称共享对象，他们一般是以“.so”为扩展名的一些文件。在Window系统中，动态链接文件被称为动态链接库（DLL, Dynamicla Linking Library），它们通常是我们平时很常见的".dll"为扩展名的文件。
+	
+	在程序被加载时，系统的动态链接器会将程序所需要的所有动态链接库装载到进程的地址空间中，并且程序中所有未决议的符号绑定到响应的动态链接库中，并进行重定位工作。动态链接把链接这个过程从程序加载前推迟到程序加载时，这会造成程序性能上的一些损失。据估算，动态链接与静态链接相比，性能损失大约在5\%以下。
+	
+	\subsubsection{动态库的创建和使用}
+	在Linux下和Window下，动态库的创建和使用是不相同的。由于本课题主要是在Linux系统中进行，因此在这里，将通过一个例子来简单的介绍在Linux下动态库的使用。例子的程序源码如下：
+	\begin{verbatim}
+	/* Program1.c*/
+	#include "Lib.h"
+	int main(int argc, char *argv[])
+	{
+		foobar(1);
+		return 0;
+	}
+	
+	/*Program2.c*/
+	#include "Lib.h"
+	int main(int argc, char *argv[])
+	{
+		foobar(2);
+		return 0;
+	}
+	
+	/*Lib.c*/
+	#include <stdio.h>
+	void foobar(int i)
+	{
+		printf("Printing from Lib.so %d\n", i);
+	}
+	/*Lib.h*/
+	#ifndef LIB_H
+	#define LIB_H
+	void foobar(int i);
+	#endif
+	\end{verbatim}
+	
+	程序很简单，两个程序的主要模块Program1.c和Program2.c分别调用Lib.c里面的foobar（）函数。
+	在Linux下，我们使用gcc讲Lib.c编译成一个共享库：
+	\begin{verbatim}
+	gcc -fPIC -shared -o Lib.so Lib.c
+	\end{verbatim}
+	
 \section{课题目标及作者的主要工作}
 
 \chapter{服务器设计和实现技术}
