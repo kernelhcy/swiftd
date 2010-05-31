@@ -29,7 +29,16 @@ int error_page_get_new(server *srv, connection *con, buffer *errorpage)
 	buffer_append_string_len(errorpage, CONST_STR_LEN("<h3>"));
 	buffer_append_string(errorpage, get_http_status_name(con -> http_status));
 	buffer_append_string_len(errorpage, CONST_STR_LEN("</h3>"));
+
+	buffer_append_string_len(errorpage, CONST_STR_LEN("<center>"));
+	if(con -> http_status == 404)
+	{
+		buffer_append_string(errorpage, "<img src='");
+		//buffer_append_string_buffer(errorpage, srv -> srvconf.docroot);
+		buffer_append_string(errorpage, "/404.jpg'/>");
+	}
 	
+	buffer_append_string_len(errorpage, CONST_STR_LEN("</center>"));
 	buffer_append_string_len(errorpage, CONST_STR_LEN("</br>"));
 	buffer_append_string_len(errorpage, CONST_STR_LEN("</body>"));
 	buffer_append_string_len(errorpage, CONST_STR_LEN("</html>"));
