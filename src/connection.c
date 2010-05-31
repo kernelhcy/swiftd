@@ -434,7 +434,7 @@ static int connection_network_read(server *srv, connection *con, chunkqueue *cq)
 		log_error_write(srv, __FILE__, __LINE__, "s", "ioctl error. FIONREAD.");
 		return -1;
 	}
-	log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
+	//log_error_write(srv, __FILE__, __LINE__, "sd", "the data (to read) length ", need_to_read);
 		
 	if(0 == need_to_read)
 	{
@@ -556,7 +556,7 @@ static int connection_handle_read(server *srv, connection *con)
 	
 	if (con -> is_readable)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "sd", "Read the data from the client. fd:", con -> fd);
+	//	log_error_write(srv, __FILE__, __LINE__, "sd", "Read the data from the client. fd:", con -> fd);
 		
 		switch(connection_network_read(srv, con, con -> read_queue))
 		{
@@ -682,7 +682,7 @@ static int connection_handle_read(server *srv, connection *con)
 		//删除已经处理过的数据。
 		int rmcnt = chunkqueue_remove_finished_chunks(con -> read_queue);
 		//log_error_write(srv, __FILE__, __LINE__, "sd", "Remove finshed chunks : ", rmcnt);
-		log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
+		//log_error_write(srv, __FILE__, __LINE__, "sb", "HTTP Header: ", con -> request.request);
 		connection_set_state(srv, con, CON_STATE_REQUEST_END);
 	}
 	pthread_mutex_unlock(& con -> read_queue_lock);
@@ -694,7 +694,7 @@ static int connection_handle_read(server *srv, connection *con)
  */
 static int connection_handle_read_post(server *srv, connection *con)
 {
-	log_error_write(srv, __FILE__, __LINE__, "s", "Read POST data.");
+//	log_error_write(srv, __FILE__, __LINE__, "s", "Read POST data.");
 	
 	if (con -> is_readable)
 	{
@@ -774,8 +774,8 @@ static int connection_handle_read_post(server *srv, connection *con)
 			}
 		}
 		chunkqueue_remove_finished_chunks(con -> read_queue);
-		log_error_write(srv, __FILE__, __LINE__, "sd", "Post data len:"
-							, chunkqueue_length(con -> request_content_queue));
+	//	log_error_write(srv, __FILE__, __LINE__, "sd", "Post data len:"
+	//						, chunkqueue_length(con -> request_content_queue));
 		if(0 == weneed)
 		{
 			log_error_write(srv, __FILE__, __LINE__, "s", "We have got enough POST data.");
@@ -817,7 +817,7 @@ static int connection_handle_write(server *srv, connection *con)
 	}
 	
 	con -> is_writable = 0;
-	log_error_write(srv, __FILE__, __LINE__, "s", "write data to client.");
+//	log_error_write(srv, __FILE__, __LINE__, "s", "write data to client.");
 		
 	//设置socket为TCP_CORK
 	int val = 1;
@@ -827,13 +827,13 @@ static int connection_handle_write(server *srv, connection *con)
 	switch(network_write(srv, con))
 	{
 		case HANDLER_GO_ON:
-			log_error_write(srv, __FILE__, __LINE__, "s", "Write Going On.");
+			//log_error_write(srv, __FILE__, __LINE__, "s", "Write Going On.");
 			setsockopt(con -> fd, IPPROTO_TCP, TCP_CORK, &val, sizeof(val));
 			return 0;
 		case HANDLER_FINISHED:
 			con -> write_request_ts = 0;
 			connection_set_state(srv, con, CON_STATE_RESPONSE_END);
-			log_error_write(srv, __FILE__, __LINE__, "s", "Write done. Go to Response End.");
+		//	log_error_write(srv, __FILE__, __LINE__, "s", "Write done. Go to Response End.");
 			setsockopt(con -> fd, IPPROTO_TCP, TCP_CORK, &val, sizeof(val));
 			return 0;
 		case HANDLER_ERROR:
@@ -865,13 +865,13 @@ static handler_t connection_fdevent_handler(void *serv, void *context, int reven
 	//log_error_write(srv, __FILE__, __LINE__, "sdsd", "fd:", con -> fd, "events:", revents);
 	if (revents & FDEVENT_IN)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "sd", "readable fd:", con -> fd);
+		//log_error_write(srv, __FILE__, __LINE__, "sd", "readable fd:", con -> fd);
 		con -> is_readable = 1;
 	}
 	
 	if (revents & FDEVENT_OUT)
 	{
-		log_error_write(srv, __FILE__, __LINE__, "sd", "writeable fd:", con -> fd);
+	//	log_error_write(srv, __FILE__, __LINE__, "sd", "writeable fd:", con -> fd);
 		con -> is_writable = 1;
 		con -> write_request_ts = srv -> cur_ts;
 	}
@@ -964,9 +964,9 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 		
 		return NULL;	
 	}
-	log_error_write(srv, __FILE__, __LINE__, "sd", "accept a fd:", fd);
+//	log_error_write(srv, __FILE__, __LINE__, "sd", "accept a fd:", fd);
 	connection *con = connection_get_new(srv);
-	log_error_write(srv, __FILE__, __LINE__, "ss", "new connection state:", connection_get_state_name(con -> state));
+//	log_error_write(srv, __FILE__, __LINE__, "ss", "new connection state:", connection_get_state_name(con -> state));
 	if (NULL == con)
 	{
 		return NULL;
@@ -978,8 +978,8 @@ connection* connection_accept(server *srv, server_socket *srv_sock)
 	++srv -> con_opened;
 	
 	fdevent_register(srv -> ev, fd, connection_fdevent_handler, (void *)con);
-	log_error_write(srv, __FILE__, __LINE__,"sd"
-						, "Register a connection socket fd in fdevent. fd:",fd);
+//	log_error_write(srv, __FILE__, __LINE__,"sd"
+//						, "Register a connection socket fd in fdevent. fd:",fd);
 	
 	//设置连接socket fd为非阻塞。
 	if (-1 == fdevent_fcntl(srv -> ev, con -> fd))
@@ -1027,7 +1027,7 @@ static int connection_handle_close(server *srv, connection *con)
 	
 	//关闭连接。
 	//直接关闭两个方向。
-	log_error_write(srv, __FILE__, __LINE__, "sd", "shutdown fd:", con -> fd);
+//	log_error_write(srv, __FILE__, __LINE__, "sd", "shutdown fd:", con -> fd);
 	if (-1 == shutdown(con -> fd, SHUT_RDWR))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "ssd", "shutdown error."
@@ -1038,7 +1038,7 @@ static int connection_handle_close(server *srv, connection *con)
 	 * 这必须再调用一次关闭。
 	 * shutdown仅仅是关闭了连接，没有关闭socket。
 	 */
-	log_error_write(srv, __FILE__, __LINE__, "sd", "close fd: ", con -> fd);
+//	log_error_write(srv, __FILE__, __LINE__, "sd", "close fd: ", con -> fd);
 	if ( -1 == close(con -> fd))
 	{
 		log_error_write(srv, __FILE__, __LINE__, "ssd", "close error."
@@ -1072,9 +1072,9 @@ int connection_state_machine(server *srv, connection *con)
 		}
 		
 		old_state = con -> state;
-		log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
-						, connection_get_state_name(con -> state), "fd:", con -> fd
-						, "connection ndx:", con -> ndx);
+	//	log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
+	//					, connection_get_state_name(con -> state), "fd:", con -> fd
+	//					, "connection ndx:", con -> ndx);
 			
 		switch(con -> state)
 		{

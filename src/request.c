@@ -821,8 +821,8 @@ int http_parse_request(server *srv, connection *con)
  							buffer_copy_string_len(ds -> key, key, key_len);
  							buffer_copy_string_len(ds -> value, value, value_len);
  							
- 							log_error_write(srv, __FILE__, __LINE__, "sbsb", "key:", ds -> key
- 														, "value:", ds -> value);
+ 						//	log_error_write(srv, __FILE__, __LINE__, "sbsb", "key:", ds -> key
+ 						//								, "value:", ds -> value);
  							
  							
  							/*

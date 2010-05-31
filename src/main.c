@@ -670,15 +670,15 @@ int main(int argc, char *argv[])
 		while(--n >= 0)
 		{
 			ndx = fdevent_event_get_next_ndx(srv -> ev, ndx);
-			log_error_write(srv, __FILE__, __LINE__, "sd", "fdevent_get_next_ndx : ", ndx);
+			//log_error_write(srv, __FILE__, __LINE__, "sd", "fdevent_get_next_ndx : ", ndx);
 			fd  = fdevent_event_get_fd(srv -> ev, ndx);
-			log_error_write(srv, __FILE__, __LINE__, "sd", "fdevent_get_fd : ", fd);
+			//log_error_write(srv, __FILE__, __LINE__, "sd", "fdevent_get_fd : ", fd);
 			fds_with_event[fd] = 1; 		//标记其发生了IO事件。
 			revents = fdevent_event_get_revent(srv -> ev, ndx);
 			handler = fdevent_event_get_handler(srv -> ev, fd);
 			ctx = fdevent_event_get_context(srv -> ev, fd);			
 			
-			log_error_write(srv, __FILE__, __LINE__, "sd", "fd got IO event.", fd);
+			//log_error_write(srv, __FILE__, __LINE__, "sd", "fd got IO event.", fd);
 			
 			jc = job_ctx_get_new(srv);
 			if (NULL == jc)
