@@ -27,10 +27,6 @@
 	headsep=1.2cm,footskip=0.75cm,%
 	twoside,a4paper]{geometry}
 
-%chapter仅仅是另起一个新页，而不是必须在奇数页（早成空白页）。
-%要配合openany选项使用。
-\cleardoublepage
-
 %中英混排
 \usepackage{xeCJK}
 \setmainfont{Times New Roman} 		%默认字体，默认英文字体。
@@ -100,7 +96,7 @@
 \renewcommand {\contentsname}{目\quad 录}
 \newcommand {\appendixtocname}{附\quad 录}
 \newcommand {\appendixpagename}{附\quad 录}
-\newcommand {\refname}{参考文献}
+\renewcommand {\bibname}{参考文献}%report和book是bibname，article是refname。
 
 \renewcommand {\figurename}{\five 图}
 \renewcommand {\thefigure}{\arabic{section}-\arabic{figure}}
