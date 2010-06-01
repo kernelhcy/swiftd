@@ -1,4 +1,4 @@
-\documentclass[18pt, twoside, a4paper, dvipdfm]{book}
+\documentclass[18pt, twoside, a4paper, dvipdfm, openany]{book}
 
 \usepackage{hcypaperstyle}
 
@@ -118,7 +118,7 @@ I will translate it later...
 	\subsection*{第五章为结束语。包括整篇论文的总结和对Web服务器设计的未来的展望}
 		首先总结了本人在整个毕业设计期间的工作以及经验和教训。
 		然后是展望，对Web服务器领域的前景做出展望，提出课题中所设计的服务器的不足和改进。
-		
+	
 \chapter{服务器设计和实现技术}
 
 \section{HTTP协议}
@@ -168,6 +168,7 @@ I will translate it later...
 	
 	\subsection{动态库的创建和使用}
 	在Linux下和Window下，动态库的创建和使用是不相同的。由于本课题主要是在Linux系统中进行，因此在这里，将通过一个例子来简单的介绍在Linux下动态库的使用\ucite{cxyzwxy}。例子的程序源码如下：
+	
 	\begin{verbatim}
 	/* Program1.c*/
 	#include "Lib.h"

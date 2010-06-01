@@ -27,6 +27,10 @@
 	headsep=1.2cm,footskip=0.75cm,%
 	twoside,a4paper]{geometry}
 
+%chapter仅仅是另起一个新页，而不是必须在奇数页（早成空白页）。
+%要配合openany选项使用。
+\cleardoublepage
+
 %中英混排
 \usepackage{xeCJK}
 \setmainfont{Times New Roman} 		%默认字体，默认英文字体。
