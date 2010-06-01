@@ -251,8 +251,6 @@ I will translate it later...
 	图\ref{epollvspoll}是有关epoll和poll的效率比较。sys\_epoll和/dev/epoll是epoll的不同接口。
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{0pt}
-	\setlength{\belowcaptionskip}{10pt}
 	\caption{epoll与poll效率比较\ucite{hudong}}
 	\label{epollvspoll}
 	\includegraphics[height=11cm, width=15cm]{pics/epollvspoll.eps}
@@ -282,8 +280,6 @@ I will translate it later...
 	图\ref{fsm}是一个简单的关于开门和关门的状态机。
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{0pt}
-	\setlength{\belowcaptionskip}{10pt}
 	\caption{开门关门状态机\ucite{wiki}}
 	\label{fsm}
 	\includegraphics[height=7cm, width=5cm]{pics/fsm.eps}
@@ -295,16 +291,147 @@ I will translate it later...
 
 \section{HTTP协议分析}
 \subsection{HTTP协议的数据格式}
+	HTTP协议的主要数据格式包括Request格式和Response格式。
+	
+	Request是客户端发送个服务器的请求数据。包括服务器完成请求所需要的信息。HTTP协议规定Request的格式如下：
+\begin{verbatim}
+    ---------------------------------------
+    | Methods |sp| URI |sp| Version |cr|lf|  -----> Request line
+    ---------------------------------------
+    | Header Field Name: |sp| Value |cr|lf|  -]
+    ---------------------------------------   |
+    |   ... (more headers)                |   |---> Header lines
+    ---------------------------------------   |
+    | Header Field Name: |sp| Value |cr|lf|  -]
+    ---------------------------------------
+    |cr|lf|                                  -----> a blank line
+    ---------------------------------------
+    |                                     |
+    | Data...                             |  -----> Entity body
+    |                                     |
+    ---------------------------------------
+      cr = \r ; lf = \n ; sp = blankspace
+\end{verbatim}
+ 	
+ 	从上面的格式可以看出，Request的格式非常简单，包括Request line，Header lines和Entity body三个部分。Request line包含请求的方法，请求资源的URI以及客户端所使用的HTTP协议的版本。其中，对于所请求的资源的URI中的特殊字符（如汉字），客户端要对其进行编码。编码的格式为“\% HEX HEX”（具体参见RFC 2396）。Header lines包含一些“key：value”形式的键值信息，是客户端发送给服务器的有关自身信息或者链接处理方式等数据。这些键值信息的键在HTTP协议中有明确的规定，服务器一般不对这些键值信息的意义进行更改或扩充HTTP协议规定之外的键值信息。Entity body中包含客户端发送给服务器的数据。这些数据通常对服务器透明，也就是说服务器不需要关心这些数据的意义，只需要将这些数据传递给一些处理链接请求的委托程序（如，CGI脚本），由这些委托程序进行处理。在HTTP协议中，没有对Entity body中的数据的格式和意义做任何形式的规定或定义。
+ 	
+ 	Response的格式与Request格式类似。Response数据由服务器处理完请求之后，发送给客户端。Response格式如下：
+\begin{verbatim}
+-----------------------------------------------
+|Version|sp|Status-Code|sp|Reason-Phrase|cr|lf| ---> Status line
+-----------------------------------------------
+| Header Field Name:   |sp|  Value      |cr|lf| -]
+-----------------------------------------------  |
+|  ... (more headers)                         |  |-> Header lines
+-----------------------------------------------  |
+| Header Field Name:   |sp|    Value    |cr|lf| -]
+-----------------------------------------------
+|cr|lf|                                        ---> a blank line
+-----------------------------------------------
+|                                             |
+| Data...                                     |  ---> Entity body
+|                                             |
+-----------------------------------------------
+ cr = \r ; lf = \n ; sp = blankspace
+\end{verbatim}
+ 	Response格式和Resquest格式的主要区别在第一行的Status line。Status line包含HTTP协议的版本，请求处理结果的状态码和结果原因描述。Response中Header lines中的键值对和Request中的键值对一样，都是由HTTP协议进行明确的规定。Entity body包含处理结果。
+ 	
 \subsection{HTTP协议的处理过程}
-
-\section{插件接口的设计}
+	通常，在HTTP协议中，有客户端发起请求，服务器被动的接受请求。如图\ref{httpbaike}
+	\begin{figure}[htbp]
+	\centering
+	\caption{HTTP协议的处理过程\ucite{baike}}
+	\label{httpbaike}
+	\includegraphics[height=3cm, width=8cm]{pics/httpbaike.eps}
+	\end{figure}
+	
+	在客户端和服务器之间建立连接之后，客户端发送Request数据，服务器对Request数据进行解析然后按照解析出来的数据对请求进行处理，处理完毕之后（包括处理出错），服务器构造Response数据，返回给客户端。在整个过程中，服务器对客户端的请求不做任何信息或者状态的记录。也就是说，即使是同一客户端的同一个请求，多次发送给服务器，服务器都认为是不同的请求。在本课题中，我们主要关心在服务器端HTTP协议的处理过程。如图\ref{serverhttp}。
+	\begin{figure}[htbp]
+	\centering
+	\caption{服务器端HTTP协议的处理过程}
+	\label{serverhttp}
+	\includegraphics[height=8cm, width=9cm]{pics/serverhttp.eps}
+	\end{figure}
+	
+\section{插件接口的分析和设计}
+\subsection{插件调用过程的分析和设计}
+	在图\ref{serverhttp}中可以看到，服务器在处理HTTP请求的时候，基本上分为三步：解析协议，处理请求和返回处理结果。在解析协议和返回处理结果的过程中，服务器都要必须严格按照HTTP协议的规定进行处理，这两个过程中，没有必要也不能增加HTTP协议规定之外的处理步骤。并且，插件基本上都是针对处理请求设计的，因此，插件的调用过程集中在处理请求的阶段。插件的调用过程如图\ref{httpplugin}所示。
+	\begin{figure}[htbp]
+	\centering
+	\caption{插件调用过程}
+	\label{httpplugin}
+	\includegraphics[height=9.5cm, width=11cm]{pics/httpplugin.eps}
+	\end{figure}
+	
+	由于插件的具体功能对于服务器是透明的，服务器无法获知插件具体要对连接进行何种处理。服务器所知道的仅仅是插件所实现的接口。对于服务器而言，所有的插件都是一样的。当服务器处理某一个特定的请求时，服务器无法判断当前请求是否需要调用某一个插件进行处理。因此，服务器对于每一个请求，依次调用所有的插件。当某一个插件完成了对请求的处理之后，服务器将不在调用其他插件。服务器将这个插件的处理结果返回给客户端。那么，对于是否要对当前连接进行处理将有插件自己决定。比如，插件可以通过Request中的URI来判断是否需要对这个请求进行处理。
+	
+	由于插件的调用是按照一定的顺序进行的，因此，对于插件的调用就存在一个隐含的优先级。通常，最先加载的插件在处理请求的时候最先被调用。如果一个请求同时需要两个插件进行处理，那么，在第一个插件处理完毕之后，如果插件返回的是处理完毕，而不是继续处理，那么服务器将不会调用第二个插件进行处理。因此，通常情况下，插件处理完请求之后，应该告诉服务器继续调用其他插件处理请求，这样可以防止出现请求没有处理完毕的错误。
+	
 \subsection{插件接口的定义}
-\subsection{插件动态加载过程}
-\subsection{插件调用的过程}
+	插件接口被定义一些列标准函数原型。所有函数都有明确的定义和调用时机。这些函数大部分都是在前一节中描述的处理请求的过程中被调用。还有一些函数则在其他一些地方调用，以完成一些辅助的任务。下面详细介绍这些接口。
+	
+	首先，需要定义插件的初始化等函数。这些函数不用来处理请求，而是做一些辅助性的工作，不是在服务器处理请求的过程中被调用。
+	\begin{itemize}
+		\item[-] init: 初始化插件。只调用一次，在加载插件之后调用。
+		\item[-] set\_default: 设置插件的配置为默认值。只调用一次，在加载插件之后调用。
+		\item[-] cleanup: 清理插件。在卸载插件的时候只调用一次。
+		\item[-] trigger: 每秒钟调用一次。相当于计时器。可以用来完成一些周期性的任务。
+		\item[-] sighup: 处理挂断信号。在服务器接收到这个连接的挂断信号（SIGHUP）时调用。
+		\item[-] connection\_close: 连接关闭时调用。
+		\item[-] connection\_reset: 连接重置时调用。
+		\item[-] joblist: 在连接被加入到作业队列中调用。作业队列中的连接处在等待I/O事件的状态。
+	\end{itemize}
+	
+	下面需要定义在处理请求时所要调用的函数。在前面分析HTTP协议数据格式和处理过程可以看出，Request中的URI用来对所请求的资源进行定位。对于不同的资源，可以调用不同的插件进行处理。比如，如果请求的资源是以".o"为扩展名，那么就可以通过这一扩展名来判断所请求的是一个CGI脚本，还是一个普通文件。通常，以".o"为扩展名的是一个CGI脚本，那么就可以调用CGI插件进行处理。
+	
+	处理请求的函数如下：
+	\begin{itemize}
+		\item[-] url\_raw: 获得原始的URI后调用。也就是未对“\% HEX HEX”形式的字符进行解码的URI。
+		\item[-] url\_clean: 获得已解码的URI后调用。
+		\item[-] docroot: 设置插件工作的根目录 。在获得解码后的URI后调用。
+		\item[-] physical: 获得请求资源对应的物理地址后调用。
+		\item[-] subrequest\_start: 子请求开始。
+		\item[-] handle\_subrequest: 处理子请求。
+		\item[-] subrequest\_end: 子请求结束。
+	\end{itemize}
+	
+	最后三个处理子请求的函数在服务器处理请求的最后阶段分别调用。
+	
+	这些函数仅仅规定了其调用的时间，对于其具体的任务不做任何限定。比如，插件可以在调用physical接口函数的时候，查找所请求的资源，也可以在调用subrequest\_end时进行查找。同时，将接口细分之后，插件可以只对请求做部分的处理。例如，插件统计某一资源的请求次数时，可以在调用physical函数的时候完成，而不需要等到请求处理完毕。这样可以给予插件以较高的灵活性。
+	
+	对于每一个插件，这些接口函数都是选择性的进行实现。服务器会对插件所实现的接口函数进行记录。对于没有实现的接口函数，服务器将会调用。
+	
+\subsection{插件动态加载过程的分析和设计}
+	为了进行动态的加载插件，服务器必须能实时的获知插件的增加。
+	
+	服务器可以通过检测插件的动态库所在的目录的变化，来获知是否有新的插件加入。但是，插件的动态库可能会放在不同的地方，这样就需要同时检测多个目录。这会影响服务器的效率。而且，一旦需要增加插件动态库存放的地方，必须通知服务器新增加的地方。这会增加服务器的复杂度。为了降低服务器的复杂度，本系统采用监测插件配置文件的方法。一旦插件配置发生更改（如，修改，删除等），服务器就重新读取插件配置文件，重新加载插件。监测的过程如图\ref{loadplugin}。
+	\begin{figure}[htbp]
+	\centering
+	\caption{插件动态加载过程}
+	\label{loadplugin}
+	\includegraphics[height=8cm, width=12cm]{pics/loadplugin.eps}
+	\end{figure}
+	
+	插件的加载和插件的调用是异步进行的。因此，在加载插件的时候，必须对插件的核心数据加锁，避免出现数据错乱导致服务器崩溃。
+	
+	在前面章节介绍动态链接技术时指出，动态链接技术可以选择性的加载共享库。那么，也就是说，在程序的运行过程中，程序可以在任意时刻加载任意的共享库。动态链接技术的这个特点可以用来实现插件的加载。在服务器监测到插件的增加之后，通过配置文件中的信息，检索到插件的共享库，利用动态链接技术，将插件的共享库加载到内存中，并通知服务器插件接口的地址。服务器得到这些信息之后，就可以对插件进行调用。
 
 \section{Web服务器的分析和设计}
-\subsection{I/O设计}
-\subsection{链接处理}
+\subsection{I/O分析和设计}
+	Web服务器是I/O密集型的程序。在运行的大部分时间中，服务器都在进行这I/O处理。这些I/O处理包括读取发送网络数据，读取和写入磁盘数据等。因此，服务器I/O效率的高低直接决定这服务器运行效率的高低。服务器在处理连接请求的时候，通常在某一时刻要同时处理多个请求，但这些请求并不是同时需要进行I/O。当一个请求在等待I/O事件而另一个请求需要处理I/O事件时，将等待I/O事件的请求暂时不处理，直到I/O事件发生再进行处理。在这个过程中，服务器对需要I/O的请求进行处理。这样可以增加服务器的吞吐量，提高效率。
+	
+	在本系统中，服务器的I/O处理采用非阻塞I/O+I/O多路复用+线程池的模式。对于所有的描述符，都将其设置为非阻塞模式，并通过I/O多路复用监测描述符的I/O事件。一旦某个描述符需要进行I/O，那么从线程池中获得一个线程，在这个线程中运行描述符对应的I/O处理函数。如果多个描述符同时需要I/O，可以实现并行处理，提高效率。I/O的结构图如图\ref{IO}。
+	
+	\begin{figure}[htbp]
+	\centering
+	\caption{I/O结构图}
+	\label{IO}
+	\includegraphics[height=8cm, width=13cm]{pics/IO.eps}
+	\end{figure}
+	
+\subsection{线程池的设计}
+\subsection{链接处理的设计}
+
 
 \chapter{插件接口和服务器的实现和测试}
 
