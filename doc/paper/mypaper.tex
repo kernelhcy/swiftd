@@ -1,4 +1,4 @@
-\documentclass[18pt, twoside, a4paper, dvipdfm]{report}
+\documentclass[12pt, twoside, a4paper, xetex]{report}
 %report中的chapter仅仅在新页开始，不强制在奇数页。
 \usepackage{hcypaperstyle}
 
@@ -130,7 +130,7 @@ I will translate it later...
 	
 	HTTP/1.1协议中共定义了八种方法（有时也叫“动作”）来表明Request-URI指定的资源的不同操作方式\ucite{wiki}：
 	\begin{enumerate}
-		\item OPTIONS 返回服务器针对特定资源所支持的HTTP请求方法。也可以利用向Web服务器发送'*'的请求来测试服务器的功能性。
+		\item OPTIONS 返回服务器针对特定资源所支持的HTTP请求方法。也可以利用向Web 服务器发送'*'的请求来测试服务器的功能性。
 		\item HEAD 向服务器索要与GET请求相一致的响应，只不过响应体将不会被返回。这一方法可以在不必传输整个响应内容的情况下，
 					就可以获取包含在响应消息头中的元信息。
 		\item GET 向特定的资源发出请求。注意：GET方法不应当被用于产生“副作用”的操作中，例如在Web Application中。
@@ -229,14 +229,15 @@ I will translate it later...
 	在链接程序Program1时，没有将动态库链接到程序的目标文件中，而仅仅是做了一个标记。当系统加载程序Program1时，动态链接加载器会根据Program1目标文件中的信息，搜索共享库Lib.so并加载到内存中。完成最后的链接工作。
 	
 \section{非阻塞I/O与I/O多路复用}
-	非阻塞I/O使我们可以调用open、read和write这样的I/O操作，并使这些操作不会永远阻塞。如果这种操作不能完成，则调用立即出错返回，表示该操作如继续执行将阻塞。
+	非阻塞I/O使我们可以调用open、read和write这样的I/O操作，并使这些操作不会永远阻塞。如果这种操作不能完成，则调用立即出错返回，表示该操作如继续执行将阻塞。\ucite{apue}
+	
 	对于一个给定的描述符有两种方法对其置顶非阻塞I/O：
 	\begin{enumerate}
 		\item 如果调用open获得描述符，则可指定O\_NONBLOCK标志。
 		\item 对于已经打开的描述符，则可调用fcntl，有该函数打开O\_NONBLOCK文件状态标志。
 	\end{enumerate}
 	
-	I/O多路复用（或者I/O夺路转接，I/O multiplexing），是指先构造一张有关描述符的列表，然后调用一个函数，知道这些描述符中的一个或多个已准备好进行I/O时，该函数返回，在返回时，它告诉进程那些描述符已经准备好进行I/O。
+	I/O多路复用（或者I/O夺路转接，I/O multiplexing），是指先构造一张有关描述符的列表，然后调用一个函数，知道这些描述符中的一个或多个已准备好进行I/O时，该函数返回，在返回时，它告诉进程那些描述符已经准备好进行I/O。\ucite{apue}
 	
 	I/O夺路服用有多种实现。主要包括：
 	\begin{enumerate}
@@ -313,7 +314,7 @@ I will translate it later...
       cr = \r ; lf = \n ; sp = blankspace
 \end{verbatim}
  	
- 	从上面的格式可以看出，Request的格式非常简单，包括Request line，Header lines和Entity body三个部分。Request line包含请求的方法，请求资源的URI以及客户端所使用的HTTP协议的版本。其中，对于所请求的资源的URI中的特殊字符（如汉字），客户端要对其进行编码。编码的格式为“\% HEX HEX”（具体参见RFC 2396）。Header lines包含一些“key：value”形式的键值信息，是客户端发送给服务器的有关自身信息或者链接处理方式等数据。这些键值信息的键在HTTP协议中有明确的规定，服务器一般不对这些键值信息的意义进行更改或扩充HTTP协议规定之外的键值信息。Entity body中包含客户端发送给服务器的数据。这些数据通常对服务器透明，也就是说服务器不需要关心这些数据的意义，只需要将这些数据传递给一些处理链接请求的委托程序（如，CGI脚本），由这些委托程序进行处理。在HTTP协议中，没有对Entity body中的数据的格式和意义做任何形式的规定或定义。
+ 	从上面的格式可以看出，Request的格式非常简单，包括Request line，Header lines和 Entity body三个部分。Request line包含请求的方法，请求资源的URI以及客户端所使用的HTTP协议的版本。其中，对于所请求的资源的URI中的特殊字符（如汉字），客户端要对其进行编码。编码的格式为“\% HEX HEX”（具体参见RFC 2396）。Header lines包含一些“key：value”形式的键值信息，是客户端发送给服务器的有关自身信息或者链接处理方式等数据。这些键值信息的键在HTTP协议中有明确的规定，服务器一般不对这些键值信息的意义进行更改或扩充HTTP协议规定之外的键值信息。Entity body中包含客户端发送给服务器的数据。这些数据通常对服务器透明，也就是说服务器不需要关心这些数据的意义，只需要将这些数据传递给一些处理链接请求的委托程序（如，CGI脚本），由这些委托程序进行处理。在HTTP协议中，没有对Entity body中的数据的格式和意义做任何形式的规定或定义。
  	
  	Response的格式与Request格式类似。Response数据由服务器处理完请求之后，发送给客户端。Response格式如下：
 \begin{verbatim}
@@ -350,7 +351,7 @@ I will translate it later...
 	\centering
 	\caption{服务器端HTTP协议的处理过程}
 	\label{serverhttp}
-	\includegraphics[height=8cm, width=9cm]{pics/serverhttp.eps}
+	\includegraphics[height=8cm, width=10cm]{pics/serverhttp.eps}
 	\end{figure}
 	
 \section{插件接口的分析和设计}
@@ -360,7 +361,7 @@ I will translate it later...
 	\centering
 	\caption{插件调用过程}
 	\label{httpplugin}
-	\includegraphics[height=9.5cm, width=11cm]{pics/httpplugin.eps}
+	\includegraphics[height=9.5cm, width=12cm]{pics/httpplugin.eps}
 	\end{figure}
 	
 	由于插件的具体功能对于服务器是透明的，服务器无法获知插件具体要对连接进行何种处理。服务器所知道的仅仅是插件所实现的接口。对于服务器而言，所有的插件都是一样的。当服务器处理某一个特定的请求时，服务器无法判断当前请求是否需要调用某一个插件进行处理。因此，服务器对于每一个请求，依次调用所有的插件。当某一个插件完成了对请求的处理之后，服务器将不在调用其他插件。服务器将这个插件的处理结果返回给客户端。那么，对于是否要对当前连接进行处理将有插件自己决定。比如，插件可以通过Request中的URI来判断是否需要对这个请求进行处理。
@@ -404,21 +405,21 @@ I will translate it later...
 \subsection{插件动态加载过程的分析和设计}
 	为了进行动态的加载插件，服务器必须能实时的获知插件的增加。
 	
-	服务器可以通过检测插件的动态库所在的目录的变化，来获知是否有新的插件加入。但是，插件的动态库可能会放在不同的地方，这样就需要同时检测多个目录。这会影响服务器的效率。而且，一旦需要增加插件动态库存放的地方，必须通知服务器新增加的地方。这会增加服务器的复杂度。为了降低服务器的复杂度，本系统采用监测插件配置文件的方法。一旦插件配置发生更改（如，修改，删除等），服务器就重新读取插件配置文件，重新加载插件。监测的过程如图\ref{loadplugin}。
+	服务器可以通过检测插件的动态库所在的目录的变化，来获知是否有新的插件加入。但是，插件的动态库可能会放在不同的地方，这样就需要同时监测多个目录。这会影响服务器的效率。而且，一旦需要增加插件动态库存放的地方，必须通知服务器新增加的地方。这会增加服务器的复杂度。为了降低服务器的复杂度，本系统采用监测插件配置文件的方法。一旦插件配置发生更改（如，修改，删除等），服务器就重新读取插件配置文件，重新加载插件。监测的过程如图\ref{loadplugin}。
 	\begin{figure}[htbp]
 	\centering
 	\caption{插件动态加载过程}
 	\label{loadplugin}
-	\includegraphics[height=8cm, width=12cm]{pics/loadplugin.eps}
+	\includegraphics[height=8cm, width=13cm]{pics/loadplugin.eps}
 	\end{figure}
 	
 	插件的加载和插件的调用是异步进行的。因此，在加载插件的时候，必须对插件的核心数据加锁，避免出现数据错乱导致服务器崩溃。
 	
-	在前面章节介绍动态链接技术时指出，动态链接技术可以选择性的加载共享库。那么，也就是说，在程序的运行过程中，程序可以在任意时刻加载任意的共享库。动态链接技术的这个特点可以用来实现插件的加载。在服务器监测到插件的增加之后，通过配置文件中的信息，检索到插件的共享库，利用动态链接技术，将插件的共享库加载到内存中，并通知服务器插件接口的地址。服务器得到这些信息之后，就可以对插件进行调用。
+	动态链接技术可以选择性的加载共享库，也就是说，在程序的运行过程中，程序可以在任意时刻加载任意的共享库。动态链接技术的这个特点可以用来实现插件的加载。在服务器监测到插件的增加之后，通过配置文件中的信息，检索到插件的共享库，利用动态链接技术，将插件的共享库加载到内存中，并通知服务器插件接口的地址。服务器得到这些信息之后，就可以对插件进行调用。
 
 \section{Web服务器的分析和设计}
 \subsection{I/O分析和设计}
-	Web服务器是I/O密集型的程序。在运行的大部分时间中，服务器都在进行这I/O处理。这些I/O处理包括读取发送网络数据，读取和写入磁盘数据等。因此，服务器I/O效率的高低直接决定这服务器运行效率的高低。服务器在处理连接请求的时候，通常在某一时刻要同时处理多个请求，但这些请求并不是同时需要进行I/O。当一个请求在等待I/O事件而另一个请求需要处理I/O事件时，将等待I/O事件的请求暂时不处理，直到I/O事件发生再进行处理。在这个过程中，服务器对需要I/O的请求进行处理。这样可以增加服务器的吞吐量，提高效率。
+	Web服务器是I/O密集型的程序。在运行的大部分时间中，服务器都在进行这I/O处理。这些I/O处理包括接收和发送网络数据，读取和写入磁盘数据等。因此，服务器I/O效率的高低直接决定这服务器运行效率的高低。服务器在处理连接请求的时候，通常在某一时刻要同时处理多个请求，但这些请求并不是同时需要进行I/O。当某一个请求在等待I/O事件时，将这个请求暂时不处理，直到I/O事件发生再进行处理。在这个过程中，服务器对需要I/O的请求进行处理。这样可以增加服务器的吞吐量，提高效率。
 	
 	在本系统中，服务器的I/O处理采用非阻塞I/O+I/O多路复用+线程池的模式。对于所有的描述符，都将其设置为非阻塞模式，并通过I/O多路复用监测描述符的I/O事件。一旦某个描述符需要进行I/O，那么从线程池中获得一个线程，在这个线程中运行描述符对应的I/O处理函数。如果多个描述符同时需要I/O，可以实现并行处理，提高效率。I/O的结构图如图\ref{IO}。
 	
@@ -426,13 +427,47 @@ I will translate it later...
 	\centering
 	\caption{I/O结构图}
 	\label{IO}
-	\includegraphics[height=8cm, width=13cm]{pics/IO.eps}
+	\includegraphics[height=8cm, width=15cm]{pics/IO.eps}
 	\end{figure}
 	
 \subsection{线程池的设计}
-\subsection{链接处理的设计}
-
-
+	为了实现线程池的目的，必须能够控制线程使其在没有任务执行的时候处于等待状态（或者睡眠状态），而当有任务需要线程处理的时候，又可以快速的使线程恢复运行。当然，这里的运行只线程处于可运行状态（Running），是否真正运行要看线程调度程序对线程的调度。
+	
+	线程池具有如下特点：
+	\begin{itemize}
+	\item 在线程池的初始化阶段，预创建一些线程放入线程池中。
+	\item 当线程池中没有可用线程时候，创建一个新的线程。这个新线程运行完任务之后，被加到线程池中，等待下一次调用。
+	\item 当线程的总数量达到某一个最大值的时候，线程池将不在创建新的线程。如果此时没有可用线程，则请求线程的调用将阻塞，直到有线程可以使用。
+	\item 当空闲线程较多时，将适当的销毁一些线程。通常，保证空闲线程的数量不会大于总的线程数量的2/3。
+	\item 创建一个管理线程，对线程池进行管理。包括统计线程池的各种数据，销毁过多的空闲线程等。
+	\end{itemize}
+	
+	在Linux下，使用Pthread库对线程进行创建管理等操作。Pthread库中的条件变量（Condition Variables）可以用来实现控制线程运行和等待的目的。条件变量可以使线程一直处于睡眠状态直到一些事件发生（或者条件改变）\ucite{unp}。线程处在一个循环中，循环的还是调用pthread\_cond\_wait等待有任务可以运行。此时，线程处于sleep状态。当有任务需要处理时，线程池调用pthread\_cond\_signal告诉线程有任务可以运行，唤醒线程。随后，线程处理任务。任务结结束后，线程再次回到sleep状态。线程的状态改变可用图\ref{tpthread}表示。
+	
+	\begin{figure}[htbp]
+	\centering
+	\caption{线程状态图}
+	\label{tpthread}
+	\includegraphics[height=6cm, width=13cm]{pics/tpthread.eps}
+	\end{figure}
+	
+\subsection{连接处理状态机的设计}
+	对于每一个请求，在不同的时刻，对请求所处在的状态进行定义。根据HTTP协议的规定，对于服务器而言，请求经历了读取Reqeust，解析Request，读取POST数据，处理连接请求，创建Response，发送Response回客户端这几个状态。为了便于处理，在请求的生命周期中增加了几个状态，最后的状态图如图\ref{state}。
+	\begin{figure}[htbp]
+	\centering
+	\caption{请求处理状态图}
+	\label{state}
+	\includegraphics[height=22.5cm, width=14.5cm]{pics/state.eps}
+	\end{figure}
+	
+	总共定义了10状态（图中椭圆所示）。connect状态是一个比较特殊的状态，它并不是请求在某一时刻的状态，它仅仅是用来标记连接对应的结构体可以使用。这个状态用来进行内部的数据处理，不参与请求的处理。
+	
+	图中虚线表示错误处理流程。一旦处理出错，服务器将关闭连接，不在接收这个连接的其余的请求。
+	
+	responseend状态结束后有两条路径：一条是标有keep-alve的指向requeststart状态的路径，一条是指向connect的路径。对于HTTP/1.1，通常是持久连接（Persistent Connection），也就是说，在处理完一个请求之后，连接不关闭。在此连接上可以再进行多次请求，直到连接双方有一方关闭了连接。如果连接不是持久连接，那么在处理完请求之后，服务器关闭连接。此时，请求已经处理完毕，不再需要任何状态表示。但是，为了方便内部数据的处理，将连接对应的结构体标记为connect状态。当有新的连接时，可以重新使用这个结构体。
+	
+	当请求处于handlerquest状态时，可能还需要进行子请求。这时候，请求依然处于handlerquest状态，并在这个状态中对子请求进行处理。某些请求可能会有多个子请求。这时，请求会一直停留在这个状态，处理所有子请求，然后进入下一个状态。
+	
 \chapter{插件接口和服务器的实现和测试}
 
 \section{插件接口的实现}
@@ -454,9 +489,12 @@ I will translate it later...
 \chapter*{致谢}
 
 \begin{thebibliography}{99}
-\bibitem{cxyzwxy}俞甲子{} 石凡{} 藩爱民 ，\emph{程序员的自我休养--链接、装载和库}, 电子工业出版社, 2009.4
+\bibitem{cxyzwxy}俞甲子{} 石凡{} 藩爱民 ，程序员的自我休养--链接、装载和库, 电子工业出版社, 2009.4
+\bibitem{apue}W.Richard Stevens,Stepphen A. Rago 著 尤晋元 张亚英 戚正伟 译， UNIX环境高级编程(第二版)，人民邮电出版社，2008.12
+\bibitem{unp}W.Richard Stevens,Bill Fenner, Andrew M.Rudoff, \emph{UNIX Network Programming Volume 1:The Socket Networking API, Thrid Edition} 人民邮电出版社， 2009.11
 \bibitem{wiki}维基百科，http://zh.wikipedia.org/zh-cn/\%E8\%B6\%85\%E6\%96\%87\%E6\%9C\%AC\%E4\%BC\%A0\%E8\%BE\%93\%E5\%8D\%8F\%E8\%AE\%AE
 \bibitem{baike}百度百科，http://baike.baidu.com
 \bibitem{hudong}互动百科，http://www.hudong.com/wiki/epoll
+
 \end{thebibliography}
 \end{document}

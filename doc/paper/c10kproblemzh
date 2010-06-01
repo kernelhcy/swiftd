@@ -1,4 +1,15 @@
-C10K 问题
+\documentclass[12pt, twoside, a4paper, xetex]{article}
+\usepackage{hcypaperstyle}
+
+\begin{document}
+
+\title{{\Huge C10K 问题\\}}
+\author{黄丛宇\\06161032\\指导老师：马瑞芳}
+\date{\today}
+
+\maketitle
+
+\lfour
 
 	现在的web服务器同时要处理上万个客户端，你不这样认为么？毕竟，现在互联网是一个强大的地方。
 	
@@ -103,3 +114,5 @@ C10K 问题
 
 	（c）
  
+ 
+\end{document}
