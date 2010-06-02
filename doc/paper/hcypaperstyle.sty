@@ -71,6 +71,18 @@
 \makeatother
 \setlength{\parindent}{2em}
 
+
+%缩小列表的行距
+\usepackage{paralist}
+\let\itemize\compactitem
+\let\enditemize\endcompactitem
+\let\enumerate\compactenum
+\let\endenumerate\endcompactenum
+\let\description\compactdesc
+\let\enddescription\endcompactdesc
+%列表缩进
+\setdefaultleftmargin{3.5em}{3.5em}{3.5em}{2em}{2em}{2em}
+
 %标题格式
 \usepackage[raggedleft]{titlesec}
 \titleformat{\chapter}{\center \three \bf}{\thechapter{}}{1em}{}

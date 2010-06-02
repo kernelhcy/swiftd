@@ -58,7 +58,7 @@ I will translate it later...
 　　			\item 压缩输出(支持deflate,gzip,bzip2)
 　　			\item CGI, FastCGI
 		\end{itemize}
-		\item Nignx("engine x")是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/SMTP代理服务器。 Nginx是由Igor Sysoev为俄罗斯访问量第二的Rambler.ru站点开发的，它已经在该站点运行超过两年半了。Igor将源代码以类BSD许可证的形式发布。尽管还是测试版，但是Nginx已经因为它的稳定性、丰富的功能集、示例配置文件和低系统资源的消耗而闻名了。Nginx具有如下特点：
+		\item Nignx("engine x")是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/SMTP代理服务器。 Nginx是由Igor Sysoev为俄罗斯访问量第二的Rambler.ru站点开发的，它已经在该站点运行超过两年半了。Igor将源代码以类BSD 许可证的形式发布。尽管还是测试版，但是Nginx已经因为它的稳定性、丰富的功能集、示例配置文件和低系统资源的消耗而闻名了。Nginx具有如下特点：
 		\begin{itemize}
 			\item 处理静态文件，索引文件以及自动索引
 　　			\item 反向代理加速(无缓存)，简单的负载均衡和容错
@@ -145,7 +145,8 @@ I will translate it later...
 	HTTP服务器至少应该实现GET和HEAD方法，其他方法都是可选的。当然，所有的方法支持的实现都应当符合下述的方法各自的语义定义。此外，除了上述方法，特定的HTTP服务器还能够扩展自定义的方法。
 	
 	所有HTTP响应的第一行都是状态行，依次是当前HTTP版本号，3位数字组成的状态代码，以及描述状态的短语，彼此由空格分隔。状态代码的第一个数字代表当前响应的类型\ucite{wiki}：
-	\begin{itemize}	
+	\begin{itemize}[$\circ$]
+		\setlength{\itemindent}{2em}
 		\item 1xx 消息——请求已被服务器接收，继续处理
 		\item 2xx 成功——请求已成功被服务器接收、理解、并接受
 		\item 3xx 重定向——需要后续操作才能完成这一请求
@@ -154,7 +155,7 @@ I will translate it later...
 	\end{itemize}
 	
 	HTTP协议已经演化出了很多版本，它们中的大部分都是向下兼容的。在RFC 2145中描述了HTTP版本号的用法。客户端在请求的开始告诉服务器它采用的协议版本号，而后者则在响应中采用相同或者更早的协议版本。
-	\begin{itemize}	
+	\begin{itemize}
 		\item 0.9 已过时。只接受GET一种请求方法，没有在通讯中指定版本号，且不支持请求头。由于该版本不支持POST方法，因此客户端无法向服务器传递太多信息。
 		\item HTTP/1.0 这是第一个在通讯中指定版本号的HTTP协议版本，至今仍被广泛采用，特别是在代理服务器中。
 		\item HTTP/1.1 当前版本。持久连接被默认采用，并能很好地配合代理服务器工作。还支持以管道方式在同时发送多个请求，以便降低线路负载，提高传输速度。
@@ -278,12 +279,14 @@ I will translate it later...
 
 \section{状态机}
 	状态机，即有限状态机（Finite State Machine）。是表示有限个状态以及在这些状态之间的转移和动作等行为的数学模型\ucite{wiki}。
+	
 	图\ref{fsm}是一个简单的关于开门和关门的状态机。
-	\begin{figure}[htbp]
+	
+	\begin{figure}[bp]
 	\centering
 	\caption{开门关门状态机\ucite{wiki}}
 	\label{fsm}
-	\includegraphics[height=7cm, width=5cm]{pics/fsm.eps}
+	\includegraphics[height=8cm, width=6cm]{pics/fsm.eps}
 	\end{figure}
 	
 	状态机可分为确定型（DFA）和非确定型（NDFA、GNFA）状态机。在确定型状态机中，每个状态对每个可能输入只有精确的一个转移。在非确定型状态中，给定状态对给定可能输入可以没有或有多于一个转移。
@@ -335,7 +338,8 @@ I will translate it later...
 -----------------------------------------------
  cr = \r ; lf = \n ; sp = blankspace
 \end{verbatim}
- 	Response格式和Resquest格式的主要区别在第一行的Status line。Status line包含HTTP协议的版本，请求处理结果的状态码和结果原因描述。Response中Header lines中的键值对和Request中的键值对一样，都是由HTTP协议进行明确的规定。Entity body包含处理结果。
+
+ 	Response格式和Resquest格式的主要区别在第一行的Status line。Status line包含HTTP 协议的版本，请求处理结果的状态码和结果原因描述。Response中Header lines中的键值对和Request中的键值对一样，都是由HTTP协议进行明确的规定。Entity body包含处理结果。
  	
 \subsection{HTTP协议的处理过程}
 	通常，在HTTP协议中，有客户端发起请求，服务器被动的接受请求。如图\ref{httpbaike}
@@ -373,27 +377,27 @@ I will translate it later...
 	
 	首先，需要定义插件的初始化等函数。这些函数不用来处理请求，而是做一些辅助性的工作，不是在服务器处理请求的过程中被调用。
 	\begin{itemize}
-		\item[-] init: 初始化插件。只调用一次，在加载插件之后调用。
-		\item[-] set\_default: 设置插件的配置为默认值。只调用一次，在加载插件之后调用。
-		\item[-] cleanup: 清理插件。在卸载插件的时候只调用一次。
-		\item[-] trigger: 每秒钟调用一次。相当于计时器。可以用来完成一些周期性的任务。
-		\item[-] sighup: 处理挂断信号。在服务器接收到这个连接的挂断信号（SIGHUP）时调用。
-		\item[-] connection\_close: 连接关闭时调用。
-		\item[-] connection\_reset: 连接重置时调用。
-		\item[-] joblist: 在连接被加入到作业队列中调用。作业队列中的连接处在等待I/O事件的状态。
+		\item init: 初始化插件。只调用一次，在加载插件之后调用。
+		\item set\_default: 设置插件的配置为默认值。只调用一次，在加载插件之后调用。
+		\item cleanup: 清理插件。在卸载插件的时候只调用一次。
+		\item trigger: 每秒钟调用一次。相当于计时器。可以用来完成一些周期性的任务。
+		\item sighup: 处理挂断信号。在服务器接收到这个连接的挂断信号（SIGHUP）时调用。
+		\item connection\_close: 连接关闭时调用。
+		\item connection\_reset: 连接重置时调用。
+		\item joblist: 在连接被加入到作业队列中调用。作业队列中的连接处在等待I/O事件的状态。
 	\end{itemize}
 	
 	下面需要定义在处理请求时所要调用的函数。在前面分析HTTP协议数据格式和处理过程可以看出，Request中的URI用来对所请求的资源进行定位。对于不同的资源，可以调用不同的插件进行处理。比如，如果请求的资源是以".o"为扩展名，那么就可以通过这一扩展名来判断所请求的是一个CGI脚本，还是一个普通文件。通常，以".o"为扩展名的是一个CGI脚本，那么就可以调用CGI插件进行处理。
 	
 	处理请求的函数如下：
 	\begin{itemize}
-		\item[-] url\_raw: 获得原始的URI后调用。也就是未对“\% HEX HEX”形式的字符进行解码的URI。
-		\item[-] url\_clean: 获得已解码的URI后调用。
-		\item[-] docroot: 设置插件工作的根目录 。在获得解码后的URI后调用。
-		\item[-] physical: 获得请求资源对应的物理地址后调用。
-		\item[-] subrequest\_start: 子请求开始。
-		\item[-] handle\_subrequest: 处理子请求。
-		\item[-] subrequest\_end: 子请求结束。
+		\item url\_raw: 获得原始的URI后调用。也就是未对“\% HEX HEX”形式的字符进行解码的URI。
+		\item url\_clean: 获得已解码的URI后调用。
+		\item docroot: 设置插件工作的根目录 。在获得解码后的URI后调用。
+		\item physical: 获得请求资源对应的物理地址后调用。
+		\item subrequest\_start: 子请求开始。
+		\item handle\_subrequest: 处理子请求。
+		\item subrequest\_end: 子请求结束。
 	\end{itemize}
 	
 	最后三个处理子请求的函数在服务器处理请求的最后阶段分别调用。
@@ -435,11 +439,11 @@ I will translate it later...
 	
 	线程池具有如下特点：
 	\begin{itemize}
-	\item 在线程池的初始化阶段，预创建一些线程放入线程池中。
-	\item 当线程池中没有可用线程时候，创建一个新的线程。这个新线程运行完任务之后，被加到线程池中，等待下一次调用。
-	\item 当线程的总数量达到某一个最大值的时候，线程池将不在创建新的线程。如果此时没有可用线程，则请求线程的调用将阻塞，直到有线程可以使用。
-	\item 当空闲线程较多时，将适当的销毁一些线程。通常，保证空闲线程的数量不会大于总的线程数量的2/3。
-	\item 创建一个管理线程，对线程池进行管理。包括统计线程池的各种数据，销毁过多的空闲线程等。
+		\item 在线程池的初始化阶段，预创建一些线程放入线程池中。
+		\item 当线程池中没有可用线程时候，创建一个新的线程。这个新线程运行完任务之后，被加到线程池中，等待下一次调用。
+		\item 当线程的总数量达到某一个最大值的时候，线程池将不在创建新的线程。如果此时没有可用线程，则请求线程的调用将阻塞，直到有线程可以使用。
+		\item 当空闲线程较多时，将适当的销毁一些线程。通常，保证空闲线程的数量不会大于总的线程数量的2/3。
+		\item 创建一个管理线程，对线程池进行管理。包括统计线程池的各种数据，销毁过多的空闲线程等。
 	\end{itemize}
 	
 	在Linux下，使用Pthread库对线程进行创建管理等操作。Pthread库中的条件变量（Condition Variables）可以用来实现控制线程运行和等待的目的。条件变量可以使线程一直处于睡眠状态直到一些事件发生（或者条件改变）\ucite{unp}。线程处在一个循环中，循环的还是调用pthread\_cond\_wait等待有任务可以运行。此时，线程处于sleep状态。当有任务需要处理时，线程池调用pthread\_cond\_signal告诉线程有任务可以运行，唤醒线程。随后，线程处理任务。任务结结束后，线程再次回到sleep状态。线程的状态改变可用图\ref{tpthread}表示。
@@ -462,20 +466,38 @@ I will translate it later...
 	
 	总共定义了10状态（图中椭圆所示）。connect状态是一个比较特殊的状态，它并不是请求在某一时刻的状态，它仅仅是用来标记连接对应的结构体可以使用。这个状态用来进行内部的数据处理，不参与请求的处理。
 	
-	图中虚线表示错误处理流程。一旦处理出错，服务器将关闭连接，不在接收这个连接的其余的请求。
+	各个状态的含义：
+	\begin{itemize}
+		\item connect: 标记connection结构体可用。
+		\item requeststart: 请求开始。主要做一些时间的记录工作。
+		\item read: 读取Request数据。
+		\item handlerequest: 解析Request数据。
+		\item requestend: 解析结束。做一些解析的收尾工作。
+		\item readpost: 读取POST数据。如果没有POST数据，跳过此状态。
+		\item responsestart: 处理请求。在这个状态中调用插件。这也是最重要的状态。
+		\item write: 发送数据回client。
+		\item responseend: 处理结束。做最后的清理工作。
+		\item error: 出错。设置错误信息。
+		\item close: 连接关闭。
+	\end{itemize}
+	
+	图\ref{state}中虚线表示错误处理流程。一旦处理出错，服务器将关闭连接，不在接收这个连接的其余的请求。
 	
 	responseend状态结束后有两条路径：一条是标有keep-alve的指向requeststart状态的路径，一条是指向connect的路径。对于HTTP/1.1，通常是持久连接（Persistent Connection），也就是说，在处理完一个请求之后，连接不关闭。在此连接上可以再进行多次请求，直到连接双方有一方关闭了连接。如果连接不是持久连接，那么在处理完请求之后，服务器关闭连接。此时，请求已经处理完毕，不再需要任何状态表示。但是，为了方便内部数据的处理，将连接对应的结构体标记为connect状态。当有新的连接时，可以重新使用这个结构体。
 	
-	当请求处于handlerquest状态时，可能还需要进行子请求。这时候，请求依然处于handlerquest状态，并在这个状态中对子请求进行处理。某些请求可能会有多个子请求。这时，请求会一直停留在这个状态，处理所有子请求，然后进入下一个状态。
+	当请求处于handlerquest状态时，可能还需要进行子请求。这时候，请求依然处于handlerquest状态，并在这个状态中对子请求进行处理。
+	%某些请求可能会有多个子请求。这时，请求会一直停留在这个状态，处理所有子请求，然后进入下一个状态。
 	
 \chapter{插件接口和服务器的实现和测试}
 
 \section{插件接口的实现}
+
 \subsection{接口定义实现}
 \subsection{动态加载过程的实现}
 \subsection{插件调用的实现}
 
 \section{服务器的实现}
+
 \subsection{I/O实现}
 \subsection{线程池的实现}
 \subsection{连接处理状态机的实现}
