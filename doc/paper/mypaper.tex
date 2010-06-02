@@ -145,8 +145,7 @@ I will translate it later...
 	HTTP服务器至少应该实现GET和HEAD方法，其他方法都是可选的。当然，所有的方法支持的实现都应当符合下述的方法各自的语义定义。此外，除了上述方法，特定的HTTP服务器还能够扩展自定义的方法。
 	
 	所有HTTP响应的第一行都是状态行，依次是当前HTTP版本号，3位数字组成的状态代码，以及描述状态的短语，彼此由空格分隔。状态代码的第一个数字代表当前响应的类型\ucite{wiki}：
-	\begin{itemize}[$\circ$]
-		\setlength{\itemindent}{2em}
+	\begin{itemize}
 		\item 1xx 消息——请求已被服务器接收，继续处理
 		\item 2xx 成功——请求已成功被服务器接收、理解、并接受
 		\item 3xx 重定向——需要后续操作才能完成这一请求
@@ -507,7 +506,7 @@ I will translate it later...
 	
 	其中，main\_version和second\_version数据成员分别表示插件的主版本号和次版本号。服务器在加载插件的过程中，要对这两个版本号依据版本控制的规则进行检查。如果版本不兼容，则服务器不对插件进行加载，同时在日志文件中提示插件版本不兼容。
 	
-	name用来保存插件的名称。data指向插件自己使用的数据，和后面的函数指针中的p\_d参数对应。插件在初始化的过程中要自己分配所需要的数据空间，然后将地址赋给data。插件卸载时，要对这个数据空间进行释放。后面的一系列的函数指针保存着插件对应的函数的入口地址。
+	name用来保存插件的名称。data指向插件自己使用的数据，和后面的函数指针中的p\_d参数对应。插件在初始化的过程中要自己分配所需要的数据空间，然后将地址赋给data。插件卸载时，要对这个数据空间进行释放。后面的一系列的函数指针保存着插件对应的函数的入口地址。每一个插件都要定义一个结构体plugin\_data用来存储插件所使用的私有数据。这个结构体的名称必须是plugin\_data，且在定义的开始部分一定是宏：PLUGIN\_DATA。插件在初始化的时候，要将这个结构体实例化并将其指针赋给plugin结构体中的data成员。宏PLUGIN\_DATA定义了一些数据成员。通过这一硬性规定，所有的插件的私有数据空间的开始部分都包含PLUGIN\_DATA所定义的数据成员。同时，插件系统自己也定义了一个plugin\_data结构体，这个结构体中只包含PLUGIN\_DATA定义的数据成员。插件系统通过把插件的数据空间强制转换成自己定义的plugin\_data结构体类型，就可以访问插件中这些有PLUGIN\_DATA定义的数据，从而实现对插件的一些管理。
 	
 	对于服务器而言，无论系统中有多少插件并且插件的接口实现个数都不相同，对于每个请求，服务器按部就班的调用所有插件接口函数。对于插件中的每一个接口函数，插件系统也定义了一些列的接口函数用于服务器调用插件。在调用插件时，服务器仅仅能看到这些接口，至于插件系统中到底有多少插件，服务器无法也不必知道。这些接口的定义如下：
 	
@@ -526,7 +525,8 @@ handler_t plugin_handle_connection_reset(server *srv, connection *con);
 handler_t plugin_handle_trigger(server *srv);
 handler_t plugin_handle_cleanup(server *srv);
 \end{verbatim}
-
+	在这些函数中，对每个插件的对应的接口函数进行调用。如果插件没有实现对应的接口函数，怎将忽略之。
+	
 \subsection{动态加载过程的实现}
 	首先，定义插件的配置文件。插件的配置文件名字是固定的：swiftd-plugin.conf。插件配置文件存放的位置可以在服务器的配置文件中进行设置。配置文件的形式为”插件名称：插件动态库文件所在目录的绝对路径\$“。每一个插件，在配置文件中都有单独一行的这种形式的配置信息。例如：
 	
@@ -561,14 +561,19 @@ cgi:/home/temp/plugins/$
 	
 	对于有些编辑器（如，vi），在对文件进行编辑的时候并不是在原文件上进行修改，而是首先复制一个文件的副本，然后在这个副本上进行编辑操作。当编辑完毕之后，用这个副本覆盖原来的文件。如果直接监测对应文件的IN\_MODIFY事件，那么，在进行文件覆盖时，监测到文件被删除，Inotify将停止对文件的监测，也就是相当于inotify\_rm\_watch文件了。这样，就只能监测到一次IN\_DELETE\_SELF事件。随后什么也监测不到。为了能够对文件进行正常的监测，这里不直接监测文件，而监测包含文件的文件夹。一旦文件被覆盖，将触发文件夹IN\_CLOSE\_WIRTE事件。这样即可得到文件的修改事件。
 	
+	为了能对插件进行初始化并得到其所实现的接口函数的入口地址。规定所有的插件中必须实现一个函数XXXXXX\_init，其中，	XXXXXX为插件的名称（必须为插件配置文件中的名称）。这个函数的原型为：
+	\begin{verbatim}
+        void XXXXXX_init(plugin *p)
+	\end{verbatim}
+	
+	在这个函数中，主要而且必须的工作就是对所传进来的plugin结构体的数据成员进行赋值。其中，最重要的是版本和接口函数指针的赋值。如果插件没有实现某一个接口函数，那么那么接口函数对应的函数指针必须赋值为NULL。这点很重要。在插件系统得到了插件动态库的路径之后，通过dlopen调用将动态库加载到内存中。然后，插件系统通过dlsym调用获得插件对应的XXXXXX\_init函数的入口地址。接着插件系统创建一个plugin结构体的实例，并以这个实例的地址为参数调用刚才得到的XXXXXX\_init函数。至此，插件系统得到了插件的所有信息。完成了插件的加载工作。
+	
 \subsection{插件调用的实现}
 
-	为了对插件的各个接口进行标记，程序中定义了一个枚举类型plugin\_slot\_t。定义如下：
-	
+	首先，为了对插件的各个接口进行标记，程序中定义了一个枚举类型plugin\_slot\_t。定义如下：
 \begin{verbatim}
 typedef enum
 {
-	//PLUGIN_SLOT_INIT = 0,
 	PLUGIN_SLOT_SET_DEFAULT= 0,
 	PLUGIN_SLOT_CLEANUP,
 	PLUGIN_SLOT_TRIGGER,
@@ -587,13 +592,188 @@ typedef enum
 }plugin_slot_t;
 \end{verbatim}
 
+	这个枚举类型中的值与接口函数有这对应关系。从这些值的名称中可以得知。比如，PLUGIN\_SLOT\_DOCROOT对应于docroot接口函数。
+	
+	然后，为了提高插件的调用效率，对每一个插件进行登记造册。plugin\_slot是一个void *类型的二维数组，相当于plugin的登记表。当插件加载之后，插件所有的信息都存放在对应的plugin结构体中。插件系统遍历所有的plugin结构体，对插件所实现的接口方法进行登记（前面已经说过，对于没有实现的插件接口，插件必须将对应的函数指针赋值为NULL。这就可以帮助插件系统判断插件到底实现了哪些接口函数）。
+	
+	plugin\_slot虽说是一个void*类型的数组，但是其存放的是plugin结构体的插件。plugin\_slot数组的每一行对应一个接口函数。对应关系由plugin\_slot\_t枚举类型确定。比如，根据C语言语法规定，枚举值PLUGIN\_SLOT\_DOCROOT等于6。那么docroot接口函数对应的行就是第7行（C语言从第0行开始计算），换句话说，第7行中保存这所有实现了docroot接口函数的插件的plugin结构体指针。
+	
+	例如，目前有三个插件，它们登记之后plugin\_slot数组的情况可有表\ref{example_plugin}表示。
+	\begin{table}[htbp]
+	\caption{plugin\_slot示例：}
+	\label{example_plugin}
+	\centering
+	\begin{tabularx}{\textwidth}{p{6cm}XXXl} %最后一列是空的。这样可以是倒数第二列居中，否则会报错或不居中。
+	\toprule
+	\centering 名称 & \centering  插件1 & \centering  插件2 &\centering 插件3&\\
+	\midrule
+	\centering PLUGIN\_SLOT\_PHYSICAL &\centering  p1 &\centering  p2 &\centering  p3&\\
+	\centering PLUGIN\_SLOT\_URI\_CLEAN &\centering  p1 &\centering  p2 &\centering  p3&\\
+	\centering PLUGIN\_SLOT\_DOCROOT &\centering  p1 & \centering NULL & \centering NULL&\\
+	\bottomrule
+	\end{tabularx}
+	\end{table}
+	
+	NULL表示插件没有实现对应的接口函数。px表示插件对应的plugin结构体指针。
+	
+	表\ref{example_plugin}中仅仅示例了三个接口函数。从表\ref{example_plugin}可以看出，插件1实现了全部的三个接口函数，插件2没有实现第三个接口函数，插件3和插件2一样。插件系统利用如下的宏对插件进行登记：
+	
+\begin{verbatim}
+#define PLUGIN_REGISTER_SLOT(x, y)\
+ for(i = 0; i < srv -> plugins -> used; ++i)\
+ {\
+  plugin *p = srv -> plugins -> ptr[i];\
+  if(p -> handle_##y)\
+  {\
+   log_error_write(srv, __FILE__, __LINE__, \
+   			"sb", "slot: ", p -> name);\
+   if(NULL == srv -> slots -> size)\
+   {\
+    srv -> slots -> used = (size_t *)\
+    			calloc(PLUGIN_SLOT_SIZE, sizeof(size_t *));\
+    srv -> slots -> size = (size_t *)\
+    			calloc(PLUGIN_SLOT_SIZE, sizeof(size_t *));\
+	srv -> slots -> ptr = (void ***)\
+				calloc(PLUGIN_SLOT_SIZE, sizeof(void **));\
+   }\
+   if (srv -> slots -> size[x] == 0)\
+   {\
+	srv -> slots -> size[x] = 8;\
+	srv -> slots -> ptr[x] = (void **)\
+			calloc(srv -> slots -> size[x], sizeof(void *));\
+   }\
+   else if (srv -> slots -> size[x] == srv -> slots -> used[x])\
+   {\
+	srv -> slots -> size[x] += 8;\
+	srv -> slots -> ptr[x] = (void **)realloc(\
+			srv -> slots -> ptr[x],\
+			srv -> slots -> size[x] * sizeof(void *));\
+   }\
+   srv -> slots -> ptr[x][srv -> slots -> used[x]] = (void*)p;\
+   ++srv -> slots -> used[x];\
+  }\
+ }
+\end{verbatim}
+	
+	宏的第一个参数x确定需要登记的接口函数的类型，这个参数是plugin\_slot\_t类型。第二个参数y是x对应的接口函数在pluing结构体中对应的数据成员的名称不包含开头的handle\_。宏中扫描所有的插件，如果插件实现了x对应的接口函数，就将这个插件对应的plugin结构体指针存入plugin\_slot数组中。宏中还包含了对plugin\_slot数组空间申请。
+	
+	例如，这个宏调用实现对docroot接口函数的登记工作。
+	\begin{verbatim}
+	PLUGIN_REGISTER_SLOT(PLUGIN_SLOT_DOCROOT, handle_docroot);
+	\end{verbatim}
+	
+	得到这张登记表之后，基本上所有的操作都是围绕这个表来进行的。插件系统定义了下面的宏，这个宏用来作为模板，实现先前提到的插件系统提供给服务器的那一些列接口函数。而这些接口函数是服务器调用插件的关键。
+
+\begin{verbatim}
+#define PLUGIN_CALL_HANDLER(x,y)\
+ handler_t plugin_handle_##y(server *srv, connection *con)\
+ {\
+  if (NULL == srv || NULL == con)\
+  {\
+   return HANDLER_ERROR;\
+  }\
+   \
+  if (!srv -> slots -> ptr)\
+  {\
+   return HANDLER_GO_ON;\
+  }\
+  if (!srv -> slots -> ptr[x])\
+  {\
+   return HANDLER_GO_ON;\
+  }\
+   \
+   pthread_mutex_lock(&srv -> plugin_lock);\
+   plugin *p;\
+   size_t i;\
+   handler_t ht;\
+   for (i = 0; i < srv -> slots -> used[x]; ++i)\
+   {\
+	if (srv -> slots -> ptr[x][i])\
+	{\
+	 p = (plugin*)srv -> slots -> ptr[x][i];\
+	 switch(ht = p -> handle_##y(srv, con, p -> data))\
+	 {\
+	  case HANDLER_GO_ON:\
+	    break;\
+	  case HANDLER_FINISHED:\
+	  case HANDLER_COMEBACK:\
+	  case HANDLER_WAIT_FOR_EVENT:\
+	  case HANDLER_ERROR:\
+	  case HANDLER_WAIT_FOR_FD:\
+		pthread_mutex_unlock(&srv -> plugin_lock);\
+		return ht;\
+	  default:\
+		log_error_write(srv, __FILE__, __LINE__, \
+						"Unknown handler type.");\
+		pthread_mutex_unlock(&srv -> plugin_lock);\
+		return HANDLER_ERROR;\
+	  }\
+     }\
+   }\
+   pthread_mutex_unlock(&srv -> plugin_lock);\
+   return ht;\
+ }
+\end{verbatim}	
+	
+	宏的第一个参数x确定需要登记的接口函数的类型，这个参数是plugin\_slot\_t类型。第二个参数y是x对应的接口函数在pluing结构体中对应的数据成员的名称不包含开头的handle\_。在这个宏中，通过x确定pluing\_slot数组的行，依次调用这行中存储的plugin结构体的对应的成员函数（函数指针）。这些成员函数的名称有y确定。这一调用工作，正是插件系统提供给服务器的所有接口函数的全部工作。利用这个宏，可以模板化的实现所有这些函数。例如，宏调用
+	
+	\begin{verbatim}
+	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_DOCROOT, docroot);
+	\end{verbatim}
+	
+	将这个宏展开就得到了plugin\_handle\_docroot函数的完整定义。
+	
+	当请求进入reponsestart状态（图\ref{state}）时，服务器调用http\_prepare\_response函数。在这个函数中，解析Resquest中的URI。在解析的过程中，按照插件接口的定义，在完成某一解析步骤之后，调用插件接口函数，调用插件处理请求。
+	
 \section{服务器的实现}
 
 \subsection{I/O实现}
+	首先，对I/O多路复用进行包装。这样可以实现使用不同的I/O多路复用实现时，对服务器而言有一个统一的接口。用户可以在对服务器编译阶段，通过定义不同的宏来选择系统中包含哪些实现。默认情况下使用的是Linux下的epoll。下面这个结构体描述了服务器的I/O多路复用系统：
+	
+\begin{verbatim}	
+typedef struct fdevent
+{
+	fdevent_handler_t type;
+	fdnode *fdarray;
+	size_t maxfds;
+	pthread_mutex_t lock; //锁
+
+#ifdef USE_EPOLL
+	int epoll_fd;
+	struct epoll_event *epoll_events;
+#endif
+#ifdef USE_SELECT
+	//用于传递给select函数。
+	fd_set select_read;
+	fd_set select_write;
+	fd_set select_error;
+	//select函数会改变上面三个函数，在这保留一个副本。
+	fd_set select_set_read;
+	fd_set select_set_write;
+	fd_set select_set_error;
+	//select函数的第一个参数。
+	int select_max_fd;
+#endif
+	int (*reset)(struct fdevent *ev);
+	void (*free)(struct fdevent *ev);
+	int (*event_add)(struct fdevent *ev, int fd, int events);
+	int (*event_del)(struct fdevent *ev, int fd);
+	int (*event_get_revent)(struct fdevent *ev, int ndx);
+	int (*event_get_fd)(struct fdevent *ev, int ndx);
+	int (*event_get_next_ndx)(struct fdevent *ev, int ndx);
+	int (*poll)(struct fdevent *ev, int timeout);
+	int (*fcntl)(struct fdevent *ev, int fd);
+}fdevent;
+\end{verbatim}
+
+	结构体中的宏可以在服务器使用不同I/O多路复用实现时，结构体包含不同的数据成员。如果系统中有多个实现，那么结构体中也可以包括多个实现所需要的数据。最终使用哪个实现，由type决定。这个可以在配置文件中进行设置。type的值决定了初始化函数中对哪个I/O多路复用实现进行初始化。
+
 \subsection{线程池的实现}
 \subsection{连接处理状态机的实现}
 
 \section{测试}
+\subsection{功能测试}
+\subsection{性能测试}
 
 \chapter{结束语}
 \section{总结}
@@ -605,6 +785,7 @@ typedef enum
 \bibitem{cxyzwxy}俞甲子{} 石凡{} 藩爱民 ，程序员的自我休养--链接、装载和库, 电子工业出版社, 2009.4
 \bibitem{apue}W.Richard Stevens,Stepphen A. Rago 著 尤晋元 张亚英 戚正伟 译， UNIX环境高级编程(第二版)，人民邮电出版社，2008.12
 \bibitem{unp}W.Richard Stevens,Bill Fenner, Andrew M.Rudoff, \emph{UNIX Network Programming Volume 1:The Socket Networking API, Thrid Edition} 人民邮电出版社， 2009.11
+\bibitem{usp} Kay A.Robbins, Steven Robbins 著 陈涓 赵振平 译， UNIX系统编程， 机械工业出版社，2005.5
 \bibitem{wiki}维基百科，http://zh.wikipedia.org/zh-cn/\%E8\%B6\%85\%E6\%96\%87\%E6\%9C\%AC\%E4\%BC\%A0\%E8\%BE\%93\%E5\%8D\%8F\%E8\%AE\%AE
 \bibitem{baike}百度百科，http://baike.baidu.com
 \bibitem{hudong}互动百科，http://www.hudong.com/wiki/epoll
