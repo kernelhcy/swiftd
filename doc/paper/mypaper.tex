@@ -404,7 +404,11 @@ I will translate it later...
 	
 	这些函数仅仅规定了其调用的时间，对于其具体的任务不做任何限定。比如，插件可以在调用physical接口函数的时候，查找所请求的资源，也可以在调用subrequest\_end时进行查找。同时，将接口细分之后，插件可以只对请求做部分的处理。例如，插件统计某一资源的请求次数时，可以在调用physical函数的时候完成，而不需要等到请求处理完毕。这样可以给予插件以较高的灵活性。
 	
-	对于每一个插件，这些接口函数都是选择性的进行实现。服务器会对插件所实现的接口函数进行记录。对于没有实现的接口函数，服务器将会调用。
+	对于每一个插件，这些接口函数都是选择性的进行实现。服务器会对插件所实现的接口函数进行记录。对于没有实现的接口函数，服务器将不会调用。
+	
+	由于插件接口有可能会因为需求的改变而随着服务器的不断升级而发生改变。对于一些使用旧版本的插件，很有可能在新版本的服务器中无法使用。因此，必须对插件的版本进行控制。
+	
+	插件的版本控制采用如下方法：插件版本号分为两个部分：主版本号和次版本号，两个版本号依次排列，并用'.'分割。比如：2.3，主版本号为2，次版本号为2。服务器的主次版本号和插件接口的主次版本号必须一致。主版本号改变通常由于插件接口发生了变化，不同主版本号的插件和服务器不兼容。次版本号改变通常是由于对插件的接口进行了增加，同时兼容较低次版本号的版本。次版本号底的插件同样可以运行在次版本号高的服务器上，当然，前提是主版本号相同。但是，不保证次版本号高的插件可以运行在次版本号底的服务器上。通常，服务器还有第三个版本号——BUG修正版本号，这个版本号不会对插件接口产生影响，仅仅是服务器的BUG修正。因此，不需要考虑到插件设计中。
 	
 \subsection{插件动态加载过程的分析和设计}
 	为了进行动态的加载插件，服务器必须能实时的获知插件的增加。
@@ -485,16 +489,103 @@ I will translate it later...
 	
 	responseend状态结束后有两条路径：一条是标有keep-alve的指向requeststart状态的路径，一条是指向connect的路径。对于HTTP/1.1，通常是持久连接（Persistent Connection），也就是说，在处理完一个请求之后，连接不关闭。在此连接上可以再进行多次请求，直到连接双方有一方关闭了连接。如果连接不是持久连接，那么在处理完请求之后，服务器关闭连接。此时，请求已经处理完毕，不再需要任何状态表示。但是，为了方便内部数据的处理，将连接对应的结构体标记为connect状态。当有新的连接时，可以重新使用这个结构体。
 	
-	当请求处于handlerquest状态时，可能还需要进行子请求。这时候，请求依然处于handlerquest状态，并在这个状态中对子请求进行处理。
-	%某些请求可能会有多个子请求。这时，请求会一直停留在这个状态，处理所有子请求，然后进入下一个状态。
+	当请求处于handlerquest状态时，可能还需要进行子请求。这时候，请求依然处于handlerquest状态，并在这个状态中对子请求进行处理。某些请求可能会有多个子请求。这时，请求会一直停留在这个状态，处理所有子请求，然后进入下一个状态。
 	
 \chapter{插件接口和服务器的实现和测试}
 
 \section{插件接口的实现}
 
-\subsection{接口定义实现}
+\subsection{接口定义的实现}
+	为了对插件进行描述，通过plugin结构体对插件进行封装。plugin结构体使用C语言的struct实现，包含有插件的所有信息。包括版本，名称，一系列接口函数指针以及一些辅助的数据成员。plugin结构体可以用图\ref{plugin_s}描述。
+	
+	\begin{figure}[htbp]
+	\centering
+	\caption{plugin结构体定义}
+	\label{plugin_s}
+	\includegraphics[height=6cm, width=12cm]{pics/plugin_s.eps}
+	\end{figure}
+	
+	其中，main\_version和second\_version数据成员分别表示插件的主版本号和次版本号。服务器在加载插件的过程中，要对这两个版本号依据版本控制的规则进行检查。如果版本不兼容，则服务器不对插件进行加载，同时在日志文件中提示插件版本不兼容。
+	
+	name用来保存插件的名称。data指向插件自己使用的数据，和后面的函数指针中的p\_d参数对应。插件在初始化的过程中要自己分配所需要的数据空间，然后将地址赋给data。插件卸载时，要对这个数据空间进行释放。后面的一系列的函数指针保存着插件对应的函数的入口地址。
+	
+	对于服务器而言，无论系统中有多少插件并且插件的接口实现个数都不相同，对于每个请求，服务器按部就班的调用所有插件接口函数。对于插件中的每一个接口函数，插件系统也定义了一些列的接口函数用于服务器调用插件。在调用插件时，服务器仅仅能看到这些接口，至于插件系统中到底有多少插件，服务器无法也不必知道。这些接口的定义如下：
+	
+\begin{verbatim}
+handler_t plugin_handle_url_raw(server *srv, connection *con);
+handler_t plugin_handle_url_clean(server *srv, connection *con);
+handler_t plugin_handle_docroot(server *srv, connection *con);
+handler_t plugin_handle_physical(server *srv, connection *con);
+handler_t plugin_handle_connection_close(server *srv, connection *con);
+handler_t plugin_handle_joblist(server *srv, connection *con);
+handler_t plugin_handle_subrequest_start(server *srv, connection *con);
+handler_t plugin_handle_handle_subrequest(server *srv, connection *con);
+handler_t plugin_handle_request_end(server *srv, connection *con);
+handler_t plugin_handle_connection_reset(server *srv, connection *con);
+
+handler_t plugin_handle_trigger(server *srv);
+handler_t plugin_handle_cleanup(server *srv);
+\end{verbatim}
+
 \subsection{动态加载过程的实现}
+	首先，定义插件的配置文件。插件的配置文件名字是固定的：swiftd-plugin.conf。插件配置文件存放的位置可以在服务器的配置文件中进行设置。配置文件的形式为”插件名称：插件动态库文件所在目录的绝对路径\$“。每一个插件，在配置文件中都有单独一行的这种形式的配置信息。例如：
+	
+	\begin{verbatim}
+#以#开头的行为注释。swiftd-plugin.conf
+#每个插件一行，每个插件配置信息必须以"$"结尾。
+dir_index:/home/hcy/plugins/$
+cgi:/home/temp/plugins/$
+...
+	\end{verbatim}
+
+	这个例子中定义了两个插件：dir\_index和cgi。它们存放的位置分别是 /home/hcy/plugins/ 和 /home/temp/plugins/ 。
+	
+	插件的动态库的名称必须为：插件名称 +.so。服务器读取到插件配置信息之后，根据配置文件中的插件名称，可以确定插件的动态库的名称。这样就可以得到插件动态库的绝对路径。例如，上面两个插件的绝对路径分别为/home/hcy/plugins/dir\_index.so和/home/temp/plugins/cgi.so。
+	
+	服务器使用Linux平台下的Inotify技术对插件配置文件进行监测。Inotify产生一个文件描述符，通过监测这个文件描述符是否有数据可读即可监测到文件的改变。由于Inotify是根据文件描述符的有无数据可读来判断文件是否发生了改变。因此，可以将Inotify的描述符设置成非阻塞模式，然后利用服务器中的I/O多路复用来监测其描述符的I/O事件 。这样，可以实现对配置文件修改的异步实时监测，同时，也不会影响服务器的效率。监测过程如图\ref{inotify}。
+	
+	\begin{figure}[htbp]
+	\centering
+	\caption{Inotify监测过程}
+	\label{inotify}
+	\includegraphics[height=8cm, width=15cm]{pics/inotify.eps}
+	\end{figure}
+	
+	\begin{enumerate}
+		\item 在服务器初始化阶段，调用inotify\_init()创建一个Inotify实例。此时函数返回一个文件描述符fd。
+		\item 调用inotify\_add\_watch()对插件配置文件所在的目录监测IN\_CLOSE\_WRITE事件(参见后文)。
+		\item 将inotify\_init()返回的文件描述符fd和对应的I/O事件处理函数\\plugin\_conf\_inotify\_fdevent\_handler()注册到I/O多路复用系统中。由I/O多路复用监测fd的I/O事件。
+		\item 配置文件被修改。调用fd的I/O事件处理函数。在这个处理函数中重新加载所有插件。
+		\item fd重新进入等待I/O事件状态。
+	\end{enumerate}
+	
+	对于有些编辑器（如，vi），在对文件进行编辑的时候并不是在原文件上进行修改，而是首先复制一个文件的副本，然后在这个副本上进行编辑操作。当编辑完毕之后，用这个副本覆盖原来的文件。如果直接监测对应文件的IN\_MODIFY事件，那么，在进行文件覆盖时，监测到文件被删除，Inotify将停止对文件的监测，也就是相当于inotify\_rm\_watch文件了。这样，就只能监测到一次IN\_DELETE\_SELF事件。随后什么也监测不到。为了能够对文件进行正常的监测，这里不直接监测文件，而监测包含文件的文件夹。一旦文件被覆盖，将触发文件夹IN\_CLOSE\_WIRTE事件。这样即可得到文件的修改事件。
+	
 \subsection{插件调用的实现}
+
+	为了对插件的各个接口进行标记，程序中定义了一个枚举类型plugin\_slot\_t。定义如下：
+	
+\begin{verbatim}
+typedef enum
+{
+	//PLUGIN_SLOT_INIT = 0,
+	PLUGIN_SLOT_SET_DEFAULT= 0,
+	PLUGIN_SLOT_CLEANUP,
+	PLUGIN_SLOT_TRIGGER,
+	PLUGIN_SLOT_SIGHUP,
+	PLUGIN_SLOT_URL_RAW,
+	PLUGIN_SLOT_URL_CLEAN,
+	PLUGIN_SLOT_DOCROOT,
+	PLUGIN_SLOT_PHYSICAL,
+	PLUGIN_SLOT_JOBLIST,
+	PLUGIN_SLOT_CONNECTION_CLOSE,
+	PLUGIN_SLOT_CONNECTION_RESET,
+	PLUGIN_SLOT_SUBREQUEST_START,
+	PLUGIN_SLOT_HANDLE_SUBREQUEST,
+	PLUGIN_SLOT_SUBREQUEST_END,
+	PLUGIN_SLOT_SIZE, 			//slot的数量。
+}plugin_slot_t;
+\end{verbatim}
 
 \section{服务器的实现}
 
