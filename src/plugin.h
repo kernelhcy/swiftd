@@ -21,6 +21,11 @@
 
 //这个宏定义了插件所使用的数据的公共部分。
 #define PLUGIN_DATA  size_t ndx
+struct plugin_data
+{
+	PLUGIN_DATA;
+};
+
 
 /*
  * 定义slot的类型。

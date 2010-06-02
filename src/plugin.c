@@ -363,7 +363,7 @@ int plugin_load(server *srv)
 	for(i = 0; i < srv -> plugins -> used; ++i)\
 	{\
 		plugin *p = srv -> plugins -> ptr[i];\
-		if(p -> y)\
+		if(p -> handle_##y)\
 		{\
 			log_error_write(srv, __FILE__, __LINE__, "sb", "slot: ", p -> name);\
 			if(NULL == srv -> slots -> size)\
