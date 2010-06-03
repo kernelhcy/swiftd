@@ -1,4 +1,7 @@
 #define _GNU_SOURCE
+/* 
+ * Change From ipod touch!!
+ */
 
 #include <sys/types.h>
 
