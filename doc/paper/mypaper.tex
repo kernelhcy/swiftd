@@ -725,6 +725,40 @@ typedef enum
 	
 	当请求进入reponsestart状态（图\ref{state}）时，服务器调用http\_prepare\_response函数。在这个函数中，解析Resquest中的URI。在解析的过程中，按照插件接口的定义，在完成某一解析步骤之后，调用插件接口函数，调用插件处理请求。
 	
+	\subsection{插件实现}
+	
+	插件的实现通常有第三方开发者来完成。在这节中，将描述插件的具体实现过程。服务器将当前连接的描述结构体connection和服务器的描述结构体server传递给插件，因此插件可以直接对这两个结构体中的内容进行读写。这两个结构体的定义在base.h文件中。由于需要使用base.h文件，因此，开发者要获得服务器的代码。为了能够编写出正确的插件，开发者还应对服务器的流程有一定的了解。
+	
+	在本节中，将创建一个简单的插件：dir\_index。这个插件的功能就是如果请求的资源是一个目录，那么，自动搜索目录下面的类似index.html的文件，并返回这个搜索到的文件。很明显，插件必须在服务器解析出了客户端请求的资源对应的物理地址之后才能做出判断。因此，插件实现的接口函数为：
+	
+	\begin{verbatim}
+void dir_index_init()
+handler_t dir_index_handle_physical(server *srv, connection *con, void *p_d)
+	\end{verbatim}
+	
+	由于服务器需要的仅仅是这些实现函数的入口地址，因此函数名服务器并不关心，开发者可以设置任意的合法名称。但是，由于服务器规定了插件接口函数的形式，因此，这些实现函数的参数和返回值必须和接口定义中的完全一致。否则，可能会出现意想不到的错误。
+	
+	在插件找到了index.html之类的文件之后，直接修改con -> physical.real\_path。服务器在后面的程序中通过这个地址确定客户端所请求的资源。如果没有找到合适的文件，则不做任何修改。服务器会做成合适的处理。另外，无论在何种情况下，dir\_index\_handle\_physical函数不打断服务器的处理流程，也就是说，调用这个函数之后，服务器继续调用其他的插件。
+	
+	编写好插件之后，编译成动态库：
+	
+	\begin{verbatim}
+gcc -c mod_dir_index.c  -o  ${OBJSPATH}/mod_dir_index.o
+gcc -fPIC -shared ${OBJS} ${OBJSPATH}/mod_dir_index.o -o dir_index.so
+	\end{verbatim}
+	
+	OBJSPATH中保存的是目标文件（.o）的存放路径。OBJS中保存的是所有文件编译后的目标文件。只所以要加上这个，是因为在插件中使用了服务器提供的其他的文件。比如，dir\_index插件中使用了管理内存的buffer结构体及其处理函数。当然，开发者也可以自行编写这些基础代码。
+	
+	生成动态库之后(.so)，将动态库拷贝到合适的目录中。修改插件配置文件swiftd-plugin.conf。增加下面的行：
+	
+	\begin{verbatim}
+dir_index:/home/hcy/plugins/$
+	\end{verbatim}
+	
+	这里假设插件的动态库放在/home/hcy/plugins/目录中。
+	
+	之后，插件可以正常被服务器调用。
+	
 \section{服务器的实现}
 
 \subsection{I/O实现}
@@ -913,9 +947,76 @@ int tp_run_job(thread_pool *tp, job_func job, void *ctx);
 	开始循环时，首先判断线程是否必须停止。接着，在pthread\_cond\_wait函数中阻塞等待任务到达。一旦有任务到达，线程调用任务函数。执行完任务之后，线程通知线程池任务执行完毕，处于空闲状态，然后，进入pthread\_cond\_wait函数阻塞，继续等待下一次任务到达。
 	
 \subsection{连接处理状态机的实现}
+	对于所有的状态，定义枚举类型connection\_state\_t表示：
+\begin{verbatim}	
+typedef enum 
+{
+	CON_STATE_CONNECT, 		//connect 连接开始 
+	CON_STATE_REQUEST_START, 	//request start 开始读取请求
+	CON_STATE_READ, 		//read 读取并解析请求
+	CON_STATE_REQUEST_END, 		//request end 读取请求结束
+	CON_STATE_READ_POST, 	//readpost 读取post数据
+	CON_STATE_HANDLE_REQUEST, 	//handel request 处理请求
+	CON_STATE_RESPONSE_START, 	//response start 开始回复
+	CON_STATE_WRITE, 		//write 回复写数据
+	CON_STATE_RESPONSE_END, 	//response end 回复结束
+	CON_STATE_ERROR, 		//error 出错
+	CON_STATE_CLOSE 		//close 连接关闭
+} connection_state_t;
+\end{verbatim}
+	
+	状态机实现的关键函数是connection.c文件中的connection\_state\_machine()函数。函数的框架如下：
 
+\begin{verbatim}	
+int connection_state_machine(server *srv, connection *con)
+{
+	int done = 0;
+	connection_state_t old_state;
+	while(!done)
+	{	
+		switch(con -> state)
+		{
+			case CON_STATE_REQUEST_START:
+				...
+				break;
+			case CON_STATE_REQUEST_END:
+				...
+				break;
+			
+			...
+			
+			default:
+				...
+				break;
+		}
+		if (old_state == con -> state)
+		{
+			done = 1;
+		}
+	}
+	
+	switch(con -> state)
+	{
+		case CON_STATE_READ:
+		case CON_STATE_READ_POST:
+			//add to fdevent and joblist
+			break;
+		case CON_STATE_WRITE:
+			//delete from fdevent and joblist
+			break;
+		default:
+			break;
+	}
+	return 0;
+}
+\end{verbatim}
+
+	当请求进入状态机之后，在while循环中switch语句中，根据请求当前的状态，做相应的处理，然后进入下一状态。直到，在退出switch语句时，请求的状态没有改变，退出循环。这时，说明请求需要等待一些I/O事件，因此，在后面的switch语句中，将请求对应的连接描述符加入到I/O多路复用系统和作业队列中。退出函数，当有I/O事件发生时，连接描述符对应处理函数中会再次调用状态机函数。
+	
 \section{测试}
 \subsection{功能测试}
+	
+
 \subsection{性能测试}
 
 \chapter{结束语}
