@@ -209,7 +209,7 @@ static void plugin_plugin_free(plugin *p)
 		return;
 	}
 	
-	free(p -> data);
+	//free(p -> data);
 	free(p);
 	return;
 }
@@ -314,7 +314,7 @@ int plugin_load(server *srv)
 			srv -> plugins -> size = 8;
 			srv -> plugins -> ptr = malloc(8 * sizeof(plugin*));
 		}
-		else if (srv -> plugins -> size == srv -> plugins -> size)
+		else if (srv -> plugins -> used == srv -> plugins -> size)
 		{
 			srv -> plugins -> size += 8;
 			srv -> plugins -> ptr = realloc(srv -> plugins -> ptr,  srv -> plugins -> size * sizeof(plugin*));
@@ -422,11 +422,12 @@ void plugin_free(server *srv)
 	}
 	
 	size_t i;
-	for (i = 0; i < srv -> plugins -> size; ++i)
+	for (i = 0; i < srv -> plugins -> used; ++i)
 	{
 		plugin_plugin_free(srv -> plugins -> ptr[i]);
 	}
 	free(srv -> plugins -> ptr);
+	srv -> plugins -> ptr = NULL;
 	srv -> plugins -> size = 0;
 	srv -> plugins -> used = 0;
 	
