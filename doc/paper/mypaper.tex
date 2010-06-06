@@ -766,9 +766,152 @@ typedef struct fdevent
 }fdevent;
 \end{verbatim}
 
-	结构体中的宏可以在服务器使用不同I/O多路复用实现时，结构体包含不同的数据成员。如果系统中有多个实现，那么结构体中也可以包括多个实现所需要的数据。最终使用哪个实现，由type决定。这个可以在配置文件中进行设置。type的值决定了初始化函数中对哪个I/O多路复用实现进行初始化。
+	结构体中的宏可以在服务器使用不同I/O多路复用实现时，结构体包含不同的数据成员。如果系统中有多个实现，那么结构体中也可以包括多个实现所需要的数据。最终使用哪个实现，由type决定。这个可以在配置文件中进行设置。type的值决定了初始化函数中对哪个I/O多路复用实现进行初始化。type是一个枚举类型变量。
+	
+	结构体最后的一系列函数指针类似于成员函数。当是使用不同的I/O多路复用实现时，函数指针中存放的是对应的各个函数的入口地址。对于不同的I/O多路复用实现，都有与这几个函数指针对应的函数定义。在初始化的时候，服务器根据所使用的I/O多路复用实现，对这些函数指针赋予不同的值。在服务器运行阶段，服务器不需要知道所使用的I/O多路复用的具体情况，仅仅通过这几个函数指针调用对应的函数来完成I/O监听任务。为了方便服务器的调用，在实现中对这几个函数指针进行了一次包装。也就是，定义了一系列接口函数，在这些函数中调用这些函数指针。而服务器只需要调用这些接口函数。接口函数的声明如下：
+	
+\begin{verbatim}
+int fdevent_reset(fdevent *ev);
+void fdevent_free(fdevent *ev);
+int fdevent_event_add(fdevent *ev, int fd, int events);
+int fdevent_event_del(fdevent *ev, int fd);
+int fdevent_event_get_revent(fdevent *ev, int ndx);
+int fdevent_event_get_fd(fdevent *ev, int ndx);
+int fdevent_event_get_next_ndx(fdevent *ev, int ndx);
+int fdevent_poll(fdevent *ev, int timeout);
+int fdevent_fcntl(fdevent *ev, int fd);
+\end{verbatim}
 
+	在程序的主循环中，接口函数的调用过程如下：
+
+\begin{verbatim}
+	do
+	{
+		n = fdevent_poll(srv -> ev, 1000);
+		ndx = -1;
+		while(--n >= 0)
+		{
+			ndx = fdevent_event_get_next_ndx(srv -> ev, ndx);
+			fd  = fdevent_event_get_fd(srv -> ev, ndx);
+			revents = fdevent_event_get_revent(srv -> ev, ndx);
+			handler = fdevent_event_get_handler(srv -> ev, fd);
+			ctx = fdevent_event_get_context(srv -> ev, fd);			
+			
+			//调用线程处理I/O事件。
+		}
+	}while(!shutdown_server);
+\end{verbatim}	
+	
+	fdevent\_poll函数用来开始监听所有注册的描述符。通常，程序阻塞在这个函数中，直到有描述符发生了I/O事件或者等待超时。当有描述符发生I/O事件时，通过接口函数，获得发生I/O事件的描述符和所发生的事件，以及其对应的事件处理函数。最后，调用线程处理I/O事件。fdevent\_poll函数被设定为等待1s后超时。如果1s后没有I/O事件发生，那么fdevent\_poll函数将返回。通过这个超时设置，可以实现一个粗略的计时器。通过这个计时器，可以做一些秒一级的计时工作。
+	
+	在这些接口函数中，大部分的任务仅仅是调用了这些函数指针对应的函数。增加这一层包装，进一步隐藏I/O多路复用系统的实现细节，降低程序的耦合性。
+
+	对于每一种描述符，服务器中都定义了一个与之对应的I/O事件处理函数。当描述符发生了I/O事件时，服务器通过调用与这个描述符对应的处理函数处理I/O事件。对于这个处理函数，定义了如下的原型：
+	
+\begin{verbatim}	
+typedef handler_t (*fdevent_handler)(void *srv, void *ctx, int revents);
+\end{verbatim}
+	
+	通过定义这样一个函数原型，强制所有的I/O处理函数都必须有一致的形式。这样，当服务器调用处理函数处理I/O事件时，不需要区分到底是哪种描述符发生了I/O事件。服务器与I/O多路复用系统的耦合度进一步的降低。
+	
+	最后，对于每一种I/O多路复用实现，对于I/O事件的定义都不尽相同。因此，为了对这些实现差异进行隐藏，服务器中定义了自己的一套I/O事件定义。对于不同的I/O多路复用实现，要将其I/O事件的定义与之对应。而这些对应关系和装换，则完全隐藏在具体的实现中。服务器只需要关系接口函数返回的事件。
+	
+	在服务器的实现中，使用一个整数类型的不同的位表示不同的事件。具体的定义如下：
+\begin{verbatim}	
+#define BV(x) (1 << x)
+
+#define FDEVENT_IN	  BV(1) 	//fd可写
+#define FDEVENT_OUT 	BV(2) 	//有数据可读
+#define FDEVENT_ERR 	BV(3) 	//出错
+#define FDEVENT_PRI 	BV(4) 	//有不阻塞的可读的高优先级数据。
+#define FDEVENT_HUP 	BV(5) 	//已挂断
+#define FDEVENT_NVAL	BV(6) 	//描述符不引用一个打开文件。
+\end{verbatim}
+	
+	这样定义事件，即节省内存，又可以通过或运算在一个整数类型变量中表示多个事件。当一个描述符同时发生了多个事件时，这种定义可以方便的在一个变量中表示这多个事件。对于函数的定义有很大的帮助。当然，如果I/O事件较多，可能一个整型变量表示不了这么多，那么就必须使用其他方法来解决。在本系统中，值定义了6中I/O事件，在32位系统上用整型变量表示不存在这个问题。
+	
 \subsection{线程池的实现}
+	为了便于管理和隐藏实现细节，同样，使用一个结构体表示线程池：
+\begin{verbatim}
+\begin{verbatim}
+struct s_thread_pool
+{
+	pthread_mutex_t lock; 
+	int max_num;            //最大线程数。
+	int min_num;            //最小线程数。
+	int cur_num; 
+	thread_info *threads;
+	sem_t thread_cnt_sem;   //用于达到线程最大值且还有作业时，等待线程空闲。
+};
+\end{verbatim}
+	
+	这个结构体中最重要的数据成员是threads数组。这个数组中存放着线程池中所有线程的信息。其定义如下：
+
+\begin{verbatim}	
+typedef struct 
+{
+	pthread_t id; 
+	int ndx;              //在数组threads中的位置。
+	pthread_mutex_t lock; 
+	pthread_cond_t  cond; //条件变量。用于等待作业分配。
+	thread_pool *tp;
+	int stop;
+	int is_busy;
+	job_func job;         //线程需要执行的作业
+	void *ctx;            //执行作业需要的数据.
+}thread_info;
+\end{verbatim}
+
+	这个结构体中保存了线程的一些重要的信息，包括线程id，在threads数组中的下标等。job成员变量是一个函数指针，这个指针的原型为：
+\begin{verbatim}
+	typedef void *(*job_func)(void *ctx); 
+\end{verbatim}
+
+	在每个线程中，当有任务去需要执行的时候，线程回去执行这个指针所指向的函数。通过定义这个指针，可以强制所有需要线程处理的任务都具有相同的形式。当线程处理任务的时候，不需要知道具体是什么任务。参数ctx通常指向一个结构体，这个结构体中保存着任务所需要的一些信息。这个结构体的指针保存在thread\_info结构体的ctx变量中。当线程执行任务时，把这个变量作为参数传递给job所指向的函数。
+	
+	线程池的接口函数很简单，只有三个：
+\begin{verbatim}
+thread_pool* tp_init(int minnum, int maxnum);
+void tp_free(thread_pool *tp);
+
+int tp_run_job(thread_pool *tp, job_func job, void *ctx);
+\end{verbatim}
+
+	前面两个是初始化和释放函数，初始化函数的参数表示线程池中线程的最小值和最大值。在服务器的运行过程中只执行一次。第三个函数是在线程池中获得一个线程，然后执行参数job指向的函数（任务），参数ctx是这个函数的运行参数。tp\_run\_job函数首先查找空闲的线程，如果没有空闲线程则创建一个。如果线程书达到最大数量且没有空闲线程，那么函数阻塞，直到有线程空闲可用。当找到一个线程之后，tp\_run\_job函数将其后两个参数分别赋值给线程对应的结构体的job成员和ctx成员，最后，通过pthread\_cond\_signal函数通知线程执行任务函数。
+	
+	当线程启动之后，线程就一直运行在下面的循环中：
+
+\begin{verbatim}
+	while(1)
+	{
+		if (info -> stop)
+		{
+			break;
+		}
+		pthread_mutex_lock(&info -> lock);
+		while(!info -> is_busy && !info -> stop)
+		{
+			pthread_cond_wait(&info -> cond, &info -> lock);
+			if (info -> stop && !info -> job)
+			{
+				stop = 1;
+				break;
+			}
+		}
+		pthread_mutex_unlock(&info -> lock);
+		if (info -> job)
+		{
+			info -> job(info -> ctx);
+		}
+		pthread_mutex_lock(&info -> lock);
+		info -> is_busy = 0;
+		sem_post(&info -> tp -> thread_cnt_sem);
+		pthread_mutex_unlock(&info -> lock);
+	}
+\end{verbatim}
+
+	开始循环时，首先判断线程是否必须停止。接着，在pthread\_cond\_wait函数中阻塞等待任务到达。一旦有任务到达，线程调用任务函数。执行完任务之后，线程通知线程池任务执行完毕，处于空闲状态，然后，进入pthread\_cond\_wait函数阻塞，继续等待下一次任务到达。
+	
 \subsection{连接处理状态机的实现}
 
 \section{测试}
