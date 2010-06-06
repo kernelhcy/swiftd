@@ -317,7 +317,7 @@ int plugin_load(server *srv)
 		else if (srv -> plugins -> size == srv -> plugins -> size)
 		{
 			srv -> plugins -> size += 8;
-			srv -> plugins -> ptr = malloc(srv -> plugins -> size * sizeof(plugin*));
+			srv -> plugins -> ptr = realloc(srv -> plugins -> ptr,  srv -> plugins -> size * sizeof(plugin*));
 		}
 		srv -> plugins -> ptr[srv -> plugins -> used] = p;
 		p -> ndx = srv -> plugins -> used;
@@ -334,6 +334,7 @@ int plugin_load(server *srv)
 
 		buffer_free(srv -> plugins_np -> path[i]);
 		srv -> plugins_np -> path[i] = NULL;
+
 		buffer_free(srv -> plugins_np -> name[i]);
 		srv -> plugins_np -> name[i] = NULL;
 		
@@ -368,8 +369,9 @@ int plugin_load(server *srv)
 			log_error_write(srv, __FILE__, __LINE__, "sb", "slot: ", p -> name);\
 			if(NULL == srv -> slots -> size)\
 			{\
-				srv -> slots -> used = (size_t *)calloc(PLUGIN_SLOT_SIZE, sizeof(size_t *));\
-				srv -> slots -> size = (size_t *)calloc(PLUGIN_SLOT_SIZE, sizeof(size_t *));\
+				log_error_write(srv, __FILE__, __LINE__, "s", "NULL == srv -> slots -> size");\
+				srv -> slots -> used = (size_t *)calloc(PLUGIN_SLOT_SIZE, sizeof(size_t));\
+				srv -> slots -> size = (size_t *)calloc(PLUGIN_SLOT_SIZE, sizeof(size_t));\
 				srv -> slots -> ptr = (void ***)calloc(PLUGIN_SLOT_SIZE, sizeof(void **));\
 			}\
 			if (srv -> slots -> size[x] == 0)\
@@ -426,6 +428,7 @@ void plugin_free(server *srv)
 	}
 	free(srv -> plugins -> ptr);
 	srv -> plugins -> size = 0;
+	srv -> plugins -> used = 0;
 	
 }
 /*
@@ -756,7 +759,10 @@ static handler_t plugin_conf_inotify_fdevent_handler(void *srv, void *ctx, int r
 				 * 由于编辑器的不同设计，可能造成在一次编辑中，多次触发这个事件。
 				 */
 				log_error_write(s, __FILE__, __LINE__, "s", "Plugin configure file is modified.");
-				plugin_load(srv);
+				pthread_mutex_lock(&s -> plugin_lock);
+				plugin_free(s);
+				pthread_mutex_unlock(&s -> plugin_lock);
+				plugin_load(s);
 			}
 			break;
 		}
