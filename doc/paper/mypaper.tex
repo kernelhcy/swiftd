@@ -1015,10 +1015,53 @@ int connection_state_machine(server *srv, connection *con)
 	
 \section{测试}
 \subsection{功能测试}
+	启动服务器：
+	启动日志：
 	
+	服务器正常启动。监听80端口。此时，服务器中没有任何插件。服务器只提供简单的返回静态资源的服务。
+	
+	通过浏览器访问服务器资源：
+	
+	浏览器得到了服务器返回的资源，服务器运行正常。
+	
+	访问日志：
+	
+	服务器在处理浏览器的请求时的日志内容。
+	
+	
+	加载插件：
+	
+	加载日志：
+	
+	服务器成功的加载了插件。插件包含三个接口函数。分别为：
+	
+	访问资源所在的目录：
+	
+	卸载插件：
+	
+	访问资源所在的目录：
+
+	测试结果总结如下：
+	\begin{table}[htbp]
+	\caption{功能测试结果：}
+	\label{testing1}
+	\centering
+	\begin{tabularx}{\textwidth}{p{1cm}XXXXl} %最后一列是空的。这样可以是倒数第二列居中，否则会报错或不居中。
+	\toprule
+	\centering 序号 & \centering  测试内容 & \centering  测试结果 &\centering 实际运行结果&\centering 是否符合要求&\\
+	\midrule
+	\centering 1 &\centering 启动并监听端口 &\centering 成功启动和监听端口 &\centering 成功启动和监听端口 & \centering 符合&\\
+	\centering 2 &\centering 处理客户端请求 &\centering 返回请求资源 &\centering   返回请求资源& \centering 符合&\\
+	\centering 3 &\centering 动态加载插件 &\centering  加载成功 &\centering  加载成功& \centering 符合&\\
+	\centering 4 &\centering 调用插件 & \centering 正确调用插件 & \centering 正确调用插件& \centering 符合&\\
+	\centering 5 &\centering 卸载插件 &\centering  卸载成功 &\centering  卸载成功& \centering 符合&\\
+	\bottomrule
+	\end{tabularx}
+	\end{table}
 
 \subsection{性能测试}
-
+	
+	
 \chapter{结束语}
 \section{总结}
 \section{展望}
