@@ -237,13 +237,7 @@ int plugin_load(server *srv)
 		log_error_write(srv, __FILE__, __LINE__, "sbsb", "Name: ", srv -> plugins_np -> name[i]
 													, "Path: ", srv -> plugins_np -> path[i]);
 	}
-	//删除已经加载的插件。
-	for(i = 0; i < srv -> plugins -> used; ++i)
-	{
-		plugin_plugin_free(srv -> plugins -> ptr[i]);
-	}
-	srv -> plugins -> used = 0;
-	
+
 	buffer *libname = buffer_init(); 		//插件的完整路径，包括插件名。
 	buffer *ini_func = buffer_init(); 		//插件的初始化函数名称。
 	plugin *p;
@@ -309,19 +303,20 @@ int plugin_load(server *srv)
 		}
 		
 		//注册插件。
-		if (srv -> plugins -> size = 0)
+		if (srv -> plugins -> size == 0)
 		{
 			srv -> plugins -> size = 8;
-			srv -> plugins -> ptr = malloc(8 * sizeof(plugin*));
+			srv -> plugins -> used = 0;
+			srv -> plugins -> ptr = malloc(8 * sizeof(void *));
 		}
 		else if (srv -> plugins -> used == srv -> plugins -> size)
 		{
 			srv -> plugins -> size += 8;
-			srv -> plugins -> ptr = realloc(srv -> plugins -> ptr,  srv -> plugins -> size * sizeof(plugin*));
+			srv -> plugins -> ptr = realloc(srv -> plugins -> ptr,  srv -> plugins -> size * sizeof(void *));
 		}
 		srv -> plugins -> ptr[srv -> plugins -> used] = p;
 		p -> ndx = srv -> plugins -> used;
-		++ srv -> plugins -> used;
+		++ (srv -> plugins -> used);
 
 		buffer_reset(libname);
 		buffer_reset(ini_func);
@@ -334,14 +329,18 @@ int plugin_load(server *srv)
 
 		buffer_free(srv -> plugins_np -> path[i]);
 		srv -> plugins_np -> path[i] = NULL;
-
 		buffer_free(srv -> plugins_np -> name[i]);
 		srv -> plugins_np -> name[i] = NULL;
 		
 	}
 	
 	free(srv -> plugins_np -> path);
+	srv -> plugins_np -> path = NULL;
 	free(srv -> plugins_np -> name);
+	srv -> plugins_np -> name = NULL;
+
+	srv -> plugins_np -> size = 0;
+	srv -> plugins_np -> used = 0;
 
 	/*
 	 * 对插件所实现的功能进行注册。
