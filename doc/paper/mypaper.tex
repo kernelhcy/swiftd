@@ -281,7 +281,7 @@ I will translate it later...
 	
 	图\ref{fsm}是一个简单的关于开门和关门的状态机。
 	
-	\begin{figure}[bp]
+	\begin{figure}[t]
 	\centering
 	\caption{开门关门状态机\ucite{wiki}}
 	\label{fsm}
@@ -1015,36 +1015,104 @@ int connection_state_machine(server *srv, connection *con)
 	
 \section{测试}
 \subsection{功能测试}
-	启动服务器：
-	启动日志：
+	启动服务器。如图\ref{startup}
 	
-	服务器正常启动。监听80端口。此时，服务器中没有任何插件。服务器只提供简单的返回静态资源的服务。
+	\begin{figure}[t]
+	\centering
+	\setlength{\abovecaptionskip}{0pt}
+	\setlength{\belowcaptionskip}{10pt}
+	\caption{服务器启动}
+	\label{startup}
+	\includegraphics[height=6cm, width=15cm]{pics/startup.eps}
+	\end{figure}
 	
-	通过浏览器访问服务器资源：
+	在启动的控制台输出中可以看出服务器正常启动。
+	
+	启动日志。如图\ref{startuplog}
+	
+	\begin{figure}[t]
+	\centering
+	\setlength{\abovecaptionskip}{0pt}
+	\setlength{\belowcaptionskip}{10pt}
+	\caption{启动日志}
+	\label{startuplog}
+	\includegraphics[height=7cm, width=16cm]{pics/startuplog.eps}
+	\end{figure}
+	
+	在服务器日志中同样显示服务器正常启动。监听8080端口。线程池，I/O多路复用系统都正常初始化。服务器开始等待客户端请求。此时，服务器中没有任何插件。服务器只提供简单的返回静态资源的服务。
+	
+	通过浏览器访问服务器资源。如图\ref{access1}。图中浏览器地址栏中的地址必须有index.html，此时服务器还没有加载插件。如果访问目录的话，会返回404（资源不存在）错误。
+	
+	\begin{figure}[htbp]
+	\centering
+	\setlength{\abovecaptionskip}{0pt}
+	\setlength{\belowcaptionskip}{10pt}
+	\caption{浏览器请求数据}
+	\label{access1}
+	\includegraphics[height=9cm, width=12cm]{pics/access1.eps}
+	\end{figure}
 	
 	浏览器得到了服务器返回的资源，服务器运行正常。
 	
-	访问日志：
+	服务器请求处理日志。如图\ref{access1log}
 	
-	服务器在处理浏览器的请求时的日志内容。
+	\begin{figure}[htbp]
+	\centering
+	\setlength{\abovecaptionskip}{0pt}
+	\setlength{\belowcaptionskip}{10pt}
+	\caption{请求处理日志}
+	\label{access1log}
+	\includegraphics[height=5cm, width=15cm]{pics/access1log.eps}
+	\end{figure}
+	
+	服务器的日志文件显示了本次请求的一些信息，主要包括HTTP请求头的数据。
 	
 	
-	加载插件：
+	加载插件。修改插件配置文件swiftd-plugin.conf。如图\ref{pluginconf}
+	\begin{figure}[htbp]
+	\centering
+	\setlength{\abovecaptionskip}{0pt}
+	\setlength{\belowcaptionskip}{10pt}
+	\caption{加载插件}
+	\label{pluginconf}
+	\includegraphics[height=3cm, width=10cm]{pics/pluginconf.eps}
+	\end{figure}
 	
-	加载日志：
+	加载插件的日志。如图\ref{loadpluginlog}
+	\begin{figure}[htbp]
+	\centering
+	\setlength{\abovecaptionskip}{0pt}
+	\setlength{\belowcaptionskip}{10pt}
+	\caption{加载插件日志}
+	\label{loadpluginlog}
+	\includegraphics[height=9cm, width=15cm]{pics/loadpluginlog.eps}
+	\end{figure}
 	
 	服务器成功的加载了插件。插件包含三个接口函数。分别为：
 	
-	访问资源所在的目录：
+	访问资源所在的目录。如图\ref{access2}
+	\begin{figure}[htbp]
+	\centering
+	\setlength{\abovecaptionskip}{0pt}
+	\setlength{\belowcaptionskip}{10pt}
+	\caption{浏览器请求数据，仅定位到目录}
+	\label{access2}
+	\includegraphics[height=9cm, width=12cm]{pics/access2.eps}
+	\end{figure}
 	
-	卸载插件：
+	将插件卸载，删掉配置文件中的配置项。再访问资源所在目录，结果如图\ref{access3}
+	\begin{figure}[htbp]
+	\centering
+	\setlength{\abovecaptionskip}{0pt}
+	\setlength{\belowcaptionskip}{10pt}
+	\caption{浏览器请求数据，仅定位到目录，不加载插件}
+	\label{access3}
+	\includegraphics[height=9cm, width=12cm]{pics/access3.eps}
+	\end{figure}
 	
-	访问资源所在的目录：
-
 	测试结果总结如下：
 	\begin{table}[htbp]
 	\caption{功能测试结果：}
-	\label{testing1}
 	\centering
 	\begin{tabularx}{\textwidth}{p{1cm}XXXXl} %最后一列是空的。这样可以是倒数第二列居中，否则会报错或不居中。
 	\toprule
@@ -1060,7 +1128,9 @@ int connection_state_machine(server *srv, connection *con)
 	\end{table}
 
 \subsection{性能测试}
+	处理大量请求。
 	
+	传送大文件。
 	
 \chapter{结束语}
 \section{总结}
