@@ -16,5 +16,11 @@ paperppt:paperppt.tex
 	mv ./tempfiles/paperppt.pdf paperppt.pdf
 	acroread paperppt.pdf &
 
+c10k:c10kproblemzh.tex
+	xelatex -output-directory=./tempfiles c10kproblemzh.tex
+	xelatex -output-directory=./tempfiles c10kproblemzh.tex
+	mv ./tempfiles/c10kproblemzh.pdf c10kproblemzh.pdf
+	acroread c10kproblemzh.pdf &
+
 clean:
 	rm ./tempfiles/*

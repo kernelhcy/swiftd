@@ -1,4 +1,4 @@
-The C10K problem
+
 
 It's time for web servers to handle ten thousand clients simultaneously, don't you think? After all, the web is a big place now.
 
