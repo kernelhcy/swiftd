@@ -8,8 +8,7 @@
 \author{黄丛宇\\06161032\\指导老师：马瑞芳}
 \date{\today}
 
-\maketitle
-
+%\maketitle
 \lfour
 
 \zhabstract 
@@ -20,12 +19,17 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 
 最后，通过测试和观察运行结果，分析服务器是否可以正确处理HTTP请求，包括HTTP/1.1的持久连接和HTTP/1.0的非持久连接，并返回客户端所请求的资源。同时，验证插件接口的设计能否满足扩展功能的需求，能否正确的动态加载插件。本系统可以处理一般规模的请求数量。
 
-{\zhkeywords Web服务器;插件;Linux;C;动态加载}
+{\zhkeywords Web服务器;接口;Linux;C;动态加载}
 
 \enabstract
-I will translate it later...
+	As the core component of the Word Wide Web, the web sever acts as a very important role to support the whole internet service. Due to the continuous update of the internet application, the web server must adapt this update. At the same time, the web server must keep running 7 * 24 hours. In the web servers which are used now, all most of them do not support to dynamically adding functions. Namely, when the server is running and dose not reboot, we can add new function to the server. Against this problem, this issue let the web servers can be added new function plugin or deleted function plugin when they are running based on dynamic link technology. This system implements the base functions of the web server and focuses on the implementation of the feature of dynamically loading function and testing the implementation.
+	
+	The main content of this paper is that studying the interface of dynamically loading function of the web sever based on dynamic link technology. First, the paper introduces the background and significance of this issue and the main task and job of the author. Then, the paper outlines the HTTP protocol(RFC 2616) and the dynamic link technology and its application, also outlines some design and implement methods of the web server. Next, by analysising the HTTP protocol and the dynamic link technology, we design the interface of the plugin and the process of dynamically loading the function plugin. Then, using nonblocking I/O, thread pool and I/O multiplexing, we design the architecture of the web server. Last, according to the designs above, we implement a prototype of the web server and implement the interface of the plugin and dynamically loading on it on the Linux system.
+	
+	Last, by testing and the obsvervation of the run result, we analysis whether the server handle the HTTP request correctly and response to the client correctly or not, including HTTP/1.1 persistent connections and HTTP/1.0 nonpersistent connections. At the some time, we test whether the interface can santisfy the requirement of dynamically extending and dynamically load the function plugin correctly or not. This system can handle the general scale of requests.
 
-{\enkeywords Web Server;Plugin;Linux;C;Dynamic load}
+
+{\enkeywords Web Server;Interface;Linux;C;Dynamically loading}
 
 \newpage
 \tableofcontents
@@ -1014,7 +1018,7 @@ int connection_state_machine(server *srv, connection *con)
 	当请求进入状态机之后，在while循环中switch语句中，根据请求当前的状态，做相应的处理，然后进入下一状态。直到，在退出switch语句时，请求的状态没有改变，退出循环。这时，说明请求需要等待一些I/O事件，因此，在后面的switch语句中，将请求对应的连接描述符加入到I/O多路复用系统和作业队列中。退出函数，当有I/O事件发生时，连接描述符对应处理函数中会再次调用状态机函数。
 	
 \section{测试}
-\subsection{功能测试}
+%\subsection{功能测试}
 	启动服务器。如图\ref{startup}
 	
 	\begin{figure}[t]
@@ -1101,7 +1105,7 @@ int connection_state_machine(server *srv, connection *con)
 	\end{figure}
 	
 	将插件卸载，删掉配置文件中的配置项。再访问资源所在目录，结果如图\ref{access3}
-	\begin{figure}[htbp]
+	\begin{figure}[t]
 	\centering
 	\setlength{\abovecaptionskip}{0pt}
 	\setlength{\belowcaptionskip}{10pt}
@@ -1110,9 +1114,10 @@ int connection_state_machine(server *srv, connection *con)
 	\includegraphics[height=9cm, width=12cm]{pics/access3.eps}
 	\end{figure}
 	
-	测试结果总结如下：
-	\begin{table}[htbp]
-	\caption{功能测试结果：}
+	测试结果总结如表\ref{testingresult}
+	\begin{table}[t]
+	\caption{测试结果：}
+	\label{testingresult}
 	\centering
 	\begin{tabularx}{\textwidth}{p{1cm}XXXXl} %最后一列是空的。这样可以是倒数第二列居中，否则会报错或不居中。
 	\toprule
@@ -1127,15 +1132,38 @@ int connection_state_machine(server *srv, connection *con)
 	\end{tabularx}
 	\end{table}
 
-\subsection{性能测试}
-	处理大量请求。
+%\subsection{性能测试}
+%	处理大量请求。
 	
-	传送大文件。
+%	传送大文件。
 	
 \chapter{总结与展望}
 \section{总结}
+	在三个月的毕业设计期间，本人查阅了大量HTTP协议的相关文献资料，重点分析了RFC2616，理解了HTTP协议处理的基本过程，包括请求的分析处理，回复的生成发送等。本人还搜集查阅了动态链接技术的相关资料，理解并掌握了动态链接技术的特点和使用。在此基础之上，通过分析HTTP协议的处理过程和动态链接技术，设计动态加载功能的接口。最后，通过实现一个服务器原型，完成接口的实现和验证。在此期间，本人学习了在Linux下进行C编程的知识，比如，使用gdb进行程序的调试，pthread库的使用，以及非阻塞I/O的使用等。通过这些知识的学习，使我系统的掌握了在linux下进行C开发的过程，也对Linux下的一些系统调用和库有了初步的了解。通过对HTTP协议的分析，本人了解了HTTP协议的处理过程，并且，通过实现web服务器的原型，是我对web服务器的设计有了初步的认识。在本论文中，首先阐述了课题的背景和意义，以及章节安排作者任务。然后，概述了一些有课题相关的技术。最后，详细的描述了系统的设计和实现，以及最后的运行测试结果。
+	
+	最终，课题所设计和实现的动态加载功能的接口实现了如下功能：
+	\begin{enumerate}
+		\item 提供一个统一的接口，并对接口的调用时机明确规定。
+		\item 正确的动态加载功能。
+		\item 正确的动态卸载功能。
+		\item 正确的对系统中的所有插件进行调用。
+	\end{enumerate}
+	
+	在毕业设计期间，本人完成的主要工作有：
+	\begin{enumerate}
+		\item 搜集学习有关动态链接技术和服务器设计技术的资料文献。掌握了动态链接技术的特点和应用，理解了HTTP协议的处理过程和主要的数据结构。
+		\item 学习在Linux下进行服务器设计实现的相关技术。熟悉了gcc，gdb等工具的使用，对linux下的系统调用和库的使用有了初步的了解。
+		\item 分析和设计动态加载功能的接口。通过分析HTTP协议的处理流程，设计接口和接口的调用过程。通过动态链接技术，设计动态加载功能的过程和方法。
+		\item 在linux下对接口进行实现。通过实现一个web服务器的原型，在这个原型之上实现和验证所设计的接口。总共完成c代码约11000行。
+		\item 对接口的实现进行测试和分析，确保实现的接口达到了预期的目的。
+		\item 整理测试分析结果。完成毕业设计论文。
+	\end{enumerate}
+	
 \section{展望}
-
+	随着互联网的高速发展，人们的生活越来越离不开互联网。越来越多的服务被从终端计算机搬到了互联网上。Google公司将要推出的网络操作系统chromeOS预示着未来的互联网将包含现在桌面PC的一切。随着应用规模的不断扩大，单一的服务器已经无法满足应用的需求。因此，分布式将成为互联网的未来。由于HTTP协议的先天特点，在分布式系统的应用中有着其得天独厚的优势。而HTTP协议的实现者————Web服务器必将是这些应用的中流砥柱。通过动态加载功能，web服务器将满足未来互联网应用的需求。随着硬件和操作系统能力的不断提高，web服务器将越来越强大。
+	
+	本系统没有对分布式系统进行考虑，不能很好的支持分布式应用。但是，在未来的互联网中，分布式将是主流。所有的服务器都会很好的支持分布式系统。
+	
 \chapter*{致谢}
 
 \begin{thebibliography}{99}
@@ -1148,4 +1176,258 @@ int connection_state_machine(server *srv, connection *con)
 \bibitem{hudong}互动百科，http://www.hudong.com/wiki/epoll
 
 \end{thebibliography}
+
+\appendix
+\addappheadtotoc
+\begin{subappendices}
+\section{The C10K Problem}
+
+
+\section{C10K问题}
+
+	现在的web服务器同时要处理上万个客户端，你不这样认为么？毕竟，现在互联网是一个强大的地方。
+	
+	计算机也同样强大。你可以花1200美元购买一台有1000MHz的CPU，2GB内存和1000Mbit/秒以太网卡的机器。让我们来看，有20000个客户端，每个客户端可以得到50Hz的CPU，100Kbytes的内存和50Kbits每秒的带宽。这不会消耗太多的时间为20000个客户端中的每一个客户端每一秒从磁盘读取4Kbytes的数据然后通过网络发送给她们。（顺便说一句，每个客户端花费0.08美元。一些操作系统费用中，每个客户端100美元的许可费用看起来有点重了！）因此，硬件已经不是瓶颈。
+	
+	1999年，一个最繁忙的ftp站点，cdrom.com，确实同时处理10000个客户端通过一个万兆以太网络。到了2001年，多个ISP服务商提供同样的速度，期望cdrom.com能够持续增长，以成为她们的大商业客户。
+	
+	这时，瘦客户端的计算模型似乎以某种形式回来了---在互联网上，服务器为成千上万的客户端同时提供服务。
+	
+	考虑到这一点，在如何配置操作系统和如何编写代码来支持成千上万的客户端，这里有一些札记。由于是我感兴趣的领域，这些讨论围绕类Unix操作系统，当然，Windows也会提及一点。	
+
+\section{相关的网站}
+
+	在2003年十月，Felix von Leitner集中了一个优秀的网页并展示了关于网络的可扩展性，完成了比较不同网络系统调用和操作系统的基准。他的其中之一的结论就是Linux2.6内核完全击败了Linux2.4内核，同样，也有许多好的图表可以提供给操组系统开发者很好的思想源泉。（参看Slashdot的注解。看看一些人是怎样做后续基准程序来提高Felix的结果是非常有意思的。）
+
+\section{要先看的书}
+
+	如果你还没有读过W. Richard Stevens的Unix网络编程：网络API：套接字联网（卷一），去读一遍吧。书中描述了很多关于编写高性能服务器的I/O策略和陷阱。书中甚至讨论'thundering herd'问题。如果你读完了，去看Jeff Darcy关于高性能服务器设计的札记。
+（另一本Cal Henderson的构建可扩展的web站点（Building Scalable Web Sites）对那些用web服务器而不是写服务器的人更有帮助。）
+
+\section{I/O框架}
+	目前有关于下面展示的技术的预先包装的库提供，这些库可以使你的代码不依赖于操作系统，使其更具可移植性。
+	\begin{enumerate}
+	
+	\item ACE，一个重量级的C++ I/O框架，包含一些I/O策略的面向对象的实现和一些其他有用的东西。在具体实践中，他的Reactor模式是处理非阻塞I/O的一种面向对象处理方式，Proactor则是处理异步I/O的面向对象方式。
+	\item ASIO是一个C++ I/O框架并且已经成为Boost库的一部分。它同ACE一样更新STL库。
+	\item libevent是Niels Provos编写的一个轻量级的C I/O框架。它支持kqueue和select，并且很快就会支持poll和epoll。它仅有水平触发模式，我认为有好处也有坏处。Niels有一个不错的时间图处理一个作为连接数量的函数的事件。它显示kqueue和sys\_epoll是绝对的胜利者。
+	\item 我自己的轻量级框架的尝试（很遗憾，没有持续更新）：
+		\begin{enumerate}
+		\item Poller是一个轻量级的C++ I/O框架，实现了使用任何你想要的依赖就绪API（poll，select，/dev/poll，kqueue或者sigio）的水平触发就绪API。它对于比较不同API的表现的基准很有用处。下面这个连接到Poller子类的文档展示了如何使用每一个就绪API。
+		\item rn是一个轻量级的C I/O框架，是我在Poller之后的第二次尝试。它是LGPL（因此更容易在社区程序中使用），用C编写（因此易于在非C++的程序中使用。）它在一些社区项目中被使用。
+		\end{enumerate}
+	\item Matt Welsh在2000年四月份写了一篇关于在构建可扩展服务器是平衡工作线程和事件驱动技术的使用的论文。论文中涉及了Sandstorm I/O框架的一部分。
+	\item Cory Nelson's Scale!库--一个Windows上的非同步套接字，文件和管道的I/O库。
+	\end{enumerate}
+	
+\section{I/O策略}
+
+网络软件设计人员有很多选择。下面就是一些：
+	\begin{enumerate}
+	
+		\item 在一个单独的线程中是否处理多个I/O调用并且怎样处理。
+		
+			\begin{enumerate}
+				\item 绝对。始终使用阻塞/同步调用，并且可能的话，使用多线程或多进程实现并发。
+				\item 使用非阻塞调用（例如：write()一个套接字时设置为O\_NONBLOCK）来启动I/O，并且使用就绪通知机制（例如：poll()或者/dev/poll）来获得在那个通道上什么时候可以开始下一个I/O。
+				\item 使用异步调用（例如：aio\_write()）来开始I/O，并且使用完全通知机制（例如：信号或者完成端口）来获得I/O完成的时间。同时适用于网络和磁盘I/O。
+			\end{enumerate}
+		\item 怎样控制为每个客户端提供服务的代码。
+			\begin{enumerate}
+				\item 每个客户端一个进程（典型的Unix解决方案，从1980年开始使用）
+				\item 一个操作系统层面的线程处理很多客户端。每个客户端的控制者为：
+				\begin{enumerate}
+					\item  一个用户层面的线程（例如：GNU状态线程，经典的Java绿色线程）
+					\item  一个状态机（有点深奥，但是在一些地方很流行。我的最爱。）。
+					\item  一个续集（有点深奥，但是同样在一些地方很流行）。
+				\end{enumerate}
+				\item 每个客户端一个操作系统层面的线程（例如：经典的Java本地线程）。
+				\item 每个活动的客户端一个操作系统层面的线程（例如：Tomcat的apache前端，NT完成端口，线程池）。
+			\end{enumerate}
+		\item 是否使用标准的操作系统服务，或者把一些代码放到内核中。（例如：在一个第三方驱动，内核模块或者虚拟设备驱动（VxD））
+	\end{enumerate}
+	
+	
+下面的五种则和很流行：
+	\begin{itemize}
+		\item 一个线程处理多个客户端，使用非阻塞I/O和水平触发就绪通知机制。
+		\item 一个线程处理多个客户端，使用非阻塞I/O和就绪状态改变通知机制。
+		\item 多个线程处理多个客户端，使用异步I/O。
+		\item 每个线程处理一个客户端，使用阻塞I/O。
+		\item 把服务器代码加到内核中。
+	\end{itemize}
+	
+\subsection{一个线程处理多个客户端，使用非阻塞I/O和水平触发就绪通知机制。}
+
+	将所有网络句柄设置成非阻塞模式，使用select()或者poll()来获知那个网络句柄有数据可读。这个是经典的传统模式。使用这种方案，操作系统内核告诉你那个文件描述符已经就绪，并且告诉你从最后一次内核告诉你这个事件是否你已经做了一些操作在那个文件描述符上。（名词“水平触发”来自计算机硬件设计。和“边际触发”相对。Jonathon Lemon在他的关于kqueue()的BSDCON 2000论文中介绍了这些。）
+	
+	注意：记住内核所发出的就绪通知仅仅是一个示意是很重要的。在你尝试从文件描述符读数据的时候，它可能压根就没有就绪。这就是为什么当使用就绪通知机制时使用非阻塞模式非常重要。
+	这种方法的一个重要瓶颈是当请求的页此时不在核心上，read()或者sendfile()磁盘阻塞。将磁盘文件描述符设置成非阻塞没有什么作用。使用内存映射磁盘文件也一样。服务器第一次需要磁盘I/O时，它阻塞了，所有的客户端必须等待，这样原生非线程效率就被浪费了。
+	
+	这就是异步I/O要去解决的问题。但是在没有异步I/O的系统上，工作线程或进程进行磁盘I/O是依然会遇到这个瓶颈。一个解决方案是使用内存映射文件，如果mincore()标明需要I/O，调用一个工作线程去处理I/O，同时急促处理网络传输。Jef Poskanzer指出Pai, Druschel, 和Zwaenepoel的1999 Flash 网络服务器使用了这个方案。在Usenix '99他们有一个关于这个的讨论。似乎mincore()在一些BSD驱动的Unix，比如FreeBSD和Solaris上已经提供，但mincore()不是单一Unix标注的一部分。多亏Chuck Lever，mincore()作为Linux2.3.51内核的一部分提供。
+	
+	但是2003年11月在freebsd黑客列表中，Vivek Pei et al上报了一个不错的成果，他们利用系统剖析工具剖析它们的Flash Web服务器，然后再攻击其瓶颈。mincore是他们发现的其中之一的瓶颈（试想对所有情况那并不都是一个好办法）。另一个则是sendfile阻塞在磁盘访问上的事实。他们通过引进一个修改版的sendfile()来提高性能，这个修改版的sendfile()在当所需要获取的磁盘页不在核心上时，返回类似于EWOULDBLOCK的信息。（不能确定你如何告诉用户那个也现在在核心中了。。。在我看来，这里真正需要的是aio\_sendfile()。）他们优化的结果是在一个1GHz/1GB FreeBSD盒子中，获得了SpecWeb99的800分。这要优于spec.org上其他任何在文件上的方案。
+
+对于一个单线程，有多种方法可以获知在一个非阻塞的套接字集合中，那个套接字已经有I/O就绪：
+
+	\begin{enumerate}
+	
+	\item 传统的select().
+	
+	不幸的是，select()的FD\_SETSIZE有限制。这个限制被编译到标准库和用户程序中。（一些版本的C库可以让你在用户程序编译期间提高这个限制。）请查看Poller\_select(cc,h)关于如何使用select()和其他就绪通知方案互换的例子。
+	
+	\item 传统的poll()
+	
+	没有关于poll()所能处理的文件描述符的数量的硬编码的限制，但是由于在某一时间上，大多数的文件描述符处于等待状态并且扫描上千的文件描述符需要花费很多时间，当描述符的数量上千之后，它开始变慢。一些操作系统通过使用一些技术，比如轮询示意来提高poll()的速度。轮询示意在1999年被Niels Provos为Linux实现并成为标准。请查看Poller\_poll(cc,h)关于如何使用poll()和其他就绪通知方案互换的例子。
+	
+	\item /dev/poll
+	
+	这个是Solaris建议的poll的替代品。
+	
+	/dev/poll背后的思想是充分利用poll()经常被以相同的参数调用很多次的事实。通过/dev/poll，你得到一个打开的句柄。通过向这个句柄写数据，你只需要告诉操作系统一次你对什么文件感兴趣。之后，你只需要从那个句柄读一个当前就绪的文件描述符的集合。
+	
+	/dev/poll在Solaris7中悄然出现（查看106541补丁）。但是在Solaris8中才第一次公开出现。根据Sun的说法，在有750哥客户端时，/dev/poll比poll()有10%的效率提升。
+	
+	/dev/poll的不同实现都在Linux上试验过，但是没有一个性能可以epoll相当，并且没有一个实现真正完成。/dev/poll不建议在Linux上使用。
+	
+	请查看Poller\_devpoll(cc, h 基准)关于如何使用/dev/poll和其他就绪通知方案互换的例子。（注意：这个例子是在Linux的/dev/poll，可能在Solaris下不能正确工作）。
+	\item kqueue()
+	这个是FreeBSD建议的poll的替代品。（并且，也是NetBSD的）。下面指出，kqueue()可以设置成边际触发或者水平触发。
+	
+	\end{enumerate}
+	
+\subsection{每一个线程处理多个客户端，使用非阻塞I/O和就绪通知机制。}
+
+	就绪通知机制（或者边际触发就绪通知机制）表示你给内核一个文件描述符，之后，当这个描述符从没有就绪转换成就绪，内核在某个时候通知你。然后，操作系统内核就假设你已经知道那个文件描述符已经就绪。内核将不再发送那种类型的关于那个文件描述符的更多的就绪通知给你，直到你做了一些事情使文件描述符编程不就绪。（例如，直到你接受到一个EWOULDBLOCK错误在send，recv或者accept调用上，或者一次send或者recv传送的数据小于需要传送的字节数。）
+	
+	当你使用就绪改变通知机制时，你必须为假事件做好准备。因为一个通常的实现是当任何接受到数据包时就发送就绪信号，不管这个文件描述符是否就绪。
+	
+	这是“水平触发”就绪通知机制的对立面。由于你错过了仅仅一个事件，那么这个事件所对应的连接将永远处于等待状态，这是一个微小的编程错误疏忽。尽管如此，我发现边际触发就绪通知机制是使用OpenSSL的非阻塞客户端编程变得容易，因此，这值得去尝试。
+	
+	[Banga, Mogul, Drusha '99]在1999年描述了这种方案。
+	
+	有几种API可以是程序获得“文件描述符就绪”的通知：
+	\begin{enumerate}
+	
+	\item kqueue()
+	
+	这是FreeBSD推荐的边际触发poll的替代品。（同样，很快也是NetBSD的）。
+	
+	FreeBSD4.3以及后续版本和NetBSD 2002年10月份的当前版本支持一个通用的poll()的候选者叫kqueue()/kevents()。支持边际触发和水平触发。（参见Jonathan Lemon's的主页和他的关于kqueue()的BSDCon 2000 论文。）
+	
+	和/dev/poll类似，你分配一个监听对象，但是不是通过打开文件/dev/poll，而是调用kqueue()去分配一个。为了改变你正在监听的事件，或者得到当前事件的列表，你在kqueue()返回的描述符上调用kevent()。它不仅可以监听套接字的就绪，还可以监听普通的文件描述符，信号，甚至I/O完成。
+	
+	注意：在2000年10月，FreeBSD的线程库不能很好的同kqueue()交互。显然，当kqueue()阻塞，整个进程阻塞，而不是调用的线程。
+	
+	参见Poller\_kqueue（cc， h，基准）关于如何使用kqueue()和其他就绪通知机制互换的例子。
+	
+	使用kqueue()的例子和库：
+		\begin{enumerate}
+			\item PyKQueue--一个Python的kqueue()包转。
+			\item Ronald F. Guilmette的echo服务器的例子。参见他的2000年9月28日在freebsd.questions上的帖子。
+		\end{enumerate}
+	\item epoll
+	
+	这是Linux 2.6内核推荐的边际触发poll的替代品。
+	
+	在2001年7月11日，Davide Libenzi建议了一个实时信号的候选者。他的补丁提供了他所谓的/dev/epoll www.xmailserver.org/linux-patches/nio-improve.html。这和实时信号就绪通知机制类似，但是他能合并冗余事件，并且有更高效的对付大批事件获得的机制。
+	
+	Epoll在他的接口从一个特殊的/dev中的文件改变成校内他调用，sys\_epoll之后，以2.5.46合并到2.5内核树中。另外有为2.4内核提供的旧版本的epoll的补丁。
+	
+	2002年在linux内核邮件列表中，围绕Halloween有一个关于同一epoll，aio和其他别的事件资源的长时间的讨论。讨论也许不会在发生，但是Davide一直努力坚定epoll为通常情况下的首选。
+
+	\item Polyakov的kevent(Linux 2.6或更高版本)的新闻：在2006年2月9日和7月6日，Evgeniy Polyakov提交了他的补丁。这个补丁看上去像是epoll和异步io的统一。它的目标是支持网络异步IO。参见：
+	\begin{itemize}
+		\item 关于kevent的LWN报告
+		\item 他的kevent主页
+		\item 他的naio主页
+		\item 一些最近的讨乱。
+	\end{itemize}
+	
+	\item Drepper的新网络接口（Linux2.6内核的方案）
+
+		在2006年的OLS，Ulrich Drepper建议了一个新的高速异步网络API。参见：
+	\begin{itemize}
+		\item 他的论文。《异步零拷贝网络I/O的需求》
+		\item 他的展示。
+		\item 7月22日的LWN文稿。
+	\end{itemize}
+
+	\item 实时信号
+
+		这个建议用来替换Linux2.4内核的边际触发poll。
+
+		linux2.4内核可以通过一个特殊的实时信号传递套接字就绪事件。下面是怎样打开这个特性：
+
+		\begin{verbatim}
+/* 屏蔽SIGIO信号和你想使用的信号 */
+sigemptyset(&sigset);
+sigaddset(&sigset, signum);
+sigaddset(&sigset, SIGIO);
+sigprocmask(SIG_BLOCK, &m_sigset, NULL);
+
+/* 对于每一个文件描述符，设置F_SETOWN，F_SETSIG和O_ASYNC. */
+fcntl(fd, F_SETOWN, (int) getpid());
+fcntl(fd, F_SETSIG, signum);
+flags = fcntl(fd, F_GETFL);
+flags |= O_NONBLOCK|O_ASYNC;
+fcntl(fd, F_SETFL, flags);
+		\end{verbatim}
+		
+		当一个普通的I/O函数，如read()或者write()，完成时，这个将发送一个信号。
+为了使用这个特性，在外循环中写一个普通的poll()函数，在循环里面，在你处理完所有poll()函数监测到的有事件的描述符之后，你循环调用sigwaitinfo()函数。
+
+		如果sigwaitinfo或者sigtimedwait给你返回了一个实时信号，那么siginfo.si\_fd和siginfo.si\_band和poll()被调用之后的pollfd.fd和pollfd.revents有着相同的信息。因此，你可以处理I/O事件，然后继续调用sigwaitinfo()。
+
+		参见Poller\_sigio(cc, h)关于如何使用实时信号和其他就绪通知机制的互换。
+
+		参见关于如何直接使用这个特性的Zach Brown的phhttpd的代码。
+
+		[Provos， Lever和Tweedie 2000]描述了最近的phhttpd使用不同的sigtimedwait()，sigtimedwait4()的基准，使你可以在一个调用中获得多个信号。另外，sigtimedwait4()函数的一点好处似乎可以允许程序测量系统的负载（那么，程序就可以有合适的行为）。（注意，poll()提供了同样的测量系统负载的功能。）
+
+	\item  每个描述符一个信号
+
+		Chandra和Mosberger建议了一个名叫“Signal-per-fd”的对实时信号实现的修改。这个修改可以通过消除冗余事件来减少或者消除实时信号队列的溢出。但是，它没有epoll的效率高。他们的论文比较了这个结构和select以及/dev/poll的效率。
+
+		Vitaly Luban在2001年5月18日宣布一个这个结构的补丁实现。他的补丁在www.luban.org/GPL/gpl.html。（住：在2001年9月，这个补丁在高负载的时候依然存在这稳定性问题。dkftpbench在大约4500个用户的时候可能触发一个oops，也就是正确的行为却输出了一个错误日志。）
+		
+		参见Poller\_sigfd(cc,h)关于如何使用signal-per-fd和其他就绪通知机制交互。
+	\end{enumerate}
+ 
+\subsection{每个线程处理多个用户，使用异步I/O}
+		
+	可能由于很少的系统支持异步I/O，也可能是因为这需要（如同非阻塞I/O一样）你重新构思你的应用，异步I/O还没有在Unix系统上流行起来。在标准Unix上，异步I/O通过aio\_ 接口提供（看下面的“异步输入输出”的链接），这个接口将一个信号和信号值与每一个I/O操作关联。信号和他们的值被排队并高效的传递个用户进程。这个来自POSIX 1003.1b实时扩展和单一Unix标准的第二版。
+
+	异步I/O通常和边际触发完成机制一起使用，例如，一个信号被存入队列中直到操作完成。（通过调用aio\_suspend()，异步I/O也可以和水平触发完成机制一起使用，但是我很少看到有人这么做。）
+
+	glibc2.1以及后续版本提供了一个通用的实现，这个实现是为了遵守标准而不是效率。
+
+	Ben LaHaise的Linux异步I/O实现被合并到linux内核主分支中，最为2.5.32版本。它不使用内核线程，并且有一个非常高效的底层api，但是（例如2.6.0-test2）还不支持套接字。（有关于2.4内核的补丁，但和2.5/2.6的实现有所不同。）更多信息：
+
+	\begin{itemize}
+		\item 页面“关于Linux的内核异步I/O支持”尝试去将所有的关于2.6内核中异步I/O实现的信息组织在一起。（2003年9月16日发布。）
+		\item 第三论：异步I/O vs /dev/epoll。Benjamin C.R. LaHaise（在2002年的OLS上发表）
+		\item Linux2.5内核支持的异步I/O，Bhattachary，Pratt，Pulaverty和Morgan著，IBM;在2003年的OLS发表。
+		\item Suparna Bhattachaya的Linux下的异步I/O设计手记。比较了Ben的异步I/O和SGI的KAIO以及一些其他的异步I/O项目。
+		\item Linux异步I/O主页。
+		\item linux-aio邮件列表
+		\item libaio-oracle;在libaio之上实现了标准Posix异步I/O的库。在2003年9月18日被Joel Becker第一次提及。
+	\end{itemize}
+
+	Suparna还建议去看看DAFS的关于AIO的API的实现。
+
+	Red Hat AS和Suse SLES都提供了一个在2.4内核上的高效的实现。它和2.6内核的实现有关系但不完全相似。
+
+	在2006年2月，一个新的尝试提供网络异步I/O。参见上面的关于Evgeniy Polyakov的基于kevent的AIO。
+
+	在1999年，SGI为Linux实现了一个高速的AIO。在1.1版本的时候，据说可以同时在磁盘I/O和套接字上很好的工作。它好像使用了内核线程。这对那些等不及Ben的AIO支持套接字的人们来说依然很有用。
+
+	O'Reilly的书POSIX.4：真实世界的编程包括了一个很好的关于aio的介绍。
+
+	Sun的网站上包含一个关于早期的非标准aio在Solaris上的实现的教程。值得一看。但是记住你要在"aioread"和"aio\_read"之间转换。
+
+	注意，AIO没有提供一个在没有对z磁盘I/O阻塞情况下打开文件的途径。如果你关心关于打开磁盘文件时引起的睡眠，Linus建议你在不同的线程中调用open()函数，而不是希望一个aio\_open()系统调用。
+
+	在Windows下，异步IO和“重叠I/O”，IOCP或者“IO完成端口”有联系。微软的IOCP
+\end{subappendices}
 \end{document}

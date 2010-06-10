@@ -59,7 +59,7 @@
 \newcommand{\zhkeywords}{~\\\hspace{-2em} \five\textbf{关键字：}}
 %英文格式
 \newcommand{\enabstract}{\chapter*{ABSTRACT}\chaptermark{ABSTRACT}}
-\newcommand{\enkeywords}{\five\textbf{KEY WORDS: }}
+\newcommand{\enkeywords}{~\\\hspace{-2em} \five\textbf{KEY WORDS: }}
 
 %1.2倍行距
 \linespread{1}
@@ -107,8 +107,12 @@
 \renewcommand {\today}{\number\year 年\number\month 月\number\day 日}
 
 \renewcommand {\contentsname}{目\quad 录}
-\newcommand {\appendixtocname}{附\quad 录}
-\newcommand {\appendixpagename}{附\quad 录}
+
+\usepackage[title,titletoc,header]{appendix}
+\renewcommand {\appendixname}{附\quad 录}
+\renewcommand {\appendixtocname}{附\quad 录}
+\renewcommand {\appendixpagename}{附\quad 录}
+%\newcommand{\myappendix}{\chapter*{附\quad 录：\quad 外文资料翻译} \chaptermark{附\quad 录}}
 \renewcommand {\bibname}{参考文献}%report和book是bibname，article是refname。
 
 %图，表标题的间距。
