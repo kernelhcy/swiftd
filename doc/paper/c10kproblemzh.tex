@@ -145,14 +145,14 @@
 	
 	和/dev/poll类似，你分配一个监听对象，但是不是通过打开文件/dev/poll，而是调用kqueue()去分配一个。为了改变你正在监听的事件，或者得到当前事件的列表，你在kqueue()返回的描述符上调用kevent()。它不仅可以监听套接字的就绪，还可以监听普通的文件描述符，信号，甚至I/O完成。
 	
-	注意：在2000年10月，FreeBSD的线程库不能很好的同kqueue()交互。显然，当kqueue()阻塞，整个进程阻塞，而不是调用的线程。
+	注意：在2000年10月，FreeBSD的线程库不能很好的同kqueue()交互。显然，当 kqueue() 阻塞，整个进程阻塞，而不是调用的线程。
 	
 	参见Poller\_kqueue（cc， h，基准）关于如何使用kqueue()和其他就绪通知机制互换的例子。
 	
 	使用kqueue()的例子和库：
 		\begin{enumerate}
 			\item PyKQueue--一个Python的kqueue()包转。
-			\item Ronald F. Guilmette的echo服务器的例子。参见他的2000年9月28日在freebsd.questions上的帖子。
+			\item Ronald F. Guilmette的echo服务器的例子。参见他的2000年9月28日在\\freebsd.questions 上的帖子。
 		\end{enumerate}
 	\item epoll
 	
@@ -169,7 +169,7 @@
 		\item 关于kevent的LWN报告
 		\item 他的kevent主页
 		\item 他的naio主页
-		\item 一些最近的讨乱。
+		\item 一些最近的讨论。
 	\end{itemize}
 	
 	\item Drepper的新网络接口（Linux2.6内核的方案）
@@ -205,7 +205,7 @@ fcntl(fd, F_SETFL, flags);
 		当一个普通的I/O函数，如read()或者write()，完成时，这个将发送一个信号。
 为了使用这个特性，在外循环中写一个普通的poll()函数，在循环里面，在你处理完所有poll()函数监测到的有事件的描述符之后，你循环调用sigwaitinfo()函数。
 
-		如果sigwaitinfo或者sigtimedwait给你返回了一个实时信号，那么siginfo.si\_fd和siginfo.si\_band和poll()被调用之后的pollfd.fd和pollfd.revents有着相同的信息。因此，你可以处理I/O事件，然后继续调用sigwaitinfo()。
+		如果sigwaitinfo或者sigtimedwait给你返回了一个实时信号，那么 siginfo.si\_fd 和 siginfo.si\_band 和poll()被调用之后的pollfd.fd和pollfd.revents有着相同的信息。因此，你可以处理I/O事件，然后继续调用sigwaitinfo()。
 
 		参见Poller\_sigio(cc, h)关于如何使用实时信号和其他就绪通知机制的互换。
 
@@ -217,7 +217,7 @@ fcntl(fd, F_SETFL, flags);
 
 		Chandra和Mosberger建议了一个名叫“Signal-per-fd”的对实时信号实现的修改。这个修改可以通过消除冗余事件来减少或者消除实时信号队列的溢出。但是，它没有epoll的效率高。他们的论文比较了这个结构和select以及/dev/poll的效率。
 
-		Vitaly Luban在2001年5月18日宣布一个这个结构的补丁实现。他的补丁在www.luban.org/GPL/gpl.html。（住：在2001年9月，这个补丁在高负载的时候依然存在这稳定性问题。dkftpbench在大约4500个用户的时候可能触发一个oops，也就是正确的行为却输出了一个错误日志。）
+		Vitaly Luban在2001年5月18日宣布一个这个结构的补丁实现。他的补丁在\\www.luban.org/GPL/gpl.html。（住：在2001年9月，这个补丁在高负载的时候依然存在这稳定性问题。dkftpbench在大约4500个用户的时候可能触发一个oops，也就是正确的行为却输出了一个错误日志。）
 		
 		参见Poller\_sigfd(cc,h)关于如何使用signal-per-fd和其他就绪通知机制交互。
 	\end{enumerate}
@@ -235,8 +235,8 @@ fcntl(fd, F_SETFL, flags);
 	\begin{itemize}
 		\item 页面“关于Linux的内核异步I/O支持”尝试去将所有的关于2.6内核中异步I/O实现的信息组织在一起。（2003年9月16日发布。）
 		\item 第三论：异步I/O vs /dev/epoll。Benjamin C.R. LaHaise（在2002年的OLS上发表）
-		\item Linux2.5内核支持的异步I/O，Bhattachary，Pratt，Pulaverty和Morgan著，IBM;在2003年的OLS发表。
-		\item Suparna Bhattachaya的Linux下的异步I/O设计手记。比较了Ben的异步I/O和SGI的KAIO以及一些其他的异步I/O项目。
+		\item Linux2.5内核支持的异步I/O，Bhattachary，Pratt，Pulaverty和Morgan著，IBM ; 在 2003年的OLS发表。
+		\item Suparna Bhattachaya的Linux下的异步I/O设计手记。比较了Ben的异步 I/O 和 SGI 的KAIO以及一些其他的异步I/O项目。
 		\item Linux异步I/O主页。
 		\item linux-aio邮件列表
 		\item libaio-oracle;在libaio之上实现了标准Posix异步I/O的库。在2003年9月18日被Joel Becker第一次提及。
@@ -256,6 +256,53 @@ fcntl(fd, F_SETFL, flags);
 
 	注意，AIO没有提供一个在没有对z磁盘I/O阻塞情况下打开文件的途径。如果你关心关于打开磁盘文件时引起的睡眠，Linus建议你在不同的线程中调用open()函数，而不是希望一个aio\_open()系统调用。
 
-	在Windows下，异步IO和“重叠I/O”，IOCP或者“IO完成端口”有联系。微软的IOCP
+	在Windows下，异步IO和“重叠I/O”，IOCP或者“IO完成端口”有联系。微软的IOCP将早先的艺术例如异步I/O（比如io\_write）和队列完成通知机制（如将\\aio\_sigevent 值和 aio\_write 一起使用）技术组合起来，并增加一个阻止一些请求以试图保持同一个单一的IOCP常量相关连的运行线程的数量的新想法。更多的信息参见Mark Russinovich在sysinternals.com上的文章《深入I/O完成端口》，Jeffrey Richter的书《编写Microsoft Windows 2000服务器端程序》， 美国专利号：\#06223207，或者MSDN。
 
+
+
+\subsection{每个客户端一个线程处理}
+	
+	...让read()和write()阻塞。由于有每一个客户端使用一个完整的栈框的缺点，这个方法浪费内存。很多操作系统在同时处理几百个线程是有一些麻烦。如果一个线程需要2MB的栈（这时通产的默认值），在运行了（2\^30 / 2\^21）512个线程时，你将耗尽一个32位机器的1GB用户可使用的虚拟内存（例如，x86上运行的linux）。你可以通过给每个线程分配更小的栈来克服这个问题，但是由于大多数线程库不允许在创建线程后增加线程栈，这样做意味着你要设计好自己的程序来减少栈的使用。你也可以通过移植到一个64位的机器来克服这个问题。
+
+	Linux，FreeBSD和Solaris对线程的支持不断增强。同时64位处理器将很快称为主流用户的选择。也许在不久的将来，那些喜欢使用每个客户端一个线程的开发者将能够使用这个设计为10000个客户端提供服务。但是，就目前而言，如果你真的想支持那么多用户，你最好使用别的设计。
+
+	对于一些支持线程的观点，参见Behren，Condit和Brewer的《为什么时间不是好东西（对于高并发服务器）》，UCB，在HotOs IX发表。有没有发对线程的人发表一篇文章来驳斥这个观点？
+
+\subsubsection{LinuxThreads}
+	LinuxThreads是标准Linux线程库的名称。从glibc2.0开始，它被集成到glibc中。它几乎是Posix兼容的，但是缺少效率和信号支持。
+
+\subsubsection{NGPT：Linux下一代线程}
+	NGPT是IBM发起的旨在为Linux提供一个好的Posix兼容的线程支持。它现在的稳定版本是2.2，并且运行的很好。。。但是NGPT开发团队已经宣布他们将NGPT的代码库设置为仅支持不开发的模式。因为他们感觉这是“最好的长时间支持社区的办法”。NGPT开发团队将继续改进Linux的线程支持，但是现在他们的重点是改进NPTL。（荣誉属于NGPT团队，为他们优秀的工作和他们考虑NPTL的优雅的方法。）
+
+\subsubsection{NPTL：Linux原生Posix线程库}
+	NPTL是Ulrich Drepper（和蔼的glibc的维护者）和Ingo Molnar发起的项目，旨在为Linux带来世界级的Posix线程支持。
+
+	在2003年10月5日，NPTL被合并到glibc的版本控制树中，最为一个附加的目录（就像linuxthreads一样），因此，它几乎确定将在gblic的下一个发布版中发布。
+
+	Red Hat9是第一个包含NPTL早期快照的主流发行版。（这也许对一些用户不太方便，但是必须有人能够破冰。。。）
+
+	NPTL的链接：
+	\begin{itemize}
+		\item NPTL讨论邮件列表
+		\item NPTL源码
+		\item NPTL的初始声明
+		\item 描述NPTL最终设计的原始白皮书
+		\item 描述NPTL最红设计的修订白皮书
+		\item Ingo Molnar的第一个测试标准现实NPTL可以处理10\^6个线程
+		\item Ulrich的比较LinuxThreads，NPTL和IBM的NGPT的测试基准。这个似乎显示 NPTL 比 NGPT快多了。
+	\end{itemize}
+
+	下面是我关于NPTL历史的一些描述（同时参见Jerry Cooperstein的文章）：
+
+	在2002年5月，NGPT的成员Bill Abt，glibc的维护者Ulrich Drepper和一些其他人见面讨论要对LinuxThreads做些什么。来自那次见面的一个想法是提高互斥锁的效率。 Rusty Russell et al后来实现了快速用户空间互斥锁（futexes），并且现在正被NGPT和NPTL使用。大部分的参与者认为NGPT应该合并到glibc中。
+
+	然而Ulrich Drepper不喜欢NGPT，并且他指出他可以做的更好。（对那些曾经给\\glibc贡献过补丁的人来说，这也许不是什么吃惊的事。）在下面的几个月中，Ulrich Drepper，Ingo Molnar和其他一些人贡献了一些对glibc和内核的修改，被称作原生Posix线程库（NPTL）。NPTL使用了内核为NGPT设计的增强功能，并且利用了一些新的功能。Ingo Molnar如下的描述了这些内核增强功能：
+
+	\begin{quotation}
+		当NPTL使用了NGPT引入的三个内核特性：getpid()返回PID，\\ CLONE\_THREAD 和 futexes，NPTL也使用（并且依赖）了一些更宽泛的内核特性，这些特性作为这个项目的一部分。
+
+		一些NGPT在2.5.8时引入的内核特性被修改，清除和扩展，例如线程组处理（CLONE\_THREAD）。(CLONE\_THREAD的修改影响了NGTP的和其他NGPT亲戚同步的兼容性，为了保证在任何不可接受的情况下NGPT都不会中断。)
+
+	\end{quotation}
+\subsubsection{}
 \end{document}
