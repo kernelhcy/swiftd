@@ -23,16 +23,16 @@
 	
 	考虑到这一点，在如何配置操作系统和如何编写代码来支持成千上万的客户端，这里有一些札记。由于是我感兴趣的领域，这些讨论围绕类Unix操作系统，当然，Windows也会提及一点。	
 
-\section{相关的网站}
+\section*{相关的网站}
 
 	在2003年十月，Felix von Leitner集中了一个优秀的网页并展示了关于网络的可扩展性，完成了比较不同网络系统调用和操作系统的基准。他的其中之一的结论就是Linux2.6内核完全击败了Linux2.4内核，同样，也有许多好的图表可以提供给操组系统开发者很好的思想源泉。（参看Slashdot的注解。看看一些人是怎样做后续基准程序来提高Felix的结果是非常有意思的。）
 
-\section{要先看的书}
+\section*{要先看的书}
 
 	如果你还没有读过W. Richard Stevens的Unix网络编程：网络API：套接字联网（卷一），去读一遍吧。书中描述了很多关于编写高性能服务器的I/O策略和陷阱。书中甚至讨论'thundering herd'问题。如果你读完了，去看Jeff Darcy关于高性能服务器设计的札记。
 （另一本Cal Henderson的构建可扩展的web站点（Building Scalable Web Sites）对那些用web服务器而不是写服务器的人更有帮助。）
 
-\section{I/O框架}
+\section*{I/O框架}
 	目前有关于下面展示的技术的预先包装的库提供，这些库可以使你的代码不依赖于操作系统，使其更具可移植性。
 	\begin{enumerate}
 	
@@ -48,7 +48,7 @@
 	\item Cory Nelson's Scale!库--一个Windows上的非同步套接字，文件和管道的I/O库。
 	\end{enumerate}
 	
-\section{I/O策略}
+\section*{I/O策略}
 
 网络软件设计人员有很多选择。下面就是一些：
 	\begin{enumerate}
@@ -85,7 +85,7 @@
 		\item 把服务器代码加到内核中。
 	\end{itemize}
 	
-\subsection{一个线程处理多个客户端，使用非阻塞I/O和水平触发就绪通知机制。}
+\subsection*{一个线程处理多个客户端，使用非阻塞I/O和水平触发就绪通知机制。}
 
 	将所有网络句柄设置成非阻塞模式，使用select()或者poll()来获知那个网络句柄有数据可读。这个是经典的传统模式。使用这种方案，操作系统内核告诉你那个文件描述符已经就绪，并且告诉你从最后一次内核告诉你这个事件是否你已经做了一些操作在那个文件描述符上。（名词“水平触发”来自计算机硬件设计。和“边际触发”相对。Jonathon Lemon在他的关于kqueue()的BSDCON 2000论文中介绍了这些。）
 	
@@ -120,11 +120,12 @@
 	
 	请查看Poller\_devpoll(cc, h 基准)关于如何使用/dev/poll和其他就绪通知方案互换的例子。（注意：这个例子是在Linux的/dev/poll，可能在Solaris下不能正确工作）。
 	\item kqueue()
+	
 	这个是FreeBSD建议的poll的替代品。（并且，也是NetBSD的）。下面指出，kqueue()可以设置成边际触发或者水平触发。
 	
 	\end{enumerate}
 	
-\subsection{每一个线程处理多个客户端，使用非阻塞I/O和就绪通知机制。}
+\subsection*{每一个线程处理多个客户端，使用非阻塞I/O和就绪通知机制。}
 
 	就绪通知机制（或者边际触发就绪通知机制）表示你给内核一个文件描述符，之后，当这个描述符从没有就绪转换成就绪，内核在某个时候通知你。然后，操作系统内核就假设你已经知道那个文件描述符已经就绪。内核将不再发送那种类型的关于那个文件描述符的更多的就绪通知给你，直到你做了一些事情使文件描述符编程不就绪。（例如，直到你接受到一个EWOULDBLOCK错误在send，recv或者accept调用上，或者一次send或者recv传送的数据小于需要传送的字节数。）
 	
@@ -222,7 +223,7 @@ fcntl(fd, F_SETFL, flags);
 		参见Poller\_sigfd(cc,h)关于如何使用signal-per-fd和其他就绪通知机制交互。
 	\end{enumerate}
  
-\subsection{每个线程处理多个用户，使用异步I/O}
+\subsection*{每个线程处理多个用户，使用异步I/O}
 		
 	可能由于很少的系统支持异步I/O，也可能是因为这需要（如同非阻塞I/O一样）你重新构思你的应用，异步I/O还没有在Unix系统上流行起来。在标准Unix上，异步I/O通过aio\_ 接口提供（看下面的“异步输入输出”的链接），这个接口将一个信号和信号值与每一个I/O操作关联。信号和他们的值被排队并高效的传递个用户进程。这个来自POSIX 1003.1b实时扩展和单一Unix标准的第二版。
 
@@ -260,7 +261,7 @@ fcntl(fd, F_SETFL, flags);
 
 
 
-\subsection{每个客户端一个线程处理}
+\subsection*{每个客户端一个线程处理}
 	
 	...让read()和write()阻塞。由于有每一个客户端使用一个完整的栈框的缺点，这个方法浪费内存。很多操作系统在同时处理几百个线程是有一些麻烦。如果一个线程需要2MB的栈（这时通产的默认值），在运行了（2\^30 / 2\^21）512个线程时，你将耗尽一个32位机器的1GB用户可使用的虚拟内存（例如，x86上运行的linux）。你可以通过给每个线程分配更小的栈来克服这个问题，但是由于大多数线程库不允许在创建线程后增加线程栈，这样做意味着你要设计好自己的程序来减少栈的使用。你也可以通过移植到一个64位的机器来克服这个问题。
 
@@ -268,13 +269,13 @@ fcntl(fd, F_SETFL, flags);
 
 	对于一些支持线程的观点，参见Behren，Condit和Brewer的《为什么时间不是好东西（对于高并发服务器）》，UCB，在HotOs IX发表。有没有发对线程的人发表一篇文章来驳斥这个观点？
 
-\subsubsection{LinuxThreads}
+\subsubsection*{LinuxThreads}
 	LinuxThreads是标准Linux线程库的名称。从glibc2.0开始，它被集成到glibc中。它几乎是Posix兼容的，但是缺少效率和信号支持。
 
-\subsubsection{NGPT：Linux下一代线程}
+\subsubsection*{NGPT：Linux下一代线程}
 	NGPT是IBM发起的旨在为Linux提供一个好的Posix兼容的线程支持。它现在的稳定版本是2.2，并且运行的很好。。。但是NGPT开发团队已经宣布他们将NGPT的代码库设置为仅支持不开发的模式。因为他们感觉这是“最好的长时间支持社区的办法”。NGPT开发团队将继续改进Linux的线程支持，但是现在他们的重点是改进NPTL。（荣誉属于NGPT团队，为他们优秀的工作和他们考虑NPTL的优雅的方法。）
 
-\subsubsection{NPTL：Linux原生Posix线程库}
+\subsubsection*{NPTL：Linux原生Posix线程库}
 	NPTL是Ulrich Drepper（和蔼的glibc的维护者）和Ingo Molnar发起的项目，旨在为Linux带来世界级的Posix线程支持。
 
 	在2003年10月5日，NPTL被合并到glibc的版本控制树中，最为一个附加的目录（就像linuxthreads一样），因此，它几乎确定将在gblic的下一个发布版中发布。
@@ -302,7 +303,107 @@ fcntl(fd, F_SETFL, flags);
 		当NPTL使用了NGPT引入的三个内核特性：getpid()返回PID，\\ CLONE\_THREAD 和 futexes，NPTL也使用（并且依赖）了一些更宽泛的内核特性，这些特性作为这个项目的一部分。
 
 		一些NGPT在2.5.8时引入的内核特性被修改，清除和扩展，例如线程组处理（CLONE\_THREAD）。(CLONE\_THREAD的修改影响了NGTP的和其他NGPT亲戚同步的兼容性，为了保证在任何不可接受的情况下NGPT都不会中断。)
+		
+		为NPTL设计并被NPTL使用而开发的内核特性在设计白皮书中描述。http://people.redhat.com/drepper/ntpl-design.pdf...
 
+		一个简短列表：TLS支持，多种克隆扩展（CLONE\_SETLS, CLOSE\_SETTID, CLONE\_CLEARTID），POSIX线程信号处理， sys\_exit()扩展（在VM发布版上发布了TID futex），sys\_exit\_group()系统调用，sys\_execve()加强和分离线程的支持。
+
+		还有关于扩展PID空间的工作被做，例如，由于64K PID的假设，max\_pid和pid分配扩展性工作，procfs会崩溃。还有一些仅性能方面的提高的工作也被做了。
+
+		本质上，新的特性是实现1:1线程的非妥协处理。现在内核可以在任何提高线程能力的地方有所版主，并且我们只需要做上下文切换和基本线程原函数的内核调用的很小的一部分。
 	\end{quotation}
-\subsubsection{}
+
+	两者之间最大的却别在于NPTL是1:1的线程模型，而NGPT是M:N的线程模型（参见下面）。尽管如此，Ulrich的初始基准似乎显示NPTL确实毕NGPT快多了。（NGPT团队期待看打Ulrich的基准代码来修改结果。）
+
+\subsubsection*{FreeBSd的线程支持}
+	
+	FreeBSD支持LinuxThreads和一个用户空间线程库。另外，一个叫做KSE的M:N的实现在FreeBSD5.0时被引入。参见www.unobvious.com/bsd/freebsd-threads.html
+
+	在2003年5月25日，Jeff Roberson在freebsd-arch发了一个贴：
+	\begin{quotation}
+		...幸亏Julian, David Xu, Mini, DanEischen和所有其他投身KSE和libpthread开发的人建立的基础，Mini和我开发出了一个1:1的线程实现。这个实现和KSE并行运行宾切不会打断KSE。它实际上通过测试共享位，帮助我们更靠近了M:N线程模型。
+	\end{quotation}
+
+	在2006年7月，Robert Watson宣布在FreeBSD7.x中，1:1线程模型实现成为默认的：
+
+	\begin{quotation}
+		我知道这个在以前已经讨论过了，但是由于7.x的不断改进，我认为现在该再次考虑它了。在很多常规应用和情景的基准中，libthr显然毕libpthread有更好的性能...libthr实现了跨很多平台，并且包含那些libpthread已经支持的一些平台。第一个我们为MySQL和其他大量线程用户的建议是“改用libthr”，libthr也是推荐的!...因此strawman的建议是：是libthr成为7.x的默认线程库。
+	\end{quotation}
+
+\subsubsection*{NetBSD的线程支持}
+		根据Noriyuki Soda的手记：
+		
+		在2003年7月18日，基于调度激活模型的支持M:N线程库的内核被合并到BetBSD当前版本中。
+
+		更多细节参见Nathan J. Williams, Wasabi Systes, Inc.在FRENIX上发表的的NetBSD操作系统上调度激活的一个实现。
+\subsubsection*{Solaris的线程支持}
+	
+	Solaris的线程支持在不断的演变。从Solaris2到Solaris8，默认的线程库是M:N模型，但是在Solaris9默认的线程库是1:1模型。参见Sun的多线程编程手册和Sun的关于Java和Solaris线程的手册。
+
+\subsubsection*{在JDK1.3.x及后续版本中Java的线程支持}
+
+	众所周知，Java直到JKD1.3.x都没有提供任何处理网络连接的方法，除了一个客户端一个线程。Volanomark是一个不错的微型测试程序，可以用来测量在某个时候不同数目的网络连接时每秒钟的信息吞吐量。在2003.5, JDK 1.3的实现实际上可以同时处理10000个连接，但是性能却严重下降了。从Table 4 可以看出JVMs可以处理10000个连接，但是随着连接数目的增长性能也逐步下降。
+
+	注：1:1模型 vs M:N模型
+
+	在实现线程的时候，你有一个选择：你可以把所有线程的支持都放入内核中（这被成为1:1模型）或者你可以把一部分的线程支持移到用户空间中（这被成为M:N模型）。有一个观点认为，M:N模型有更高的性能，但是它太过复杂以致很难保证正确，并且大多数人正在远离他。
+	\begin{itemize}
+		\item 为什么Ingo Molnar更喜欢1:1,而不是M:N
+		\item Sun正在转移到1：1模型上。
+		\item NGPT是一个Linux下的M:N模型线程库。
+		\item 尽管Ulrich Drepper计划在新的glibc线程库中使用M:N模型，但是他曾经转移到1:1模型过。
+		\item MaxOSX看来使用1:1模型。
+		\item FreeBSd和NetBSD似乎依然坚守M:N模型...最长的坚守者？好像freebsd7.0也许转移到1:1线程模型（参见上文），所以也学M:N线程模型的坚守者被证明一无是处。
+	\end{itemize}
+\subsection*{将服务器代码嵌入内核}
+
+	Novell和微软在不同的时间都宣称已经实现了这个。至少，一个NFS的实现是这样的，khttpd是linux下的静态网页服务器，"TUX"(Threaded linUX webserver)是Ingo Molnar为Linux实现的相当快并且可扩展的内核空间HTTP服务器。Ingo的2000年9月1日的声明说一个alpha版本的TUX可以在ftp://ftp.redhat.com/pub/redhat/tux上下载，并且说明怎样加入一个邮件列表以获得更多的信息。
+
+	linux-kernel邮件列表已经一直在讨论这个实现的优缺点，讨论的共识似乎是内核因改提供最小的可能的hooks的增加以提高web服务器的性能，而不是将web服务器移到内核中。这种方法也可使其他服务器受益。参见Zach Brown的关于用户空间vs内核http服务器的备注。linux2.4内核提供了有效的功能给用户程序，比如X15服务器运行的和Tux一样快，但没有对内核进行任何修改。
+
+\section*{注解}
+	Richard Gooch写了一篇讨论I/O选项的论文。
+	
+	在2001年，Tim Brecht和MMichal Ostrowski测量了各种策略下的简单基于select服务器的性能。他们的数据值得一看。
+
+	在2003年，Tim Brecht发布了userver的源代码。这是一个下的web服务器，集合了Abhishek Chandra，David Mosberger，David Pariag和Michal Ostrowski所写的多个服务器。它可以使用select()，poll()，epoll()或者sigio。
+
+	回到1999年五月，Dean Gaudet发帖说：
+
+	我不断地被问道“为什么你们这些人不使用基于select/event的模型，就像Zeus？很明显那是最快的。”...
+
+	他的理由归结为“很困难，并且回报不明显”。但是几个月后，越来越明显，人们喜欢使用它。
+
+	Mark Russinovich写了一篇社论和论文讨论关于Linux2.2内核的I/O策略。值得一读，虽然他似乎乎略了一些观点。实际上，他似乎认为Linux2.2内核的异步I/O（参见上文F\_SETSIG）不会在数据准备就绪时通知用户进程，而是仅仅在新连接到达时通知。这看起来是一个异乎寻常的误解。参见一个早期草案的注解，Ingo Molnar在1999年4月30日的反驳，Russinovich在1999年5月2日的注解，Alan Cox的反驳和linux-kernel的帖子。我猜测他试图在说Linux不支持异步磁盘I/O，这个曾经确实是对的。但是现在，SGI已经实现了KAIO，这个不在是对的了。
+
+	参见这些关于“完成端口”的sysinternals.com和MSDN的网页。他认为完成端口是NT特有的。总之，win32的“覆盖I/O”过于底层而不方便使用，并且一个“完成端口”是一个包装，提供了完成事件的队列，外加通过当别的已经从这个端口获得完成事件的线程处于睡眠状态时（可能在做阻塞I/O）， 允许更多更多的线程获得完成事件来保持运行状态的线程数量保持不变。
+	
+	参见OS/400的对完成端口的支持。
+
+	1999年9月，在linux-kernel上有一个内部的讨论，“>15000并发连接”（线程的第二个星期）。主要包括：
+
+	\begin{itemize}
+		\item Ed Hall发布了一些关于他的经验的手记。他的在一个运行Solaris的HP P2/333上实现>1000 个连接/秒的方案。他的代码使用了一个小的线程池（1或2个每个CPU）每个线程处理大量客户端使用“一个基于事件的线程”。
+		\item Mike Jagdis发布了一个关于poll/select开销的分析，他说“当前的select/poll实现可以被显著的提高，尤其是在阻塞的情况下。但是开销依然会随着描述符数量的增加而增加，这是因为select/poll没有，也不可能记住哪些描述符可能有事件。这个很容易通过一个新的API来修正。欢迎提建议...”
+		\item Mike发布了他的关于提高select()和poll()性能的工作。
+		\item Mike发布了一点关于一个可能替换select()/poll()的API：“在一写‘类pollfd’结构体的地方，一个‘类设备’的API如何，这个‘设备’监听事件并且在你读它的时候，它传送‘类pollfd’结构体来表示事件？...”
+		\item Rogier Wolff建议使用“数字开发人员建议的API”，http://www.cs.rice.edu/\~gaurav/papers/usenix99.ps
+		\item Joerg Pommnitz指出，这个讨论中的任何新的API必须不仅仅能构等待文件描述符的事件，还要能够等待信号和也许SYSV-IPC。至少，我们的同步原语能够确切的完成Win32的WaitForMultipleObjects能够完成的任务。
+		\item Stephen Tweedie断言，F\_SETSIG，实时信号队列和sigwaitinfo()的组合是http://www.cs.rice.edu/\~gaurav/papers/usenix99.ps所提到的API的超集。他还提到，如果你很在意效率，那么一致保持信号阻塞。否则，进程从sigwaitinfo()的队列中抓取下一个信号，而不是异步的传送信号。
+		\item Jayson Nordwick比较了完成端口和F\_SETSIG同步事件模型，得出的结论是他们非常的相似。
+		\item Alax Cox指出，一个旧的SCT的SIGIO的rev补丁包含在2.3.18ac中。
+		\item Jordan Mendelson发布了一些如何使用F\_SETSIG的示例代码。
+		\item Stephen C. Tweedie继续比较了完成端口和F\_SETSIG，指出“当使用一个信号队列机制时，如果正在使用的库也使用了相同的机制，那么，你的程序将获得那些本来属于各种库组件的信号。”但是，库可以设置自己的信号处理函数，因此这个不会（过多）的影响程序。
+		\item Doug Royer指出，当他在Sun日期服务器上工作的时候，他获得了100000个连接在Solaris2.6上。其他的关于如何估计在Linux需要多少RAM和将会遇到什么瓶颈的文章。
+	\end{itemize}
+	
+	有趣的文章！
+
+\section*{可打开文件句柄的限制}
+\section*{线程的限制}
+\section*{关于Java}
+\section*{其他小问题}
+\section*{其他限制}
+\section*{关于内核}
+\section*{测试服务器性能}
 \end{document}
