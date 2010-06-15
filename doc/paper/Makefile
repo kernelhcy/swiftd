@@ -10,7 +10,7 @@ paper:mypaper.tex
 	mv ./tempfiles/mypaper.pdf 毕业设计论文.pdf
 	acroread 毕业设计论文.pdf &
 	
-paperppt:paperppt.tex
+ppt:paperppt.tex
 	xelatex -output-directory=./tempfiles paperppt.tex
 	xelatex -output-directory=./tempfiles paperppt.tex
 	mv ./tempfiles/paperppt.pdf paperppt.pdf

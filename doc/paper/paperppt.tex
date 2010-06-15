@@ -67,11 +67,7 @@
 			\item[*] 必须重启或重新编译。
 		\end{itemize}
 	\end{block}
-	
-\end{frame}
-
-\begin{frame}
-	\frametitle{背景和意义}
+	\pause
 	\begin{block}{}
 	\begin{itemize}
 		\item 针对以上问题，本课题将基于动态链接库技术，使服务器在运行期间，可以动态的获知模块的增加并加载模块。
@@ -80,90 +76,10 @@
 	\end{block}
 \end{frame}
 
-\section{HTTP协议分析}
+\section{插件接口设计}
 
-\begin{frame}
-	\frametitle{HTTP协议分析}
-	\begin{center}
-	{\Large
-		二、HTTP协议分析
-	}
-	\end{center}
-\end{frame}
-
-\begin{frame}
-	\frametitle{HTTP协议简介}
-	
-HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属于应用层的面向对象的协议。它于1990年提出。主要用于从WWW服务器传输超文本到本地浏览器的传送协议。
-
- 	\pause
-
-\begin{block}{HTTP协议具有如下特点：}
-\five{
-	\begin{enumerate}
-		\item 支持客户/服务器模式。
-		\item 简单快速：客户向服务器请求服务时，只需传送请求方法和路径。
-		\item 灵活：HTTP允许传输任意类型的数据对象。
-		\item 无连接：无连接的含义是限制每次连接只处理一个请求。
-		\item 无状态：协议对于事务处理没有记忆能力。
-	\end{enumerate}
-}
-\end{block}
-\end{frame}
-
-\begin{frame}
-	\frametitle{HTTP协议处理过程}
-	\begin{figure}[htbp]
-	\centering
-	\includegraphics[height=6cm, width=7cm]{pics/serverhttp.eps}
-	\end{figure}
-\end{frame}
 
 %要使用verbatim环境，必须是这个格式。begin{frame}不可以。
-\frame[containsverbatim]{
-	\frametitle{Request格式}
-	
-	{\scriptsize
-	\begin{verbatim}
-        ---------------------------------------
-        | Methods |sp| URL |sp| Version |cr|lf|  -----> Request line
-        ---------------------------------------
-        | Header Field Name: |sp| Value |cr|lf|  -]
-        ---------------------------------------   |
-        |   ... (more headers)                |   |---> Header lines
-        ---------------------------------------   |
-        | Header Field Name: |sp| Value |cr|lf|  -]
-        ---------------------------------------
-        |cr|lf|                                  -----> a blank line
-        ---------------------------------------
-        |                                     |
-        | Data...                             |  -----> Entity body
-        |                                     |
-        ---------------------------------------
-        cr = \r ; lf = \n ; sp = blankspace
- 	\end{verbatim}
- 	}%\scriptsize
- 	
- 	\begin{block}{}
- 	此格式规定了HTTP协议中每一个Request中数据的意义。服务器根据此格式理解请求的内容。
- 	\end{block}
-}
-
-\begin{frame}
-	\frametitle{需要处理的HEADERS}
-	\begin{block}{HEADERS:}
-	\begin{enumerate}[(a)]
-		\item Connection: 标记是否保持连接。
-		\item Content-Length: POST数据的长度。
-		\item Content-Type: POST数据的格式。
-		\item Host: 主机名。HTTP/1.1要求必须有主机名。
-		\item If-Modifice-Since: 用于缓存。
-		\item If-None-Match: 用于缓存。
-	\end{enumerate}
-	\end{block}
-\end{frame}
-
-\section{插件接口设计}
 
 \begin{frame}
 	\frametitle{插件接口设计}
@@ -174,19 +90,13 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	\end{center}
 \end{frame}
 
+
 \begin{frame}
-	\frametitle{插件动态加载过程}
-	
-	服务器通过实时监测插件配置文件是否修改。一旦监测到修改，立即加载（卸载）插件。
-	
-	\pause
-	
-	\begin{block}{处理过程如下：}
+	\frametitle{HTTP协议处理过程}
 	\begin{figure}[htbp]
 	\centering
-	\includegraphics[height=5cm, width=9cm]{pics/loadplugin.eps}
+	\includegraphics[height=6cm, width=7cm]{pics/serverhttp.eps}
 	\end{figure}
-	\end{block}
 \end{frame}
 
 \begin{frame}
@@ -238,6 +148,22 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 		\item[-] handle\_subrequest: 处理子请求。
 		\item[-] subrequest\_end: 子请求结束。
 	\end{itemize}
+	\end{block}
+\end{frame}
+
+
+\begin{frame}
+	\frametitle{插件动态加载过程}
+	
+	服务器通过实时监测插件配置文件是否修改。一旦监测到修改，立即加载（卸载）插件。
+	
+	\pause
+	
+	\begin{block}{处理过程如下：}
+	\begin{figure}[htbp]
+	\centering
+	\includegraphics[height=5cm, width=9cm]{pics/loadplugin.eps}
+	\end{figure}
 	\end{block}
 \end{frame}
 
@@ -299,19 +225,20 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 
 
 \begin{frame}
-	\frametitle{连接处理：状态机}
+	\frametitle{状态机和线程池}
+	\begin{block}{状态机}
 	使用状态机对连接进行处理。
 	
 	对连接定义一系列状态。在整个生命周期中，连接处于某一个状态。根据连接的当前状态和所发生的事件，使连接进入下一状态。
-	
+	\end{block}
 	\pause
+	\begin{block}{线程池}
+	每一个I/O事件调用一个线程进行处理。
 	
-	\begin{example}{例如：}
-	\begin{figure}[htbp]
-	\centering
-	\includegraphics[height=3cm, width=4cm]{pics/statemachine.eps}
-	\end{figure}
-	\end{example}
+	预先创建一部分线程。如果线程不够，再创建新的线程。线程处理完I/O事件不销毁，放入线程池中以备下次继续使用。
+	
+	降低线程创建和销毁的开销。
+	\end{block}
 \end{frame}
 
 \section{插件接口实现}
@@ -326,29 +253,8 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 \end{frame}
 
 \frame[containsverbatim]{
-	\frametitle{接口实现}
-	\begin{block}{主要的数据结构：}
-		\begin{enumerate}
-			\item plugin\_slot\_t枚举类型
-			\item plugin结构体
-			\item plugin\_slot结构体。
-		\end{enumerate}
-	\end{block}
-	plugin\_slot\_t枚举类型用于定义接口函数的类型。与接口函数一一对应。
-	\begin{example}
-	\begin{verbatim}
-	PLUGIN_SLOT_SET_DEFAULT
-	PLUGIN_SLOT_CLEANUP
-	PLUGIN_SLOT_TRIGGER
-	PLUGIN_SLOT_URL_RAW
-	PLUGIN_SLOT_URL_CLEAN
-	...
-	\end{verbatim}
-	\end{example}
-}
-
-\begin{frame}
-	\frametitle{接口实现}
+	\frametitle{接口实现：plugin结构体}
+	
 	plugin结构体包含一个插件的所有信息。包括版本，名称以及一系列接口函数的地址。plugin结构体类似于一个类。服务器通过调用其成员方法（函数指针）来执行插件的功能。
 	
 	定义如下：
@@ -356,10 +262,11 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	\centering
 	\includegraphics[height=4cm, width=8cm]{pics/plugin_s.eps}
 	\end{figure}
-\end{frame}
+}
+
 
 \begin{frame}
-	\frametitle{接口实现}
+	\frametitle{接口实现：plugin\_slot数组}
 	plugin\_slot是一个二维数组。相当于plugin的登记表。服务器通过这个表中的信息对插件进行调用。
 	表的形式如下：
 	\begin{table}[htbp]
@@ -426,64 +333,18 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	\frametitle{IO实现}
 	使用epoll对文件描述符的IO事件进行监测。
 	
-	
 	每个文件描述符都有一个对应的IO事件处理函数。一旦有IO事件发生，申请一个线程，在线程中调用这个函数处理IO事件。
-	\pause
-	\begin{block}{IO事件处理过程：}
-	\begin{figure}[htbp]
-	\centering
-	\includegraphics[height=5cm, width=9cm]{pics/epoll.eps}
-	\end{figure}
-	\end{block}
 	
-\end{frame}
-
-\begin{frame}
-	\frametitle{IO实现}
-	\begin{block}{Queue}
-		每个连接对应三个队列。用来存储数据：
-		\begin{enumerate}
-			\item read\_queue : 读取的数据，要加锁。
-			\item write\_queue : 发送的数据
-			\item requet\_content\_queue : POST数据
-		\end{enumerate}
-	\end{block}
 	\pause
 	\begin{block}{线程池}
 		每个线程的主循环中，调用传递进来的函数。（包括参数）\\
 		使用pthread的条件变量对线程进行唤醒和睡眠操作。\\
 		预先创建线程。提高效率。
 	\end{block}
-\end{frame}
-
-\begin{frame}
-	\frametitle{连接处理的状态机}
-	对于每个连接，在其生存周期中，共定义了11个状态。
 	
+	\pause
 	
-	\begin{block}{连接状态：}
-		\begin{itemize}
-			\item connect: 标记connection结构体可用。
-			\item requeststart: 请求开始。
-			\item read: 读取Request数据。
-			\item handlerequest: 解析Request数据。
-			\item requestend: 解析结束。
-		\end{itemize}
-	\end{block}
-\end{frame}
-
-\begin{frame}
-	\frametitle{连接处理的状态机}
-	\begin{block}{连接状态（续）：}
-		\begin{itemize}
-			\item readpost: 读取POST数据。
-			\item responsestart: 处理请求。在这个状态中调用插件。
-			\item write: 发送数据回client。
-			\item responseend: 处理结束。
-			\item error: 出错。
-			\item close: 连接关闭。
-		\end{itemize}
-	\end{block}
+	对于每个连接，在其生存周期中，共定义了11个状态。包括connection,requeststart,read,handlerequest, \\requestend,readpose,responsestart,write,responseend,\\error和close。
 \end{frame}
 
 \begin{frame}
@@ -493,7 +354,7 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 		\frametitle{连接处理的状态机}
 		\begin{figure}[htbp]
 		\centering
-		\includegraphics[height=8cm, width=6cm]{pics/state.eps}
+		\includegraphics[height=7.5cm, width=6cm]{pics/state.eps}
 		\end{figure}
 	\end{column}
 	
@@ -513,40 +374,6 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	
 \end{frame}
 
-\frame[containsverbatim]{
-	\frametitle{连接处理的状态机}
-	\begin{block}{}
-	状态机的关键函数就是下面的connection\_state\_machine函数。
-	\end{block}
-	{\scriptsize
-	\begin{verbatim}
-    int connection_state_machine(server * srv, connection * con)
-    {
-        int done = 0, r;
-        while (done == 0)
-        {
-            size_t ostate = con -> state;
-            switch (con->state)
-            { 
-                case CON_STATE_REQUEST_START: 
-                case CON_STATE_REQUEST_END: 
-                case CON_STATE_HANDLE_REQUEST:
-                 /* more case... */
-                default:
-                    break;
-            }
-            if ( ostate == con->state)
-            {
-                done = 1;
-            }
-        } 
-        return 0;
-    }
-	\end{verbatim}
-	}
-}
-
-\section{运行结果}
 
 \begin{frame}
 	\frametitle{运行结果}
@@ -600,7 +427,7 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	\begin{block}{访问失败：}
 	\begin{figure}[htbp]
 	\centering
-	\includegraphics[height=3cm, width=6cm]{pics/nodirindex.eps}
+	\includegraphics[height=2.5cm, width=6cm]{pics/nodirindex.eps}
 	\end{figure}
 	\end{block}
 \end{frame}
@@ -625,7 +452,7 @@ HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属�
 	\begin{block}{访问成功：}
 	\begin{figure}[htbp]
 	\centering
-	\includegraphics[height=3cm, width=6cm]{pics/dirindex.eps}
+	\includegraphics[height=2.5cm, width=6cm]{pics/dirindex.eps}
 	\end{figure}
 	\end{block}
 \end{frame}
