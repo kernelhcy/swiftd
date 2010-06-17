@@ -13,18 +13,18 @@
 
 \zhabstract 
 
-Web服务器作为互联网的核心组成部分，在支撑整个互联网服务中，起到了至关重要的作用。由于互联网中应用的不断更新，要求web服务器也能适应这种更新变化。同时，web服务器必须保证7*24小时的运行。在目前的正在使用的web服务器中，大部分都不支持功能的动态增加，也就是在不重启服务器的情况下，动态的为服务器增加功能。针对这一问题，本课题基于动态链接库技术，使服务器在运行期间，可以动态的获知模块的增加并加载模块。本系统实现了服务器的基本功能，重点实现模块动态加载特性，并对实现进行测试。 
+Web服务器作为互联网的核心组成部分，在支撑整个互联网服务中，起到了至关重要的作用。由于互联网中应用的不断更新，要求web服务器也能适应这种更新变化。同时，web服务器必须保证7*24小时的运行。在目前的正在使用的web服务器中，大部分都不支持功能的动态增加，也就是在不重启服务器的情况下，动态的为服务器增加功能。针对这一问题，本课题基于动态链接库技术，使服务器在运行期间，可以动态的获知模块的增加并加载模块。 
 
-本论文的主要内容是研究实现基于动态链接技术的Web服务器动态加载插件的接口。首先，文中介绍了本课题的背景和意义，以及作者的主要任务和工作。接着概述与本课题相关的HTTP协议（RFC2616）的内容，简单介绍动态链接技术及其使用，还有介绍Web服务器的一些主流设计和实现方法。接下来，通过对HTTP协议的分析，设计插件的接口，分析动态链接技术，设计动态加载插件的过程。然后，采用非阻塞I/O+线程池+I/O多路复用技术，设计服务器的架构。然后，根据以上的设计，在Linux系统下，实现服务器的原型，并在其上实现插件接口和动态加载功能。
+本论文的主要内容是研究实现基于动态链接技术的Web服务器动态加载插件的接口。首先，文中介绍了本课题的背景和意义，以及作者的主要任务和工作。接着概述与本课题相关的HTTP协议（RFC2616）的内容，简单介绍动态链接技术及其使用，还有介绍Web服务器的一些主流设计和实现方法。接下来，通过对HTTP协议的分析，设计插件的接口，分析动态链接技术，设计动态加载插件的过程。然后，采用非阻塞I/O+线程池+I/O多路复用技术，设计服务器的架构。然后，根据以上的设计，在Linux系统下，实现服务器的原型，并在其上实现插件接口和动态加载功能。本系统实现了服务器的基本功能，重点实现模块动态加载特性，并对实现进行测试。
 
 最后，通过测试和观察运行结果，分析服务器是否可以正确处理HTTP请求，包括HTTP/1.1的持久连接和HTTP/1.0的非持久连接，并返回客户端所请求的资源。同时，验证插件接口的设计能否满足扩展功能的需求，能否正确的动态加载插件。本系统可以处理一般规模的请求数量。
 
 {\zhkeywords Web服务器;接口;Linux;C;动态加载}
 
 \enabstract
-	As the core component of the Word Wide Web, the web sever acts as a very important role to support the whole internet service. Due to the continuous update of the internet application, the web server must adapt this update. At the same time, the web server must keep running 7 * 24 hours. In the web servers which are used now, all most of them do not support to dynamically adding functions. Namely, when the server is running and dose not reboot, we can add new function to the server. Against this problem, this issue let the web servers can be added new function plugin or deleted function plugin when they are running based on dynamic link technology. This system implements the base functions of the web server and focuses on the implementation of the feature of dynamically loading function and testing the implementation.
+	As the core component of the Word Wide Web, the web sever acts as a very important role to support the whole internet service. Due to the continuous update of the internet application, the web server must adapt this update. At the same time, the web server must keep running 7 * 24 hours. In the web servers which are used now, all most of them do not support to dynamically adding functions. Namely, when the server is running and dose not reboot, we can add new function to the server. Against this problem, this issue let the web servers can be added new function plugin or deleted function plugin when they are running based on dynamic link technology. 
 	
-	The main content of this paper is that studying the interface of dynamically loading function of the web sever based on dynamic link technology. First, the paper introduces the background and significance of this issue and the main task and job of the author. Then, the paper outlines the HTTP protocol(RFC 2616) and the dynamic link technology and its application, also outlines some design and implement methods of the web server. Next, by analysising the HTTP protocol and the dynamic link technology, we design the interface of the plugin and the process of dynamically loading the function plugin. Then, using nonblocking I/O, thread pool and I/O multiplexing, we design the architecture of the web server. Last, according to the designs above, we implement a prototype of the web server and implement the interface of the plugin and dynamically loading on it on the Linux system.
+	The main content of this paper is that studying the interface of dynamically loading function of the web sever based on dynamic link technology. First, the paper introduces the background and significance of this issue and the main task and job of the author. Then, the paper outlines the HTTP protocol(RFC 2616) and the dynamic link technology and its application, also outlines some design and implement methods of the web server. Next, by analysising the HTTP protocol and the dynamic link technology, we design the interface of the plugin and the process of dynamically loading the function plugin. Then, using nonblocking I/O, thread pool and I/O multiplexing, we design the architecture of the web server. Last, according to the designs above, we implement a prototype of the web server and implement the interface of the plugin and dynamically loading on it on the Linux system.This system implements the base functions of the web server and focuses on the implementation of the feature of dynamically loading function and testing the implementation.
 	
 	Last, by testing and the obsvervation of the run result, we analysis whether the server handle the HTTP request correctly and response to the client correctly or not, including HTTP/1.1 persistent connections and HTTP/1.0 nonpersistent connections. At the some time, we test whether the interface can santisfy the requirement of dynamically extending and dynamically load the function plugin correctly or not. This system can handle the general scale of requests.
 
@@ -296,8 +296,37 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	状态机可分为确定型（DFA）和非确定型（NDFA、GNFA）状态机。在确定型状态机中，每个状态对每个可能输入只有精确的一个转移。在非确定型状态中，给定状态对给定可能输入可以没有或有多于一个转移。
 	
+	状态存储关于过去的信息，就是说：它反映从系统开始到现在时刻的输入变化。转移指示状态变更，并且用必须满足来确使转移发生的条件来描述它。动作是在给定时刻要进行的活动的描述。有多种类型的动作：
+	\begin{itemize}
+		\item 进入动作（Entry action） 在进入状态时进行
+		\item 退出动作 在退出状态时进行
+		\item 输入动作 依赖于当前状态和输入条件进行
+		\item 转移动作 在进行特定转移时进行
+	\end{itemize}
+	
+	FSM（有限状态机）可以使用图\ref{fsm}那样的状态图（或状态转移图）来表示。此外可以使用多种类型的状态转移表。下面展示最常见的表示：当前状态（B）和条件（Y）的组合指示出下一个状态（C）。完整的动作信息可以只使用脚注来增加。包括完整动作信息的 FSM定义可以使用状态表。如表\ref{statemove}
+	
+\begin{table}[htbp]
+\setlength{\abovecaptionskip}{0pt} 
+\setlength{\belowcaptionskip}{10pt} 
+\label{statemove}
+\caption{状态转移表\ucite{wiki}}
+\centering
+\begin{tabularx}{\textwidth}{XXXXl} %最后一列是空的。这样可以是倒数第二列居中，否则会报错或不居中。
+\toprule
+\centering 当前状态 →\\条件 ↓     &	 \centering  状态 A &\centering 	状态 B &\centering 	状态 C &\\
+\midrule
+\centering 条件 X &\centering 	… &\centering 	… &	\centering … &\\
+\centering 条件 Y &\centering 	… &\centering 	状态 C &\centering 	…&\\
+\centering 条件 Z &\centering 	… &\centering 	… &\centering 	… &\\
+\bottomrule
+\end{tabularx}
+\end{table}
+	
 \chapter{动态扩展功能接口与服务器的分析和设计}
-
+	
+	Web服务器的主要工作就是根据HTTP协议处理客户端的请求，因此，HTTP协议是Web服务器的核心。在对服务器的功能进行怎加时，必须能够和HTTP协议的处理无缝接合。因此在本章中，首先对HTTP协议处理过程和数据格式进行了分析。在分析的基础之上，设计接口的具体内容以及接口的调用过程。为了实现动态加载功能，服务器必须动态的感知插件的增加。本章针对这个问题进行分析并给出了设计方案。对于服务器的分析和设计，着重描述了I/O处理和连接处理两个部分。
+	
 \section{动态扩展功能接口的分析和设计}
 \subsection{HTTP协议数据格式的分析}
 	HTTP协议的主要数据格式包括Request格式和Response格式。
@@ -496,6 +525,8 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	当请求处于handlerquest状态时，可能还需要进行子请求。这时候，请求依然处于handlerquest状态，并在这个状态中对子请求进行处理。某些请求可能会有多个子请求。这时，请求会一直停留在这个状态，处理所有子请求，然后进入下一个状态。
 	
 \chapter{动态扩展功能接口和服务器的实现和测试}
+
+	基于上一章的分析和设计，本章描述了动态扩展功能接口和服务器的实现，最后给出了测试的结果。动态扩展功能接口的实现主要描述了接口定义的实现，加载过程的实现和调用过程的实现。在服务器的实现中重点描述了I/O，连接处理状态机和线程池的实现
 
 \section{动态扩展功能接口的实现}
 
@@ -1035,7 +1066,7 @@ int connection_state_machine(server *srv, connection *con)
 	
 	启动日志。如图\ref{startuplog}
 	
-	\begin{figure}[t]
+	\begin{figure}[htbp]
 	\centering
 	\setlength{\abovecaptionskip}{0pt}
 	\setlength{\belowcaptionskip}{10pt}
@@ -1046,7 +1077,7 @@ int connection_state_machine(server *srv, connection *con)
 	
 	在服务器日志中同样显示服务器正常启动。监听8080端口。线程池，I/O多路复用系统都正常初始化。服务器开始等待客户端请求。此时，服务器中没有任何插件。服务器只提供简单的返回静态资源的服务。
 	
-	通过浏览器访问服务器资源。如图\ref{access1}。图中浏览器地址栏中的地址必须有index.html，此时服务器还没有加载插件。如果访问目录的话，会返回404（资源不存在）错误。
+	通过浏览器访问服务器资源。如图\ref{access1}。图中浏览器地址栏中的地址必须有index.html，此时服务器还没有加载插件。如果访问目录的话，会返回404（资源不存在）错误。服务器对于定位到目录的资源请求，默认返回404错误。
 	
 	\begin{figure}[htbp]
 	\centering
@@ -1057,7 +1088,7 @@ int connection_state_machine(server *srv, connection *con)
 	\includegraphics[height=9cm, width=12cm]{pics/access1.eps}
 	\end{figure}
 	
-	浏览器得到了服务器返回的资源，服务器运行正常。
+	浏览器得到了服务器返回的资源，服务器正确的处理的来自浏览器的请求。
 	
 	服务器请求处理日志。如图\ref{access1log}
 	
@@ -1070,10 +1101,10 @@ int connection_state_machine(server *srv, connection *con)
 	\includegraphics[height=5cm, width=15cm]{pics/access1log.eps}
 	\end{figure}
 	
-	服务器的日志文件显示了本次请求的一些信息，主要包括HTTP请求头的数据。
+	服务器的日志文件显示了本次请求的一些信息，主要包括HTTP请求头的数据。通过这些日志信息可以清除的看到服务器对各个请求的处理。日志中没有记录连接的次数，仅仅记录了各个请求的处理情况。
 	
 	
-	加载插件。修改插件配置文件swiftd-plugin.conf。如图\ref{pluginconf}
+	加载插件。修改插件配置文件swiftd-plugin.conf。将插件的位置和名称写入配置文件中。保存。如图\ref{pluginconf}
 	\begin{figure}[htbp]
 	\centering
 	\setlength{\abovecaptionskip}{0pt}
@@ -1083,7 +1114,8 @@ int connection_state_machine(server *srv, connection *con)
 	\includegraphics[height=3cm, width=10cm]{pics/pluginconf.eps}
 	\end{figure}
 	
-	加载插件的日志。如图\ref{loadpluginlog}
+	加载插件的日志。如图\ref{loadpluginlog}。
+	
 	\begin{figure}[htbp]
 	\centering
 	\setlength{\abovecaptionskip}{0pt}
@@ -1093,9 +1125,8 @@ int connection_state_machine(server *srv, connection *con)
 	\includegraphics[height=9cm, width=15cm]{pics/loadpluginlog.eps}
 	\end{figure}
 	
-	服务器成功的加载了插件。插件包含三个接口函数。分别为：
-	
-	访问资源所在的目录。如图\ref{access2}
+
+	再次通过浏览器访问资源所在的目录。如图\ref{access2}。这个时候，服务器通过调用插件，完成在目录中搜索index.html的任务。如果搜索到这个文件，则返回这个文件。图\ref{access2}中显示服务器返回了目录下的index.html文件。
 	\begin{figure}[htbp]
 	\centering
 	\setlength{\abovecaptionskip}{0pt}
@@ -1105,15 +1136,8 @@ int connection_state_machine(server *srv, connection *con)
 	\includegraphics[height=9cm, width=12cm]{pics/access2.eps}
 	\end{figure}
 	
-	将插件卸载，删掉配置文件中的配置项。再访问资源所在目录，结果如图\ref{access3}
-	\begin{figure}[t]
-	\centering
-	\setlength{\abovecaptionskip}{0pt}
-	\setlength{\belowcaptionskip}{10pt}
-	\caption{浏览器请求数据，仅定位到目录，不加载插件}
-	\label{access3}
-	\includegraphics[height=9cm, width=12cm]{pics/access3.eps}
-	\end{figure}
+	将插件卸载，删掉配置文件中的配置项。此时，服务器再次重新读取配置文件，删除配置文件中没有描述的插件。使用浏览器再访问资源所在目录。此时服务器返回404错误。
+
 	
 	测试结果总结如表\ref{testingresult}
 	\begin{table}[t]

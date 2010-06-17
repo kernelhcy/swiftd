@@ -1,4 +1,4 @@
-all:paper
+all:毕业设计论文.pdf 任务书考核表等.pdf
 	xelatex -output-directory=./tempfiles mergepdf.tex
 	mv ./tempfiles/mergepdf.pdf 毕业设计论文黄丛宇.pdf
 	acroread 毕业设计论文黄丛宇.pdf &
