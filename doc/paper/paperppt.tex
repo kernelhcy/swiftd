@@ -7,7 +7,10 @@
 
 %标题作者等信息。
 %这些信息将自动生成ppt的第一页
-\title[毕业设计答辩]{\LARGE{毕业设计答辩\\}}
+\title[毕业设计答辩]{\LARGE{
+			基于动态链接技术的web服务器动态扩展功能
+				接口的设计与实现
+	}}
 %\subtitle{基于动态链接技术的{\cp web}服务器动态扩展功能\\接口的设计与实现}
 \author[黄丛宇]{黄丛宇\\06161032\\指导老师：马瑞芳}
 \institute[西安交通大学 软件学院]{西安交通大学 软件学院 软件62班}
@@ -20,22 +23,6 @@
 \begin{frame}
 	\frametitle{目录}
 	\tableofcontents
-\end{frame}
-
-\section{课题名称}
-%第二页
-\begin{frame}
-	\frametitle{课题名称}
-	
-	\begin{block}{}
-	\begin{center}
-	{\Large
-			基于动态链接技术的web服务器动态扩展功能\\
-				接口的设计与实现
-	}
-	\end{center}
-	\end{block}
-	
 \end{frame}
 
 \section{背景和意义}
@@ -76,53 +63,52 @@
 	\end{block}
 \end{frame}
 
-\section{插件接口设计}
+\section{动态扩展功能接口和服务器的分析和设计}
 
 
 %要使用verbatim环境，必须是这个格式。begin{frame}不可以。
 
 \begin{frame}
-	\frametitle{插件接口设计}
+	\frametitle{动态扩展功能接口分析和设计}
 	\begin{center}
 	{\Large
-		三、插件接口设计
+		二、动态扩展功能接口和服务器的分析和设计
 	}
 	\end{center}
 \end{frame}
 
 
 \begin{frame}
-	\frametitle{HTTP协议处理过程}
+	\frametitle{HTTP协议分析}
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=6cm, width=7cm]{pics/serverhttp.eps}
+	\caption{HTTP协议处理过程}
 	\end{figure}
 \end{frame}
 
 \begin{frame}
-	\frametitle{插件调用过程}
-	服务器对HTTP协议Request数据进行解析。	在解析的过程中调用插件对Request进行处理。
-	
-	\pause
-	
-	\begin{block}{处理过程如下：}
+	\frametitle{动态扩展功能接口调用过程}
+	服务器对HTTP协议Request数据进行解析。	在解析的过程中调用接口函数对Request进行处理。
+
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=5cm, width=8cm]{pics/httpplugin.eps}
+	\caption{接口调用过程}
 	\end{figure}
-	\end{block}
+
 \end{frame}
 
 
 \begin{frame}
-	\frametitle{插件接口定义：}
-	接口定义一些列函数原型。所有函数都有明确的定义和调用时机。
+	\frametitle{动态扩展功能接口定义：}
+	接口定义了一些列函数原型。所有函数都有明确的定义和调用时机。
 	
-	插件选择性的实现这些函数。服务器在确定的时机调用所有插件的对应函数。
+	功能插件选择性的实现这些函数。服务器在确定的时机调用所有插件的对应函数。
 	
 	\pause
 	
-	\begin{block}{接口定义：}
+	\begin{block}{接口函数定义：}
 	\begin{itemize}
 		\item[-] init: 初始化插件。
 		\item[-] set\_default: 设置插件的配置为默认值。
@@ -134,8 +120,8 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{插件接口定义：}
-	\begin{block}{接口定义（续）：}
+	\frametitle{动态扩展功能接口定义：}
+	\begin{block}{接口函数定义（续）：}
 	\begin{itemize}
 		\item[-] url\_raw: 获得未解码的URL地址后调用。
 		\item[-] url\_clean: 获得已解码的URL地址后调用。
@@ -153,33 +139,20 @@
 
 
 \begin{frame}
-	\frametitle{插件动态加载过程}
+	\frametitle{动态加载过程}
 	
-	服务器通过实时监测插件配置文件是否修改。一旦监测到修改，立即加载（卸载）插件。
-	
-	\pause
-	
-	\begin{block}{处理过程如下：}
+	服务器实时的监测插件配置文件是否修改。一旦监测到修改，立即重新加载功能插件。
+
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=5cm, width=9cm]{pics/loadplugin.eps}
+	\caption{处理过程}
 	\end{figure}
-	\end{block}
-\end{frame}
 
-\section{服务器设计}
-
-\begin{frame}
-	\frametitle{服务器设计}
-	\begin{center}
-	{\Large
-		四、服务器设计
-	}
-	\end{center}
 \end{frame}
 
 \begin{frame}
-	\frametitle{IO设计}
+	\frametitle{I/O分析和设计}
 	\begin{columns}
 		\begin{column}{0.25\textwidth}
 			\begin{alertblock}{}
@@ -213,13 +186,13 @@
 			\end{alertblock}
 		\end{column}
 	\end{columns}
-	\pause
-	\begin{block}{IO结构图：}
+
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=5cm, width=10cm]{pics/IO.eps}
+	\caption{I/O结构图}
 	\end{figure}
-	\end{block}
+
 	
 \end{frame}
 
@@ -241,13 +214,13 @@
 	\end{block}
 \end{frame}
 
-\section{插件接口实现}
+\section{动态扩展功能接口和服务器的实现}
 
 \begin{frame}
-	\frametitle{插件接口实现}
+	\frametitle{动态扩展功能接口和服务器的实现}
 	\begin{center}
 	{\Large
-		五、插件接口实现
+		三、动态扩展功能接口和服务器的实现
 	}
 	\end{center}
 \end{frame}
@@ -261,6 +234,7 @@
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=4cm, width=8cm]{pics/plugin_s.eps}
+	\caption{plugin结构体}
 	\end{figure}
 }
 
@@ -310,30 +284,21 @@
 \begin{frame}
 	\frametitle{接口实现}
 	服务器使用inotify监测插件配置文件。inotify产生一个文件描述符，通过监测这个文件描述符是否有数据可读即可监测到文件的改变。
-	\begin{block}{监测的过程如下：}
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=5cm, width=9cm]{pics/inotify.eps}
+	\caption{监测的过程}
 	\end{figure}
-	\end{block}
 \end{frame}
-
-\section{服务器实现}
 
 \begin{frame}
 	\frametitle{服务器实现}
-	\begin{center}
-	{\Large
-		六、服务器实现
-	}
-	\end{center}
-\end{frame}
-
-\begin{frame}
-	\frametitle{IO实现}
+	\begin{block}{I/O}
 	使用epoll对文件描述符的IO事件进行监测。
 	
-	每个文件描述符都有一个对应的IO事件处理函数。一旦有IO事件发生，申请一个线程，在线程中调用这个函数处理IO事件。
+	epoll的效率高于select/poll。
+	\end{block}
+	%每个文件描述符都有一个对应的IO事件处理函数。一旦有IO事件发生，申请一个线程，在线程中调用这个函数处理IO事件。
 	
 	\pause
 	\begin{block}{线程池}
@@ -343,15 +308,16 @@
 	\end{block}
 	
 	\pause
-	
+	\begin{block}{状态机}
 	对于每个连接，在其生存周期中，共定义了11个状态。包括connection,requeststart,read,handlerequest, \\requestend,readpose,responsestart,write,responseend,\\error和close。
+	\end{block}
 \end{frame}
 
 \begin{frame}
 	\begin{columns}
+	\frametitle{连接处理状态机}
 	
 	\begin{column}{0.6\textwidth}
-		\frametitle{连接处理的状态机}
 		\begin{figure}[htbp]
 		\centering
 		\includegraphics[height=7.5cm, width=6cm]{pics/state.eps}
@@ -374,12 +340,12 @@
 	
 \end{frame}
 
-
+\section{运行结果}
 \begin{frame}
 	\frametitle{运行结果}
 	\begin{center}
 	{\Large
-		七、运行结果
+		四、运行结果
 	}
 	\end{center}
 \end{frame}
@@ -388,21 +354,20 @@
 	\frametitle{启动和访问}
 	\begin{columns}
 		\begin{column}{0.4\textwidth}
-			\begin{block}{启动：}
+			启动：
 			\begin{figure}[htbp]
 			\centering
 			\includegraphics[height=3cm, width=4.5cm]{pics/startup.eps}
 			\end{figure}
-			\end{block}
 		\end{column}
 		
 		\begin{column}{0.5\textwidth}
-			\begin{block}{正常访问：}
+			正常访问
 			\begin{figure}[htbp]
 			\centering
 			\includegraphics[height=5cm, width=6cm]{pics/works.eps}
 			\end{figure}
-			\end{block}
+
 		\end{column}
 	\end{columns}
 \end{frame}
@@ -411,12 +376,11 @@
 	\frametitle{运行结果}
 	\begin{columns}
 		\begin{column}{0.6\textwidth}
-			\begin{block}{注释掉插件配置：}
+			注释掉插件配置：
 			\begin{figure}[htbp]
 			\centering
 			\includegraphics[height=3cm, width=4.5cm]{pics/complugin.eps}
 			\end{figure}
-			\end{block}
 		\end{column}
 		
 		\begin{column}{0.3\textwidth}
@@ -424,24 +388,22 @@
 		\end{column}
 	\end{columns}
 	
-	\begin{block}{访问失败：}
+	访问失败：
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=2.5cm, width=6cm]{pics/nodirindex.eps}
 	\end{figure}
-	\end{block}
 \end{frame}
 
 \begin{frame}
 	\frametitle{运行结果}
 	\begin{columns}
 		\begin{column}{0.6\textwidth}
-			\begin{block}{重新掉插件配置：}
+			增加插件配置：
 			\begin{figure}[htbp]
 			\centering
 			\includegraphics[height=3cm, width=4.5cm]{pics/uncomplugin.eps}
 			\end{figure}
-			\end{block}
 		\end{column}
 		
 		\begin{column}{0.3\textwidth}
@@ -449,13 +411,35 @@
 		\end{column}
 	\end{columns}
 	
-	\begin{block}{访问成功：}
+	访问成功：
 	\begin{figure}[htbp]
 	\centering
-	\includegraphics[height=2.5cm, width=6cm]{pics/dirindex.eps}
+	\includegraphics[height=2.5cm, width=7cm]{pics/dirindex.eps}
 	\end{figure}
-	\end{block}
+
 \end{frame}
+
+\section{总结}
+\begin{frame}
+	\frametitle{总结}
+	\begin{center}
+	{\Large
+		五、总结
+	}
+	\end{center}
+\end{frame}
+
+\begin{frame}
+	\frametitle{运行结果}
+	\begin{enumerate}
+		\item 阅读关于HTTP协议的相关资料，理解了HTTP协议的处理过程。
+		\item 学习了在Linux下进行开发。熟悉了linux，gcc，gdb，vim等的使用。
+		\item 动态加载功能接口达到了课题的目标要求。可以正确的进行动态加载和卸载功能插件。
+		\item 服务器可以正确处理HTTP请求。包括HTTP/1.1和HTTP/1.0。能够正确的调用插件处理请求。
+		\item 总共完成11000行C代码的编写和调试。
+	\end{enumerate}
+\end{frame}
+
 \begin{frame}
 	\frametitle{结束}
 	\begin{center}

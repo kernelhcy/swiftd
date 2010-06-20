@@ -210,8 +210,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	图\ref{epollvspoll}是有关epoll和poll的效率比较。sys\_epoll和/dev/epoll是epoll的不同接口。
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=11cm, width=15cm]{pics/epollvspoll.eps}
 	\caption{epoll与poll效率比较\ucite{hudong}}
 	\label{epollvspoll}
@@ -243,8 +241,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=8cm, width=6cm]{pics/fsm.eps}
 	\caption{开门关门状态机\ucite{wiki}}
 	\label{fsm}
@@ -308,8 +304,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	通常，在HTTP协议中，有客户端发起请求，服务器被动的接受请求。如图\ref{httpbaike}
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=3cm, width=8cm]{pics/httpbaike.eps}
 	\caption{HTTP协议的处理过程\ucite{baike}}
 	\label{httpbaike}
@@ -318,8 +312,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	在客户端和服务器之间建立连接之后，客户端发送Request数据，服务器对Request数据进行解析然后按照解析出来的数据对请求进行处理，处理完毕之后（包括处理出错），服务器构造Response数据，返回给客户端。在整个过程中，服务器对客户端的请求不做任何信息或者状态的记录。也就是说，即使是同一客户端的同一个请求，多次发送给服务器，服务器都认为是不同的请求。在本课题中，我们主要关心在服务器端HTTP协议的处理过程。如图\ref{serverhttp}。
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=8cm, width=10cm]{pics/serverhttp.eps}
 	\caption{服务器端HTTP协议的处理过程}
 	\label{serverhttp}
@@ -329,8 +321,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	在图\ref{serverhttp}中可以看到，服务器在处理HTTP请求的时候，基本上分为三步：解析协议，处理请求和返回处理结果。在解析协议和返回处理结果的过程中，服务器都要必须严格按照HTTP协议的规定进行处理，这两个过程中，没有必要也不能增加HTTP协议规定之外的处理步骤。并且，插件基本上都是针对处理请求设计的，因此，插件的调用过程集中在处理请求的阶段。插件的调用过程如图\ref{httpplugin}所示。
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=9.5cm, width=12cm]{pics/httpplugin.eps}
 	\caption{接口调用过程}
 	\label{httpplugin}
@@ -384,8 +374,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	服务器可以通过检测插件的动态库所在的目录的变化，来获知是否有新的插件加入。但是，插件的动态库可能会放在不同的地方，这样就需要同时监测多个目录。这会影响服务器的效率。而且，一旦需要增加插件动态库存放的地方，必须通知服务器新增加的地方。这会增加服务器的复杂度。为了降低服务器的复杂度，本系统采用监测插件配置文件的方法。一旦插件配置发生更改（如，修改，删除等），服务器就重新读取插件配置文件，重新加载插件。监测的过程如图\ref{loadplugin}。
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=8cm, width=13cm]{pics/loadplugin.eps}
 	\caption{动态加载过程}
 	\label{loadplugin}
@@ -403,8 +391,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=8cm, width=15cm]{pics/IO.eps}
 	\caption{I/O结构图}
 	\label{IO}
@@ -426,8 +412,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=6cm, width=13cm]{pics/tpthread.eps}
 	\caption{线程状态图}
 	\label{tpthread}
@@ -437,8 +421,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	对于每一个请求，在不同的时刻，对请求所处在的状态进行定义。根据HTTP协议的规定，对于服务器而言，请求经历了读取Reqeust，解析Request，读取POST数据，处理连接请求，创建Response，发送Response回客户端这几个状态。为了便于处理，在请求的生命周期中增加了几个状态，最后的状态图如图\ref{state}。
 	\begin{figure}[t]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=16cm, width=10cm]{pics/state.eps}
 	\caption{请求处理状态图}
 	\label{state}
@@ -485,8 +467,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=6cm, width=12cm]{pics/plugin_s.eps}
 	\caption{plugin结构体定义}
 	\label{plugin_s}
@@ -534,8 +514,6 @@ cgi:/home/temp/plugins/$
 	
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=8cm, width=15cm]{pics/inotify.eps}
 	\caption{Inotify监测过程}
 	\label{inotify}
@@ -1112,8 +1090,6 @@ int connection_state_machine(server *srv, connection *con)
 	
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=6cm, width=15cm]{pics/startup.eps}
 	\caption{服务器启动}
 	\label{startup}
@@ -1124,8 +1100,6 @@ int connection_state_machine(server *srv, connection *con)
 	启动日志。如图\ref{startuplog}。启动日志详细的记录了服务器的启动信息。
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=7cm, width=16cm]{pics/startuplog.eps}
 	\caption{启动日志}
 	\label{startuplog}
@@ -1137,8 +1111,6 @@ int connection_state_machine(server *srv, connection *con)
 	
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=9cm, width=12cm]{pics/access1.eps}
 	\caption{浏览器请求数据}
 	\label{access1}
@@ -1150,8 +1122,6 @@ int connection_state_machine(server *srv, connection *con)
 	
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=5cm, width=15cm]{pics/access1log.eps}
 	\caption{请求处理日志}
 	\label{access1log}
@@ -1163,8 +1133,6 @@ int connection_state_machine(server *srv, connection *con)
 	加载插件。修改插件配置文件swiftd-plugin.conf。将插件的位置和名称写入配置文件中。保存。如图\ref{pluginconf}
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=3cm, width=10cm]{pics/pluginconf.eps}
 	\caption{加载插件}
 	\label{pluginconf}
@@ -1174,8 +1142,6 @@ int connection_state_machine(server *srv, connection *con)
 	
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=9cm, width=15cm]{pics/loadpluginlog.eps}
 	\caption{加载插件日志}
 	\label{loadpluginlog}
@@ -1185,8 +1151,6 @@ int connection_state_machine(server *srv, connection *con)
 	再次通过浏览器访问资源所在的目录。如图\ref{access2}。这个时候，服务器通过调用插件，完成在目录中搜索index.html的任务。如果搜索到这个文件，则返回这个文件。图\ref{access2}中显示服务器返回了目录下的index.html文件。
 	\begin{figure}[htbp]
 	\centering
-	\setlength{\abovecaptionskip}{10pt}
-	\setlength{\belowcaptionskip}{0pt}
 	\includegraphics[height=9cm, width=12cm]{pics/access2.eps}
 	\caption{浏览器请求数据，仅定位到目录}
 	\label{access2}
