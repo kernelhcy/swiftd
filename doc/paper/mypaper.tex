@@ -30,11 +30,11 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 
 
 {\enkeywords Web Server;Interface;Linux;C;Dynamically loading}
-
-\newpage
+\setcounter{page}{1}
 \tableofcontents
 
 \chapter{绪论}
+\setcounter{page}{1}
 
 \section{背景和意义}
 \subsection{Web服务器的背景}
@@ -42,37 +42,9 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	目前，主流的web服务器包括Apache，Lighttpd和Nginx。\ucite{baike}
 	\begin{itemize}
-		\item Apache是世界排名第一的web服务器，是Apache软件基金会的一个开放源码的web服务器。Apache可以运行在几乎所有的计算机平台上，如，Linux，Windows，Unix等。Apache快速、可靠并且可通过简单的API扩充。Apache web服务器具有如下特点：
-		\begin{itemize}
-			\item 支持通用网关接口和FastCGI
-　　			\item 支持多种方式的HTTP认证
-　　			\item 支持实时监视服务器状态和定制服务器日志
-　　			\item 支持服务器端包含指令(SSI)
-　　			\item 支持安全Socket层(SSL)
-　　			\item 提供用户会话过程的跟踪
-　　			\item 通过第三方模块可以支持Java Servlets
-		\end{itemize}
-		\item Lighttpd是一个德国人领导的开源软件，根本在于提供一个专门针对高性能网站，安全、快速、兼容性好并且灵活的web服务器。Lighttpd具有非常低的内存开销，cpu占用率低，较好的性能以及丰富的模块。Lighttpd主要针对Unix/Linux平台，通过Cygwin也可以运行在Windows平台上，具有较好的夸平台特性。Lighttpd具有如下特性：
-		\begin{itemize}
-			\item 虚拟主机
-　　			\item virtual directory listings URL-Rewriting,HTTP-Redirects
-　　			\item automatic expiration offiles
-　　			\item 大文件支持(64bit file offsets)
-　　			\item 断点续传(start-end,start-,-end,multipleranges)
-　　			\item 压缩输出(支持deflate,gzip,bzip2)
-　　			\item CGI, FastCGI
-		\end{itemize}
-		\item Nignx("engine x")是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/SMTP代理服务器。 Nginx是由Igor Sysoev为俄罗斯访问量第二的Rambler.ru站点开发的，它已经在该站点运行超过两年半了。Igor将源代码以类BSD 许可证的形式发布。尽管还是测试版，但是Nginx已经因为它的稳定性、丰富的功能集、示例配置文件和低系统资源的消耗而闻名了。Nginx具有如下特点：
-		\begin{itemize}
-			\item 处理静态文件，索引文件以及自动索引
-　　			\item 反向代理加速(无缓存)，简单的负载均衡和容错
-　　			\item FastCGI，简单的负载均衡和容错
-　　			\item 模块化的结构
-　　			\item SSL和TLS SNI支持
-　　			\item IMAP/POP3代理服务功能
-　　			\item 使用外部 HTTP认证服务器重定向用户到IMAP/POP3后端
-　　			\item 使用外部 HTTP认证服务器认证用户后连接重定向到内部的SMTP后端
-		\end{itemize}
+		\item Apache是世界排名第一的web服务器，是Apache软件基金会的一个开放源码的web服务器。Apache可以运行在几乎所有的计算机平台上，如，Linux，Windows，Unix等。Apache快速、可靠并且可通过简单的API扩充。
+		\item Lighttpd是一个德国人领导的开源软件，根本在于提供一个专门针对高性能网站，安全、快速、兼容性好并且灵活的web服务器。Lighttpd具有非常低的内存开销，cpu占用率低，较好的性能以及丰富的模块。Lighttpd主要针对Unix/Linux平台，通过Cygwin也可以运行在Windows平台上，具有较好的夸平台特性。
+		\item Nignx("engine x")是一个高性能的HTTP和反向代理服务器，也是一个IMAP/POP3/SMTP代理服务器。 Nginx是由Igor Sysoev为俄罗斯访问量第二的Rambler.ru站点开发的，它已经在该站点运行超过两年半了。Igor将源代码以类BSD 许可证的形式发布。尽管还是测试版，但是Nginx已经因为它的稳定性、丰富的功能集、示例配置文件和低系统资源的消耗而闻名了。
 	\end{itemize}
 	
 	在这三个主流服务器的当前版本中，对于新的功能模块，都必须重启服务器才能是模块生效。然而有些时候，在怎加服务器功能的时候，不能对服务器进行重启，否则将会造成客户端当前状态的丢失，致使客户端当前正在进行的所有操作都将变的无效。比如，服务器和客户端保持了一个持久的连接，服务器不断的处理来自客户端的请求，而每个请求之间又保持着某种数据上的联系。也就是，前一个请求的处理结果影响下一个请求的处理结果。这时候，如果需要增加服务器的功能，同时增加的功能要立刻应用到当前的连接中，那么，服务器就不能进行重启。一旦服务器进行重启，由于HTTP协议不记录连接的状态，当前连接的所有状态都将丢失，那么，客户端的所有请求都将作废并重新开始。在一些场合，这将造成很严重的后果。
@@ -88,12 +60,9 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	由于动态链接技术的这些特点，使得动态链接还具有另外一个特点：在程序运行时可以动态地选择加载各种程序模块。这个优点就可以用来制作程序的插件（Plug-in）。
 \subsection{意义}
 	在目前的正在使用的web服务器中，大部分都不支持功能的动态增加，也就是在不重启服务器的情况下，动态的为服务器增加功能。针对这一问题，本课题基于动态链接库技术，使服务器在运行期间，可以动态的获知模块的增加并加载模块。
-	
 \section{课题目标及作者的主要工作}
 	\subsection{课题目标}
 	本课题通过分析HTTP协议（RFC2616）,设计插件所需的接口，通过使用动态链接技术，设计插件的动态加载的过程。最后，通过使用非阻塞I/O，I/O多路复用以及线程池的技术，构造出一个简单的Web服务器，并在这个服务器上验证插件接口的设计。最终，服务器将能完成基本的HTTP协议解析和处理，正确的加载和调用插件。
-	
-%	\vspace{12pt}
 	\subsection{作者主要工作}
 	\begin{enumerate}
 		\item 学习动态链接库和web服务器设计实现的相关知识和技术                                
@@ -102,7 +71,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 		\item 测试插接接口的额可用性和服务器的性能                                                                                              
 		\item 撰写毕业设计论文                                                                  
 	\end{enumerate}
-	
 \section{论文章节结构}
 	\subsection*{第一章是绪论，主要对本论文的主要内容进行了概述。}
 	
@@ -158,13 +126,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 		\item 4xx 请求错误——请求含有词法错误或者无法被执行
 		\item 5xx 服务器错误——服务器在处理某个正确请求时发生错误
 	\end{itemize}
-	
-	HTTP协议已经演化出了很多版本，它们中的大部分都是向下兼容的。在RFC 2145中描述了HTTP版本号的用法。客户端在请求的开始告诉服务器它采用的协议版本号，而后者则在响应中采用相同或者更早的协议版本。
-	\begin{itemize}
-		\item 0.9 已过时。只接受GET一种请求方法，没有在通讯中指定版本号，且不支持请求头。由于该版本不支持POST方法，因此客户端无法向服务器传递太多信息。
-		\item HTTP/1.0 这是第一个在通讯中指定版本号的HTTP协议版本，至今仍被广泛采用，特别是在代理服务器中。
-		\item HTTP/1.1 当前版本。持久连接被默认采用，并能很好地配合代理服务器工作。还支持以管道方式在同时发送多个请求，以便降低线路负载，提高传输速度。
-	\end{itemize}
 	%http://zh.wikipedia.org/zh-cn/%E8%B6%85%E6%96%87%E6%9C%AC%E4%BC%A0%E8%BE%93%E5%8D%8F%E8%AE%AE
 \section{动态链接技术}
 	\subsection{动态链接的实现}
@@ -174,7 +135,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	\subsection{动态库的创建和使用}
 	在Linux下和Window下，动态库的创建和使用是不相同的。由于本课题主要是在Linux系统中进行，因此在这里，将通过一个例子来简单的介绍在Linux下动态库的使用\ucite{cxyzwxy}。例子的程序源码如下：
-	
 	\begin{verbatim}
 	/* Program1.c*/
 	#include "Lib.h"
@@ -204,12 +164,11 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	void foobar(int i);
 	#endif
 	\end{verbatim}
-	
 	程序很简单，两个程序的主要模块Program1.c和Program2.c分别调用Lib.c里面的foobar()函数。
 	在Linux下，我们使用gcc讲Lib.c编译成一个共享库：
-	\begin{verbatim}
+
 	gcc -fPIC -shared -o Lib.so Lib.c
-	\end{verbatim}
+
 	-fPIC和-shared是GCC的参数，这也是创建共享库的关键参数：
 	\begin{itemize}
 		\item -fPIC 表示使用地址无关代码（Position Independent Code）技术来产生输出文件。
@@ -217,20 +176,10 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	\end{itemize}
 	
 	这时候，我们得到了一个Lib.so文件，这就是包含了Lib.c的foobar()函数的共享对象文件。然后，我们分别编译链接Program1.c和Program2.c：
-	\begin{verbatim}
-	gcc -o Program1 Program1.c ./Lib.so
-	gcc -o Program2 Program2.c ./Lib.so
-	\end{verbatim}
 	
-	从Program1的角度看，整个编译和链接的过程如图\ref{solink}
-	\begin{figure}[htbp]
-	\centering
-	\setlength{\abovecaptionskip}{0pt}
-	\setlength{\belowcaptionskip}{10pt}
-	\caption{动态链接过程}
-	\label{solink}
-	\includegraphics[height=9cm, width=15cm]{pics/solink.eps}
-	\end{figure}
+	gcc -o Program1 Program1.c ./Lib.so
+	
+	gcc -o Program2 Program2.c ./Lib.so
 	
 	在链接程序Program1时，没有将动态库链接到程序的目标文件中，而仅仅是做了一个标记。当系统加载程序Program1时，动态链接加载器会根据Program1目标文件中的信息，搜索共享库Lib.so并加载到内存中。完成最后的链接工作。
 	
@@ -295,33 +244,7 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	\end{figure}
 	
 	状态机可分为确定型（DFA）和非确定型（NDFA、GNFA）状态机。在确定型状态机中，每个状态对每个可能输入只有精确的一个转移。在非确定型状态中，给定状态对给定可能输入可以没有或有多于一个转移。
-	
-	状态存储关于过去的信息，就是说：它反映从系统开始到现在时刻的输入变化。转移指示状态变更，并且用必须满足来确使转移发生的条件来描述它。动作是在给定时刻要进行的活动的描述。有多种类型的动作：
-	\begin{itemize}
-		\item 进入动作（Entry action） 在进入状态时进行
-		\item 退出动作 在退出状态时进行
-		\item 输入动作 依赖于当前状态和输入条件进行
-		\item 转移动作 在进行特定转移时进行
-	\end{itemize}
-	
-	FSM（有限状态机）可以使用图\ref{fsm}那样的状态图（或状态转移图）来表示。此外可以使用多种类型的状态转移表。下面展示最常见的表示：当前状态（B）和条件（Y）的组合指示出下一个状态（C）。完整的动作信息可以只使用脚注来增加。包括完整动作信息的 FSM定义可以使用状态表。如表\ref{statemove}
-	
-\begin{table}[htbp]
-\setlength{\abovecaptionskip}{0pt} 
-\setlength{\belowcaptionskip}{10pt} 
-\label{statemove}
-\caption{状态转移表\ucite{wiki}}
-\centering
-\begin{tabularx}{\textwidth}{XXXXl} %最后一列是空的。这样可以是倒数第二列居中，否则会报错或不居中。
-\toprule
-\centering 当前状态 →\\条件 ↓     &	 \centering  状态 A &\centering 	状态 B &\centering 	状态 C &\\
-\midrule
-\centering 条件 X &\centering 	… &\centering 	… &	\centering … &\\
-\centering 条件 Y &\centering 	… &\centering 	状态 C &\centering 	…&\\
-\centering 条件 Z &\centering 	… &\centering 	… &\centering 	… &\\
-\bottomrule
-\end{tabularx}
-\end{table}
+
 	
 \chapter{动态扩展功能接口与服务器的分析和设计}
 	
@@ -350,7 +273,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
     ---------------------------------------
       cr = \r ; lf = \n ; sp = blankspace
 \end{verbatim}
- 	
  	从上面的格式可以看出，Request的格式非常简单，包括Request line，Header lines和 Entity body三个部分。Request line包含请求的方法，请求资源的URI以及客户端所使用的HTTP协议的版本。其中，对于所请求的资源的URI中的特殊字符（如汉字），客户端要对其进行编码。编码的格式为“\% HEX HEX”（具体参见RFC 2396）。Header lines包含一些“key：value”形式的键值信息，是客户端发送给服务器的有关自身信息或者链接处理方式等数据。这些键值信息的键在HTTP协议中有明确的规定，服务器一般不对这些键值信息的意义进行更改或扩充HTTP协议规定之外的键值信息。Entity body中包含客户端发送给服务器的数据。这些数据通常对服务器透明，也就是说服务器不需要关心这些数据的意义，只需要将这些数据传递给一些处理链接请求的委托程序（如，CGI脚本），由这些委托程序进行处理。在HTTP协议中，没有对Entity body中的数据的格式和意义做任何形式的规定或定义。
  	
  	Response的格式与Request格式类似。Response数据由服务器处理完请求之后，发送给客户端。Response格式如下：
@@ -372,7 +294,6 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 -----------------------------------------------
  cr = \r ; lf = \n ; sp = blankspace
 \end{verbatim}
-
  	Response格式和Resquest格式的主要区别在第一行的Status line。Status line包含HTTP 协议的版本，请求处理结果的状态码和结果原因描述。Response中Header lines中的键值对和Request中的键值对一样，都是由HTTP协议进行明确的规定。Entity body包含处理结果。
  	
 \subsection{HTTP协议处理过程的分析}
@@ -494,11 +415,11 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 \subsection{连接处理状态机的分析和设计}
 	对于每一个请求，在不同的时刻，对请求所处在的状态进行定义。根据HTTP协议的规定，对于服务器而言，请求经历了读取Reqeust，解析Request，读取POST数据，处理连接请求，创建Response，发送Response回客户端这几个状态。为了便于处理，在请求的生命周期中增加了几个状态，最后的状态图如图\ref{state}。
-	\begin{figure}[htbp]
+	\begin{figure}[t]
 	\centering
 	\caption{请求处理状态图}
 	\label{state}
-	\includegraphics[height=22.5cm, width=14.5cm]{pics/state.eps}
+	\includegraphics[height=15cm, width=10cm]{pics/state.eps}
 	\end{figure}
 	
 	总共定义了10状态（图中椭圆所示）。connect状态是一个比较特殊的状态，它并不是请求在某一时刻的状态，它仅仅是用来标记连接对应的结构体可以使用。这个状态用来进行内部的数据处理，不参与请求的处理。
@@ -544,35 +465,34 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	name用来保存插件的名称。data指向插件自己使用的数据，和后面的函数指针中的p\_d参数对应。插件在初始化的过程中要自己分配所需要的数据空间，然后将地址赋给data。插件卸载时，要对这个数据空间进行释放。后面的一系列的函数指针保存着插件对应的函数的入口地址。每一个插件都要定义一个结构体plugin\_data用来存储插件所使用的私有数据。这个结构体的名称必须是plugin\_data，且在定义的开始部分一定是宏：PLUGIN\_DATA。插件在初始化的时候，要将这个结构体实例化并将其指针赋给plugin结构体中的data成员。宏PLUGIN\_DATA定义了一些数据成员。通过这一硬性规定，所有的插件的私有数据空间的开始部分都包含PLUGIN\_DATA所定义的数据成员。同时，插件系统自己也定义了一个plugin\_data结构体，这个结构体中只包含PLUGIN\_DATA定义的数据成员。插件系统通过把插件的数据空间强制转换成自己定义的plugin\_data结构体类型，就可以访问插件中这些有PLUGIN\_DATA定义的数据，从而实现对插件的一些管理。
 	
-	对于服务器而言，无论系统中有多少插件并且插件的接口实现个数都不相同，对于每个请求，服务器按部就班的调用所有插件接口函数。对于插件中的每一个接口函数，插件系统也定义了一些列的接口函数用于服务器调用插件。在调用插件时，服务器仅仅能看到这些接口，至于插件系统中到底有多少插件，服务器无法也不必知道。这些接口的定义如下：
-	
-\begin{verbatim}
-handler_t plugin_handle_url_raw(server *srv, connection *con);
-handler_t plugin_handle_url_clean(server *srv, connection *con);
-handler_t plugin_handle_docroot(server *srv, connection *con);
-handler_t plugin_handle_physical(server *srv, connection *con);
-handler_t plugin_handle_connection_close(server *srv, connection *con);
-handler_t plugin_handle_joblist(server *srv, connection *con);
-handler_t plugin_handle_subrequest_start(server *srv, connection *con);
-handler_t plugin_handle_handle_subrequest(server *srv, connection *con);
-handler_t plugin_handle_request_end(server *srv, connection *con);
-handler_t plugin_handle_connection_reset(server *srv, connection *con);
+	对于服务器而言，无论系统中有多少插件并且插件的接口实现个数都不相同，对于每个请求，服务器按部就班的调用所有插件接口函数。对于插件中的每一个接口函数，插件系统也定义了一些列的接口函数用于服务器调用插件。在调用插件时，服务器仅仅能看到这些接口，至于插件系统中到底有多少插件，服务器无法也不必知道。这些接口的定义如下：\\
+handler\_t plugin\_handle\_url\_raw(server *srv, connection *con);\\
+handler\_t plugin\_handle\_url\_clean(server *srv, connection *con);\\
+handler\_t plugin\_handle\_docroot(server *srv, connection *con);\\
+handler\_t plugin\_handle\_physical(server *srv, connection *con);\\
+handler\_t plugin\_handle\_connection\_close(server *srv, connection *con);\\
+handler\_t plugin\_handle\_joblist(server *srv, connection *con);\\
+handler\_t plugin\_handle\_subrequest\_start(server *srv, connection *con);\\
+handler\_t plugin\_handle\_handle\_subrequest(server *srv, connection *con);\\
+handler\_t plugin\_handle\_request\_end(server *srv, connection *con);\\
+handler\_t plugin\_handle\_connection\_reset(server *srv, connection *con);\\
+handler\_t plugin\_handle\_trigger(server *srv);\\
+handler\_t plugin\_handle\_cleanup(server *srv);
 
-handler_t plugin_handle_trigger(server *srv);
-handler_t plugin_handle_cleanup(server *srv);
-\end{verbatim}
 	在这些函数中，对每个插件的对应的接口函数进行调用。如果插件没有实现对应的接口函数，怎将忽略之。
 	
 \subsection{动态加载过程的实现}
 	首先，定义插件的配置文件。插件的配置文件名字是固定的：swiftd-plugin.conf。插件配置文件存放的位置可以在服务器的配置文件中进行设置。配置文件的形式为”插件名称：插件动态库文件所在目录的绝对路径\$“。每一个插件，在配置文件中都有单独一行的这种形式的配置信息。例如：
-	
-	\begin{verbatim}
-#以#开头的行为注释。swiftd-plugin.conf
-#每个插件一行，每个插件配置信息必须以"$"结尾。
-dir_index:/home/hcy/plugins/$
-cgi:/home/temp/plugins/$
+
+\#以\#开头的行为注释。swiftd-plugin.conf
+
+\#每个插件一行，每个插件配置信息必须以"\$"结尾。
+
+dir\_index:/home/hcy/plugins/\$
+
+cgi:/home/temp/plugins/\$
+
 ...
-	\end{verbatim}
 
 	这个例子中定义了两个插件：dir\_index和cgi。它们存放的位置分别是 /home/hcy/plugins/ 和 /home/temp/plugins/ 。
 	
@@ -598,7 +518,6 @@ cgi:/home/temp/plugins/$
 	对于有些编辑器（如，vi），在对文件进行编辑的时候并不是在原文件上进行修改，而是首先复制一个文件的副本，然后在这个副本上进行编辑操作。当编辑完毕之后，用这个副本覆盖原来的文件。如果直接监测对应文件的IN\_MODIFY事件，那么，在进行文件覆盖时，监测到文件被删除，Inotify将停止对文件的监测，也就是相当于inotify\_rm\_watch文件了。这样，就只能监测到一次IN\_DELETE\_SELF事件。随后什么也监测不到。为了能够对文件进行正常的监测，这里不直接监测文件，而监测包含文件的文件夹。一旦文件被覆盖，将触发文件夹IN\_CLOSE\_WIRTE事件。这样即可得到文件的修改事件。
 	
 	当服务器检测到了配置文件的修改之后，服务器执行下面的函数完成插件的加载。这个函数被注册到I/O多路复用系统中，有多路复用系统在检测到配置文件修改后调用。
-	
 	\begin{verbatim}
 static handler_t plugin_conf_inotify_fdevent_handler(
 				void *srv, void *ctx, int revents)
@@ -647,10 +566,9 @@ static handler_t plugin_conf_inotify_fdevent_handler(
 	在函数中，通过read从inotify系统中读取发生的修改事件，判断所发生的事件是不是IN\_CLOSE\_WRITE。最后，释放以前加载的所有插件，调用plugin\_load重新加载所有的插件，包括新增加的。
 	
 	为了能对插件进行初始化并得到其所实现的接口函数的入口地址。规定所有的插件中必须实现一个函数XXXXXX\_init，其中，	XXXXXX为插件的名称（必须为插件配置文件中的名称）。这个函数的原型为：
-	\begin{verbatim}
-        void XXXXXX_init(plugin *p)
-	\end{verbatim}
-	
+
+        void XXXXXX\_init(plugin *p)
+
 	在这个函数中，主要而且必须的工作就是对所传进来的plugin结构体的数据成员进行赋值。其中，最重要的是版本和接口函数指针的赋值。如果插件没有实现某一个接口函数，那么那么接口函数对应的函数指针必须赋值为NULL。这点很重要。在插件系统得到了插件动态库的路径之后，通过dlopen调用将动态库加载到内存中。然后，插件系统通过dlsym调用获得插件对应的XXXXXX\_init函数的入口地址。接着插件系统创建一个plugin结构体的实例，并以这个实例的地址为参数调用刚才得到的XXXXXX\_init函数。至此，插件系统得到了插件的所有信息。完成了插件的加载工作。
 	
 \subsection{动态扩展功能接口调用的实现}
@@ -676,7 +594,6 @@ typedef enum
 	PLUGIN_SLOT_SIZE, 			//slot的数量。
 }plugin_slot_t;
 \end{verbatim}
-
 	这个枚举类型中的值与接口函数有这对应关系。从这些值的名称中可以得知。比如，PLUGIN\_SLOT\_DOCROOT对应于docroot接口函数。
 	
 	然后，为了提高插件的调用效率，对每一个插件进行登记造册。plugin\_slot是一个void *类型的二维数组，相当于plugin的登记表。当插件加载之后，插件所有的信息都存放在对应的plugin结构体中。插件系统遍历所有的plugin结构体，对插件所实现的接口方法进行登记（前面已经说过，对于没有实现的插件接口，插件必须将对应的函数指针赋值为NULL。这就可以帮助插件系统判断插件到底实现了哪些接口函数）。
@@ -702,7 +619,6 @@ typedef enum
 	NULL表示插件没有实现对应的接口函数。px表示插件对应的plugin结构体指针。
 	
 	表\ref{example_plugin}中仅仅示例了三个接口函数。从表\ref{example_plugin}可以看出，插件1实现了全部的三个接口函数，插件2没有实现第三个接口函数，插件3和插件2一样。插件系统利用如下的宏对插件进行登记：
-	
 \begin{verbatim}
 #define PLUGIN_REGISTER_SLOT(x, y)\
  for(i = 0; i < srv -> plugins -> used; ++i)\
@@ -739,16 +655,13 @@ typedef enum
   }\
  }
 \end{verbatim}
-	
 	宏的第一个参数x确定需要登记的接口函数的类型，这个参数是plugin\_slot\_t类型。第二个参数y是x对应的接口函数在pluing结构体中对应的数据成员的名称不包含开头的handle\_。宏中扫描所有的插件，如果插件实现了x对应的接口函数，就将这个插件对应的plugin结构体指针存入plugin\_slot数组中。宏中还包含了对plugin\_slot数组空间申请。
 	
 	例如，这个宏调用实现对docroot接口函数的登记工作。
-	\begin{verbatim}
-	PLUGIN_REGISTER_SLOT(PLUGIN_SLOT_DOCROOT, handle_docroot);
-	\end{verbatim}
-	
-	得到这张登记表之后，基本上所有的操作都是围绕这个表来进行的。插件系统定义了下面的宏，这个宏用来作为模板，实现先前提到的插件系统提供给服务器的那一些列接口函数。而这些接口函数是服务器调用插件的关键。
 
+	PLUGIN\_REGISTER\_SLOT(PLUGIN\_SLOT\_DOCROOT, handle\_docroot);
+
+	得到这张登记表之后，基本上所有的操作都是围绕这个表来进行的。插件系统定义了下面的宏，这个宏用来作为模板，实现先前提到的插件系统提供给服务器的那一些列接口函数。而这些接口函数是服务器调用插件的关键。
 \begin{verbatim}
 #define PLUGIN_CALL_HANDLER(x,y)\
  handler_t plugin_handle_##y(server *srv, connection *con)\
@@ -799,13 +712,10 @@ typedef enum
    return ht;\
  }
 \end{verbatim}	
-	
 	宏的第一个参数x确定需要登记的接口函数的类型，这个参数是plugin\_slot\_t类型。第二个参数y是x对应的接口函数在pluing结构体中对应的数据成员的名称不包含开头的handle\_。在这个宏中，通过x确定pluing\_slot数组的行，依次调用这行中存储的plugin结构体的对应的成员函数（函数指针）。这些成员函数的名称有y确定。这一调用工作，正是插件系统提供给服务器的所有接口函数的全部工作。利用这个宏，可以模板化的实现所有这些函数。例如，宏调用
-	
-	\begin{verbatim}
-	PLUGIN_CALL_HANDLER(PLUGIN_SLOT_DOCROOT, docroot);
-	\end{verbatim}
-	
+
+	PLUGIN\_CALL\_HANDLER(PLUGIN\_SLOT\_DOCROOT, docroot);
+
 	将这个宏展开就得到了plugin\_handle\_docroot函数的完整定义。
 	
 	当请求进入reponsestart状态（图\ref{state}）时，服务器调用http\_prepare\_response函数。在这个函数中，解析Resquest中的URI。在解析的过程中，按照插件接口的定义，在完成某一解析步骤之后，调用插件接口函数，调用插件处理请求。
@@ -868,31 +778,27 @@ handler_t http_prepare_response(server *srv, connection *con)
 	插件的实现通常有第三方开发者来完成。在这节中，将描述插件的具体实现过程。服务器将当前连接的描述结构体connection和服务器的描述结构体server传递给插件，因此插件可以直接对这两个结构体中的内容进行读写。这两个结构体的定义在base.h文件中。由于需要使用base.h文件，因此，开发者要获得服务器的代码。为了能够编写出正确的插件，开发者还应对服务器的流程有一定的了解。
 	
 	在本节中，将创建一个简单的插件：dir\_index。这个插件的功能就是如果请求的资源是一个目录，那么，自动搜索目录下面的类似index.html的文件，并返回这个搜索到的文件。很明显，插件必须在服务器解析出了客户端请求的资源对应的物理地址之后才能做出判断。因此，插件实现的接口函数为：
-	
-	\begin{verbatim}
-void dir_index_init()
-handler_t dir_index_handle_physical(server *srv, connection *con, void *p_d)
-	\end{verbatim}
-	
+
+void dir\_index\_init()
+
+handler\_t dir\_index\_handle\_physical(server *srv, connection *con, void *p\_d)
+
 	由于服务器需要的仅仅是这些实现函数的入口地址，因此函数名服务器并不关心，开发者可以设置任意的合法名称。但是，由于服务器规定了插件接口函数的形式，因此，这些实现函数的参数和返回值必须和接口定义中的完全一致。否则，可能会出现意想不到的错误。
 	
 	在插件找到了index.html之类的文件之后，直接修改con -> physical.real\_path。服务器在后面的程序中通过这个地址确定客户端所请求的资源。如果没有找到合适的文件，则不做任何修改。服务器会做成合适的处理。另外，无论在何种情况下，dir\_index\_handle\_physical函数不打断服务器的处理流程，也就是说，调用这个函数之后，服务器继续调用其他的插件。
 	
 	编写好插件之后，编译成动态库：
-	
-	\begin{verbatim}
-gcc -c mod_dir_index.c  -o  ${OBJSPATH}/mod_dir_index.o
-gcc -fPIC -shared ${OBJS} ${OBJSPATH}/mod_dir_index.o -o dir_index.so
-	\end{verbatim}
-	
+
+gcc -c mod\_dir\_index.c  -o  \${OBJSPATH}/mod\_dir\_index.o
+
+gcc -fPIC -shared \${OBJS} \${OBJSPATH}/mod\_dir\_index.o -o dir\_index.so
+
 	OBJSPATH中保存的是目标文件（.o）的存放路径。OBJS中保存的是所有文件编译后的目标文件。只所以要加上这个，是因为在插件中使用了服务器提供的其他的文件。比如，dir\_index插件中使用了管理内存的buffer结构体及其处理函数。当然，开发者也可以自行编写这些基础代码。
 	
 	生成动态库之后(.so)，将动态库拷贝到合适的目录中。修改插件配置文件swiftd-plugin.conf。增加下面的行：
-	
-	\begin{verbatim}
-dir_index:/home/hcy/plugins/$
-	\end{verbatim}
-	
+
+dir\_index:/home/hcy/plugins/\$
+
 	这里假设插件的动态库放在/home/hcy/plugins/目录中。
 	
 	之后，插件可以正常被服务器调用。
@@ -901,7 +807,6 @@ dir_index:/home/hcy/plugins/$
 
 \subsection{I/O实现}
 	首先，对I/O多路复用进行包装。这样可以实现使用不同的I/O多路复用实现时，对服务器而言有一个统一的接口。用户可以在对服务器编译阶段，通过定义不同的宏来选择系统中包含哪些实现。默认情况下使用的是Linux下的epoll。下面这个结构体描述了服务器的I/O多路复用系统：
-	
 \begin{verbatim}	
 typedef struct fdevent
 {
@@ -937,25 +842,20 @@ typedef struct fdevent
 	int (*fcntl)(struct fdevent *ev, int fd);
 }fdevent;
 \end{verbatim}
-
 	结构体中的宏可以在服务器使用不同I/O多路复用实现时，结构体包含不同的数据成员。如果系统中有多个实现，那么结构体中也可以包括多个实现所需要的数据。最终使用哪个实现，由type决定。这个可以在配置文件中进行设置。type的值决定了初始化函数中对哪个I/O多路复用实现进行初始化。type是一个枚举类型变量。
 	
-	结构体最后的一系列函数指针类似于成员函数。当是使用不同的I/O多路复用实现时，函数指针中存放的是对应的各个函数的入口地址。对于不同的I/O多路复用实现，都有与这几个函数指针对应的函数定义。在初始化的时候，服务器根据所使用的I/O多路复用实现，对这些函数指针赋予不同的值。在服务器运行阶段，服务器不需要知道所使用的I/O多路复用的具体情况，仅仅通过这几个函数指针调用对应的函数来完成I/O监听任务。为了方便服务器的调用，在实现中对这几个函数指针进行了一次包装。也就是，定义了一系列接口函数，在这些函数中调用这些函数指针。而服务器只需要调用这些接口函数。接口函数的声明如下：
-	
-\begin{verbatim}
-int fdevent_reset(fdevent *ev);
-void fdevent_free(fdevent *ev);
-int fdevent_event_add(fdevent *ev, int fd, int events);
-int fdevent_event_del(fdevent *ev, int fd);
-int fdevent_event_get_revent(fdevent *ev, int ndx);
-int fdevent_event_get_fd(fdevent *ev, int ndx);
-int fdevent_event_get_next_ndx(fdevent *ev, int ndx);
-int fdevent_poll(fdevent *ev, int timeout);
-int fdevent_fcntl(fdevent *ev, int fd);
-\end{verbatim}
+	结构体最后的一系列函数指针类似于成员函数。当是使用不同的I/O多路复用实现时，函数指针中存放的是对应的各个函数的入口地址。对于不同的I/O多路复用实现，都有与这几个函数指针对应的函数定义。在初始化的时候，服务器根据所使用的I/O多路复用实现，对这些函数指针赋予不同的值。在服务器运行阶段，服务器不需要知道所使用的I/O多路复用的具体情况，仅仅通过这几个函数指针调用对应的函数来完成I/O监听任务。为了方便服务器的调用，在实现中对这几个函数指针进行了一次包装。也就是，定义了一系列接口函数，在这些函数中调用这些函数指针。而服务器只需要调用这些接口函数。接口函数的声明如下：\\
+int fdevent\_reset(fdevent *ev);\\
+void fdevent\_free(fdevent *ev);\\
+int fdevent\_event\_add(fdevent *ev, int fd, int events);\\
+int fdevent\_event\_del(fdevent *ev, int fd);\\
+int fdevent\_event\_get\_revent(fdevent *ev, int ndx);\\
+int fdevent\_event\_get\_fd(fdevent *ev, int ndx);\\
+int fdevent\_event\_get\_next\_ndx(fdevent *ev, int ndx);\\
+int fdevent\_poll(fdevent *ev, int timeout);\\
+int fdevent\_fcntl(fdevent *ev, int fd);
 
 	在程序的主循环中，接口函数的调用过程如下：
-
 \begin{verbatim}
 	do
 	{
@@ -973,17 +873,14 @@ int fdevent_fcntl(fdevent *ev, int fd);
 		}
 	}while(!shutdown_server);
 \end{verbatim}	
-	
 	fdevent\_poll函数用来开始监听所有注册的描述符。通常，程序阻塞在这个函数中，直到有描述符发生了I/O事件或者等待超时。当有描述符发生I/O事件时，通过接口函数，获得发生I/O事件的描述符和所发生的事件，以及其对应的事件处理函数。最后，调用线程处理I/O事件。fdevent\_poll函数被设定为等待1s后超时。如果1s后没有I/O事件发生，那么fdevent\_poll函数将返回。通过这个超时设置，可以实现一个粗略的计时器。通过这个计时器，可以做一些秒一级的计时工作。
 	
 	在这些接口函数中，大部分的任务仅仅是调用了这些函数指针对应的函数。增加这一层包装，进一步隐藏I/O多路复用系统的实现细节，降低程序的耦合性。
 
 	对于每一种描述符，服务器中都定义了一个与之对应的I/O事件处理函数。当描述符发生了I/O事件时，服务器通过调用与这个描述符对应的处理函数处理I/O事件。对于这个处理函数，定义了如下的原型：
 	
-\begin{verbatim}	
-typedef handler_t (*fdevent_handler)(void *srv, void *ctx, int revents);
-\end{verbatim}
-	
+typedef handler\_t (*fdevent\_handler)(void *srv, void *ctx, int revents);
+
 	通过定义这样一个函数原型，强制所有的I/O处理函数都必须有一致的形式。这样，当服务器调用处理函数处理I/O事件时，不需要区分到底是哪种描述符发生了I/O事件。服务器与I/O多路复用系统的耦合度进一步的降低。
 	
 	最后，对于每一种I/O多路复用实现，对于I/O事件的定义都不尽相同。因此，为了对这些实现差异进行隐藏，服务器中定义了自己的一套I/O事件定义。对于不同的I/O多路复用实现，要将其I/O事件的定义与之对应。而这些对应关系和装换，则完全隐藏在具体的实现中。服务器只需要关系接口函数返回的事件。
@@ -999,7 +896,6 @@ typedef handler_t (*fdevent_handler)(void *srv, void *ctx, int revents);
 #define FDEVENT_HUP 	BV(5) 	//已挂断
 #define FDEVENT_NVAL	BV(6) 	//描述符不引用一个打开文件。
 \end{verbatim}
-	
 	这样定义事件，即节省内存，又可以通过或运算在一个整数类型变量中表示多个事件。当一个描述符同时发生了多个事件时，这种定义可以方便的在一个变量中表示这多个事件。对于函数的定义有很大的帮助。当然，如果I/O事件较多，可能一个整型变量表示不了这么多，那么就必须使用其他方法来解决。在本系统中，值定义了6中I/O事件，在32位系统上用整型变量表示不存在这个问题。
 	
 \subsection{线程池的实现}
@@ -1016,9 +912,7 @@ struct s_thread_pool
 	sem_t thread_cnt_sem;   //用于达到线程最大值且还有作业时，等待线程空闲。
 };
 \end{verbatim}
-	
 	这个结构体中最重要的数据成员是threads数组。这个数组中存放着线程池中所有线程的信息。其定义如下：
-
 \begin{verbatim}	
 typedef struct 
 {
@@ -1033,26 +927,23 @@ typedef struct
 	void *ctx;            //执行作业需要的数据.
 }thread_info;
 \end{verbatim}
-
 	这个结构体中保存了线程的一些重要的信息，包括线程id，在threads数组中的下标等。job成员变量是一个函数指针，这个指针的原型为：
-\begin{verbatim}
-	typedef void *(*job_func)(void *ctx); 
-\end{verbatim}
+	
+	typedef void *(*job\_func)(void *ctx); 
 
 	在每个线程中，当有任务去需要执行的时候，线程回去执行这个指针所指向的函数。通过定义这个指针，可以强制所有需要线程处理的任务都具有相同的形式。当线程处理任务的时候，不需要知道具体是什么任务。参数ctx通常指向一个结构体，这个结构体中保存着任务所需要的一些信息。这个结构体的指针保存在thread\_info结构体的ctx变量中。当线程执行任务时，把这个变量作为参数传递给job所指向的函数。
 	
 	线程池的接口函数很简单，只有三个：
-\begin{verbatim}
-thread_pool* tp_init(int minnum, int maxnum);
-void tp_free(thread_pool *tp);
 
-int tp_run_job(thread_pool *tp, job_func job, void *ctx);
-\end{verbatim}
+thread\_pool* tp\_init(int minnum, int maxnum);
+
+void tp\_free(thread\_pool *tp);
+
+int tp\_run\_job(thread\_pool *tp, job\_func job, void *ctx);
 
 	前面两个是初始化和释放函数，初始化函数的参数表示线程池中线程的最小值和最大值。在服务器的运行过程中只执行一次。第三个函数是在线程池中获得一个线程，然后执行参数job指向的函数（任务），参数ctx是这个函数的运行参数。tp\_run\_job函数首先查找空闲的线程，如果没有空闲线程则创建一个。如果线程书达到最大数量且没有空闲线程，那么函数阻塞，直到有线程空闲可用。当找到一个线程之后，tp\_run\_job函数将其后两个参数分别赋值给线程对应的结构体的job成员和ctx成员，最后，通过pthread\_cond\_signal函数通知线程执行任务函数。
 	
 	当线程启动之后，线程就一直运行在下面的循环中：
-
 \begin{verbatim}
 	while(1)
 	{
@@ -1081,7 +972,6 @@ int tp_run_job(thread_pool *tp, job_func job, void *ctx);
 		pthread_mutex_unlock(&info -> lock);
 	}
 \end{verbatim}
-
 	开始循环时，首先判断线程是否必须停止。接着，在pthread\_cond\_wait函数中阻塞等待任务到达。一旦有任务到达，线程调用任务函数。执行完任务之后，线程通知线程池任务执行完毕，处于空闲状态，然后，进入pthread\_cond\_wait函数阻塞，继续等待下一次任务到达。
 	
 \subsection{连接处理状态机的实现}
@@ -1102,9 +992,7 @@ typedef enum
 	CON_STATE_CLOSE 		//close 连接关闭
 } connection_state_t;
 \end{verbatim}
-	
 	状态机实现的关键函数是connection.c文件中的connection\_state\_machine()函数。函数的框架如下：
-
 \begin{verbatim}	
 int connection_state_machine(server *srv, connection *con)
 {
@@ -1148,7 +1036,6 @@ int connection_state_machine(server *srv, connection *con)
 	return 0;
 }
 \end{verbatim}
-
 	当请求进入状态机之后，在while循环中switch语句中，根据请求当前的状态，做相应的处理，然后进入下一状态。直到，在退出switch语句时，请求的状态没有改变，退出循环。这时，说明请求需要等待一些I/O事件，因此，在后面的switch语句中，将请求对应的连接描述符加入到I/O多路复用系统和作业队列中。退出函数，当有I/O事件发生时，连接描述符对应处理函数中会再次调用状态机函数。
 	
 \section{测试}
@@ -1710,7 +1597,7 @@ Novell and Microsoft are both said to have done this at various times, at least 
 
 The linux-kernel list has been discussing the pros and cons of this approach, and the consensus seems to be instead of moving web servers into the kernel, the kernel should have the smallest possible hooks added to improve web server performance. That way, other kinds of servers can benefit. See e.g. Zach Brown's remarks about userland vs. kernel http servers. It appears that the 2.4 linux kernel provides sufficient power to user programs, as the X15 server runs about as fast as Tux, but doesn't use any kernel modifications.
 
-\section{Comments}
+\section*{Comments}
 
 Richard Gooch has written a paper discussing I/O options.
 

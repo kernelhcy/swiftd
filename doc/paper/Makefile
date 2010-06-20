@@ -15,6 +15,11 @@ paper:mypaper.tex
 	mv ./tempfiles/mypaper.pdf 毕业设计论文.pdf
 #	acroread 毕业设计论文.pdf &
 	
+abstract:abstract.tex
+	xelatex -output-directory=./tempfiles abstract.tex
+	xelatex -output-directory=./tempfiles abstract.tex
+	mv ./tempfiles/abstract.pdf abstract.pdf
+	
 ppt:paperppt.tex
 	xelatex -output-directory=./tempfiles paperppt.tex
 	xelatex -output-directory=./tempfiles paperppt.tex

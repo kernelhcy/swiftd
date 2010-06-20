@@ -39,7 +39,7 @@
 \newcommand{\three}{\fontsize{16pt}{24pt}\selectfont}		%三号
 \newcommand{\lthree}{\fontsize{15pt}{22.5pt}\selectfont}	%小三
 \newcommand{\four}{\fontsize{14pt}{21pt}\selectfont}		%四号
-\newcommand{\lfour}{\fontsize{12pt}{18pt}\selectfont}		%小四
+\newcommand{\lfour}{\fontsize{13pt}{18pt}\selectfont}		%小四
 \newcommand{\five}{\fontsize{10.5pt}{15.75pt}\selectfont}	%五号
 \newcommand{\lfive}{\fontsize{9pt}{13.5pt}\selectfont}		%小五
 
@@ -89,7 +89,8 @@
 \titleformat{\section}{\lthree \bf}{\thesection}{1em}{}
 \titleformat{\subsection}{\four \bf}{\thesubsection}{1em}{}
 \titleformat{\subsubsection}{\four \bf}{\thesubsubsection}{1em}{}
-\titlespacing{\section}{0em}{*4}{*2}
+\titlespacing{\chapter}{0em}{*1}{*3}
+\titlespacing{\section}{0em}{*3}{*2}
 \titlespacing{\subsection}{2.5em}{*2}{*1}
 \titlespacing{\subsubsection}{5em}{*1}{*1}
 
@@ -169,7 +170,7 @@
 \fancyfoot[EL,OR]{\lfive\thepage} %奇数页页码在右下脚
 
 \usepackage{fancyvrb}	%代码环境
-\DefineVerbatimEnvironment{verbatim}{Verbatim} {frame=single, baselinestretch=1, xleftmargin=5pt, xrightmargin=5pt, fontsize=\five}
+\DefineVerbatimEnvironment{verbatim}{Verbatim} {frame=none, baselinestretch=1, xleftmargin=5pt, xrightmargin=5pt, fontsize=\five}
 
 \usepackage{indentfirst,cite,tabularx}
 \newcommand{\ucite}[1]{$^{\mbox{\scriptsize \cite{#1}}}$}	%参考文献上标
