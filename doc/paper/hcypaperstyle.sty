@@ -23,7 +23,7 @@
 
 %设置页边距。
 %上、下、左、右、装订线的页边距：3.0cm, 2.5cm, 2.6cm, 2.6cm, 0cm
-\usepackage[top=3cm, bottom=2.5cm, left=2.5cm, right=2.5cm,% 
+\usepackage[top=3cm, bottom=2.5cm, left=1.9cm, right=1.9cm,% 
 	headsep=1.2cm,footskip=0.75cm,%
 	twoside,a4paper]{geometry}
 
@@ -69,7 +69,7 @@
 \let\@afterindentfalse\@afterindenttrue
 \@afterindenttrue
 \makeatother
-\setlength{\parindent}{2.5em}
+\setlength{\parindent}{2.7em}
 
 
 %缩小列表的行距
@@ -91,7 +91,7 @@
 \titleformat{\subsubsection}{\four \bf}{\thesubsubsection}{1em}{}
 \titlespacing{\chapter}{0em}{*1}{*3}
 \titlespacing{\section}{0em}{*3}{*2}
-\titlespacing{\subsection}{2.5em}{*2}{*1}
+\titlespacing{\subsection}{2.5em}{*1}{*1}
 \titlespacing{\subsubsection}{5em}{*1}{*1}
 
 
@@ -170,7 +170,7 @@
 \fancyfoot[EL,OR]{\lfive\thepage} %奇数页页码在右下脚
 
 \usepackage{fancyvrb}	%代码环境
-\DefineVerbatimEnvironment{verbatim}{Verbatim} {frame=none, baselinestretch=1, xleftmargin=5pt, xrightmargin=5pt, fontsize=\five}
+\DefineVerbatimEnvironment{verbatim}{Verbatim} {frame=none, baselinestretch=1, xleftmargin=0pt, xrightmargin=0pt, fontsize=\lfour}
 
 \usepackage{indentfirst,cite,tabularx}
 \newcommand{\ucite}[1]{$^{\mbox{\scriptsize \cite{#1}}}$}	%参考文献上标
