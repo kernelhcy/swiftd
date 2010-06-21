@@ -7,7 +7,7 @@
 
 %标题作者等信息。
 %这些信息将自动生成ppt的第一页
-\title[毕业设计答辩]{\LARGE{
+\title[毕业设计答辩]{\Large{
 			基于动态链接技术的web服务器动态扩展功能
 				接口的设计与实现
 	}}
@@ -82,29 +82,30 @@
 	\frametitle{HTTP协议分析}
 	\begin{figure}[htbp]
 	\centering
-	\includegraphics[height=6cm, width=7cm]{pics/serverhttp.eps}
+	\includegraphics[height=5cm, width=7cm]{pics/serverhttp.eps}
 	\caption{HTTP协议处理过程}
 	\end{figure}
+	服务器的处理分为三部分：解析Request，处理请求，返回response。
 \end{frame}
 
 \begin{frame}
-	\frametitle{动态扩展功能接口调用过程}
-	服务器对HTTP协议Request数据进行解析。	在解析的过程中调用接口函数对Request进行处理。
-
+	\frametitle{动态扩展功能接口调用过程的设计}
+	在处理请求的过程中，调用接口函数。
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=5cm, width=8cm]{pics/httpplugin.eps}
 	\caption{接口调用过程}
 	\end{figure}
-
+	服务器调用所有功能插件的接口函数。根据函数的返回结果确定执行步骤。
+	
 \end{frame}
 
 
 \begin{frame}
-	\frametitle{动态扩展功能接口定义：}
-	接口定义了一些列函数原型。所有函数都有明确的定义和调用时机。
+	\frametitle{动态扩展功能接口函数设计：}
+	接口定义了一些列函数原型。所有函数都有明确的声明和调用时机。
 	
-	功能插件选择性的实现这些函数。服务器在确定的时机调用所有插件的对应函数。
+	功能插件选择性的实现这些函数。
 	
 	\pause
 	
@@ -120,7 +121,7 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{动态扩展功能接口定义：}
+	\frametitle{动态扩展功能接口函数设计：}
 	\begin{block}{接口函数定义（续）：}
 	\begin{itemize}
 		\item[-] url\_raw: 获得未解码的URL地址后调用。
@@ -139,7 +140,7 @@
 
 
 \begin{frame}
-	\frametitle{动态加载过程}
+	\frametitle{动态加载过程的设计}
 	
 	服务器实时的监测插件配置文件是否修改。一旦监测到修改，立即重新加载功能插件。
 
@@ -206,8 +207,6 @@
 	\end{block}
 	\pause
 	\begin{block}{线程池}
-	每一个I/O事件调用一个线程进行处理。
-	
 	预先创建一部分线程。如果线程不够，再创建新的线程。线程处理完I/O事件不销毁，放入线程池中以备下次继续使用。
 	
 	降低线程创建和销毁的开销。
@@ -228,7 +227,7 @@
 \frame[containsverbatim]{
 	\frametitle{接口实现：plugin结构体}
 	
-	plugin结构体包含一个插件的所有信息。包括版本，名称以及一系列接口函数的地址。plugin结构体类似于一个类。服务器通过调用其成员方法（函数指针）来执行插件的功能。
+	plugin结构体包含一个功能插件的所有信息。包括版本，名称以及一系列接口函数的地址。plugin结构体类似于一个类。服务器通过调用其成员方法（函数指针）来执行插件的功能。
 	
 	定义如下：
 	\begin{figure}[htbp]
@@ -256,13 +255,14 @@
 	\bottomrule
 	\end{tabular}
 	\end{table}
-	\begin{block}{}
-		表中存放的是plugin结构体指针。NULL表示此插件没有实现这个函数。
-	\end{block}
+		
+	表中存放的是plugin结构体指针。NULL表示此插件没有实现这个函数。
+	
+	服务器通过这张表来调用所有的插件。
 \end{frame}
 
 \begin{frame}
-	\frametitle{接口实现}
+	\frametitle{接口实现：配置文件}
 	服务器中包含一个定义插件的配置文件： swiftd-plugin.conf。
 	
 	\begin{block}{配置文件的形式如下：}	
@@ -282,7 +282,7 @@
 \end{frame}
 
 \begin{frame}
-	\frametitle{接口实现}
+	\frametitle{接口实现：加载过程}
 	服务器使用inotify监测插件配置文件。inotify产生一个文件描述符，通过监测这个文件描述符是否有数据可读即可监测到文件的改变。
 	\begin{figure}[htbp]
 	\centering
@@ -302,9 +302,8 @@
 	
 	\pause
 	\begin{block}{线程池}
-		每个线程的主循环中，调用传递进来的函数。（包括参数）\\
 		使用pthread的条件变量对线程进行唤醒和睡眠操作。\\
-		预先创建线程。提高效率。
+		每个线程的主循环中，调用传递进来的函数。（包括参数）\\	
 	\end{block}
 	
 	\pause
