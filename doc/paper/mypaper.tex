@@ -15,9 +15,9 @@
 
 Web服务器作为互联网的核心组成部分，在支撑整个互联网服务中，起到了至关重要的作用。由于互联网中应用的不断更新，要求web服务器也能适应这种更新变化。同时，web服务器必须保证7*24小时的运行。在目前的正在使用的web服务器中，大部分都不支持功能的动态增加，也就是在不重启服务器的情况下，动态的为服务器增加功能。
 
-本论文的主要内容是研究实现基于动态链接技术的Web服务器动态加载功能的接口。首先，文中介绍了本课题的背景和意义，以及作者的主要任务和工作。接着概述与本课题相关的HTTP协议（RFC2616）的内容，简单介绍动态链接技术及其使用，还有介绍Web服务器的一些主流设计和实现方法。接下来，通过对HTTP协议的分析，设计插件的接口，分析动态链接技术，设计动态加载插件的过程。然后，采用非阻塞I/O+线程池+I/O多路复用技术，设计服务器的架构。本系统实现了服务器的基本功能，重点实现模块动态加载特性，并对实现进行测试。
+本论文的主要内容是研究实现基于动态链接技术的Web服务器动态加载功能的接口。首先，介绍本课题的背景和意义以及作者的主要任务和工作，概述与本课题相关的HTTP协议（RFC2616）的内容，简单介绍动态链接技术及其使用，介绍Web服务器的一些主流设计和实现方法。然后，通过对HTTP协议的分析，设计插件的接口，分析动态链接技术，设计动态加载插件的过程。然后，采用非阻塞I/O+线程池+I/O多路复用技术，设计服务器的架构。本系统实现了服务器的基本功能，重点实现模块动态加载特性，并对实现进行测试。
 
-最后，通过测试和观察运行结果，分析服务器是否可以正确处理HTTP请求，包括HTTP/1.1的持久连接和HTTP/1.0的非持久连接，并返回客户端所请求的资源。同时，验证插件接口的设计能否满足扩展功能的需求，能否正确的动态加载插件。本系统可以处理一般规模的请求数量。
+最后，通过测试和观察运行结果，分析服务器是否可以正确处理HTTP请求，包括HTTP/1.1的持久连接和HTTP/1.0的非持久连接，并返回客户端所请求的资源。同时，验证插件接口的设计能否满足扩展功能的需求，能否正确的动态加载插件。
 
 {\zhkeywords Web服务器;接口;Linux;C;动态加载}
 
@@ -26,7 +26,7 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	The main content of this paper is that studying the interface of dynamically loading function of the web sever based on dynamic link technology. First, the paper introduces the background and significance of this issue and the main task and job of the author. Then, the paper outlines the HTTP protocol(RFC 2616) and the dynamic link technology and its application, also outlines some design and implement methods of the web server. Next, by analysising the HTTP protocol and the dynamic link technology, we design the interface of the plugin and the process of dynamically loading the function plugin. Then, using nonblocking I/O, thread pool and I/O multiplexing, we design the architecture of the web server. This system implements the base functions of the web server and focuses on the implementation of the feature of dynamically loading function and testing the implementation.
 	
-	Last, by testing and the obsvervation of the run result, we analysis whether the server handle the HTTP request correctly and response to the client correctly or not, including HTTP/1.1 persistent connections and HTTP/1.0 nonpersistent connections. At the some time, we test whether the interface can santisfy the requirement of dynamically extending and dynamically load the function plugin correctly or not. This system can handle the general scale of requests.
+	Last, by testing and the obsvervation of the run result, we analysis whether the server handle the HTTP request correctly and response to the client correctly or not, including HTTP/1.1 persistent connections and HTTP/1.0 nonpersistent connections. At the some time, we test whether the interface can santisfy the requirement of dynamically extending and dynamically load the function plugin correctly or not. 
 
 
 {\enkeywords Web Server;Interface;Linux;C;Dynamically loading}
@@ -40,7 +40,7 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 \subsection{Web服务器的背景}
 	Web服务器也称为WWW(Word Wide Web)服务器，主要功能是提供网上信息浏览服务。Web服务器通过解析处理HTTP协议完成客户端的请求。当Web服务器接收到一个HTTP请求时，通过解析请求的内容，经过一些列的处理（如，查找客户端请求的资源），生成一个HTTP响应并发送给客户端。这个HTTP响应包含客户端所请求的数据（例如送回一个HTML页面）或者提示信息等。在处理一个请求，Web服务器可以返回给客户端一个静态页面或图片，进行页面跳转，或者把动态响应委托给一些其它的程序处理（例如CGI脚本，JSP脚本，ASP脚本，或者一些其它的服务器端技术)。这些处理委托请求的服务器端程序通常产生一个HTML的响应，并通过web服务器发送给客户端。
 	
-	目前，主流的web服务器包括Apache，Lighttpd和Nginx。\ucite{baike}
+	目前，主流的web服务器包括Apache，Lighttpd和Nginx。
 	\begin{itemize}
 		\item Apache是世界排名第一的web服务器，是Apache软件基金会的一个开放源码的web服务器。Apache可以运行在几乎所有的计算机平台上，如，Linux，Windows，Unix等。Apache快速、可靠并且可通过简单的API扩充。
 		\item Lighttpd是一个德国人领导的开源软件，根本在于提供一个专门针对高性能网站，安全、快速、兼容性好并且灵活的web服务器。Lighttpd具有非常低的内存开销，cpu占用率低，较好的性能以及丰富的模块。Lighttpd主要针对Unix/Linux平台，通过Cygwin也可以运行在Windows平台上，具有较好的夸平台特性。
@@ -102,11 +102,11 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 \section{HTTP协议}
 	HTTP协议（Hypertext Transfer Protocol，超文本传输协议）是一个属于应用层的面向对象的协议。它于1990年提出。主要用于从WWW服务器传输超文本到本地浏览器的传送协议。
 	
-	HTTP是一个客户端和服务器端请求和应答的标准。客户端是终端用户，服务器端是网站。通过使用Web浏览器、网络爬虫或者其它的工具，客户端发起一个到服务器上指定端口（默认端口为80）的HTTP请求。应答的服务器上存储着（一些）资源，比如HTML文件和图像。我们称这个应答服务器为源服务器（origin server）。\ucite{wiki}
+	HTTP是一个客户端和服务器端请求和应答的标准。客户端是终端用户，服务器端是网站。通过使用Web浏览器、网络爬虫或者其它的工具，客户端发起一个到服务器上指定端口（默认端口为80）的HTTP请求。应答的服务器上存储着（一些）资源，比如HTML文件和图像。我们称这个应答服务器为源服务器（origin server）。
 	
 	通常，由HTTP客户端发起一个请求，建立一个到服务器指定端口（默认是80端口）的TCP连接。HTTP服务器则在那个端口监听客户端发送过来的请求。一旦收到请求，服务器（向客户端）发回一个状态行，比如"HTTP/1.1 200 OK"，和（响应的）消息，消息的消息体可能是请求的文件、错误消息、或者其它一些信息。通过HTTP或者HTTPS协议请求的资源由统一资源标识符（Uniform Resource Identifiers，URI）来标识。
 	
-	HTTP/1.1协议中共定义了八种方法（有时也叫“动作”）来表明Request-URI指定的资源的不同操作方式\ucite{wiki}：
+	HTTP/1.1协议中共定义了八种方法（有时也叫“动作”）来表明Request-URI指定的资源的不同操作方式：
 	\begin{enumerate}
 		\item OPTIONS 返回服务器针对特定资源所支持的HTTP请求方法。也可以利用向Web 服务器发送'*'的请求来测试服务器的功能性。
 		\item HEAD 向服务器索要与GET请求相一致的响应，只不过响应体将不会被返回。这一方法可以在不必传输整个响应内容的情况下，
@@ -122,7 +122,7 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	
 	HTTP服务器至少应该实现GET和HEAD方法，其他方法都是可选的。当然，所有的方法支持的实现都应当符合下述的方法各自的语义定义。此外，除了上述方法，特定的HTTP服务器还能够扩展自定义的方法。
 	
-	所有HTTP响应的第一行都是状态行，依次是当前HTTP版本号，3位数字组成的状态代码，以及描述状态的短语，彼此由空格分隔。状态代码的第一个数字代表当前响应的类型\ucite{wiki}：
+	所有HTTP响应的第一行都是状态行，依次是当前HTTP版本号，3位数字组成的状态代码，以及描述状态的短语，彼此由空格分隔。状态代码的第一个数字代表当前响应的类型：
 	\begin{itemize}
 		\item 1xx 消息——请求已被服务器接收，继续处理
 		\item 2xx 成功——请求已成功被服务器接收、理解、并接受
@@ -211,7 +211,7 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=11cm, width=15cm]{pics/epollvspoll.eps}
-	\caption{epoll与poll效率比较\ucite{hudong}}
+	\caption{epoll与poll效率比较}
 	\label{epollvspoll}
 	\end{figure}
 	
@@ -235,14 +235,14 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	线程池中关键的是如何通知处于等待状态的线程有新的任务需要处理。这需要对应平台的线程库予以支持。在Linux下，线程的使用通常依赖pthread库。pthread库提供了一套线程的创建管理方法。其中，条件变量可以很好的实现通知等待线程的功能。条件变量是指线程等待某一事件的发生，在事件发生之前，线程一直处于等待状态。
 
 \section{状态机}
-	状态机，即有限状态机（Finite State Machine）。是表示有限个状态以及在这些状态之间的转移和动作等行为的数学模型\ucite{wiki}。
+	状态机，即有限状态机（Finite State Machine）。是表示有限个状态以及在这些状态之间的转移和动作等行为的数学模型。
 	
 	图\ref{fsm}是一个简单的关于开门和关门的状态机。
 	
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=8cm, width=6cm]{pics/fsm.eps}
-	\caption{开门关门状态机\ucite{wiki}}
+	\caption{开门关门状态机}
 	\label{fsm}
 	\end{figure}
 	
@@ -305,7 +305,7 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	\begin{figure}[htbp]
 	\centering
 	\includegraphics[height=3cm, width=8cm]{pics/httpbaike.eps}
-	\caption{HTTP协议的处理过程\ucite{baike}}
+	\caption{HTTP协议的处理过程}
 	\label{httpbaike}
 	\end{figure}
 	
@@ -421,7 +421,7 @@ Web服务器作为互联网的核心组成部分，在支撑整个互联网服�
 	对于每一个请求，在不同的时刻，对请求所处在的状态进行定义。根据HTTP协议的规定，对于服务器而言，请求经历了读取Reqeust，解析Request，读取POST数据，处理连接请求，创建Response，发送Response回客户端这几个状态。为了便于处理，在请求的生命周期中增加了几个状态，最后的状态图如图\ref{state}。
 	\begin{figure}[t]
 	\centering
-	\includegraphics[height=16cm, width=10cm]{pics/state.eps}
+	\includegraphics[height=16cm, width=12cm]{pics/state.eps}
 	\caption{请求处理状态图}
 	\label{state}
 	\end{figure}
@@ -1211,38 +1211,28 @@ int connection_state_machine(server *srv, connection *con)
 	
 	本系统没有对分布式系统进行考虑，不能很好的支持分布式应用。但是，在未来的互联网中，分布式将是主流。所有的服务器都会很好的支持分布式系统。
 
+\five
+\begin{thebibliography}{99}
+\bibitem{cxyzwxy}俞甲子，石凡，藩爱民\quad 程序员的自我休养--链接、装载和库[M]\quad 电子工业出版社\quad 2009年4月
+\bibitem{apue}W.Richard Stevens,Stepphen A. Rago 著\quad 尤晋元，张亚英，戚正伟 译\quad UNIX环境高级编程[M]\quad 第二版\quad 人民邮电出版社\quad 2008年12月
+\bibitem{unp}W.Richard Stevens,Bill Fenner, Andrew M.Rudoff\quad UNIX Network Programming Volume 1:The Socket Networking API, Thrid Edition[M]\quad 人民邮电出版社\quad 2009年11月
+\bibitem{usp}Kay A.Robbins, Steven Robbins 著\quad 陈涓，赵振平 译\quad UNIX系统编程[M]\quad 机械工业出版社\quad 2005年5月
+\bibitem{pwpthread}David R. Butenhof\quad Programming with POSIX Threads[M]\quad Addison-Wesley\quad 2005年6月
+\bibitem{sun}Sun Microsystems Inc.\quad 多线程编程指南[R]\quad 文件号码819–7051–10\quad 2006年10月
+\bibitem{pp}Bil Lewis Daniel,J. Berg\quad PThreads Primer, A Guide to Multithreaded Programming[M]\quad SunSoft Press 2002年2月
+\bibitem{http}R. Fielding,UC Irvine,J. Gettys等\quad Hypertext Transfer Protocol -- HTTP/1.1(RFC2616)[S]\quad Network Working Group\quad 1999年6月
+\bibitem{WCW}Arlitt, T. Jin\quad Workload Characterization of the 1998 World Cup Web Site[M]\quad 1999年2月\quad http://www.hpl.hp.com/techreports/1999/HPL-1999-35R1.html.
+
+\bibitem{wsw}F. Arlitt, C. L. Williamson\quad Web Server Workload Characterization: The Search for Invariants[M]\quad ACM SIGMETRICS Performance Evaluation Review\quad 24(1):126–137\quad 1996年5月
+
+\bibitem{pp}Jon Bentley 著\quad 黄倩，钱丽艳 译\quad 编程珠玑[M]\quad 第二版本\quad 人民邮电出版社\quad 2008年10月
+\bibitem{lighttpd}Lighttpd 1.4.20 源代码[CP]
+\end{thebibliography}
+
 %后面的chapter不需要标号。
 \titleformat{\chapter}{\center \three \bf}{}{1em}{}
 
-\chapter{致谢}
-
-本论文及系统的完成得益于许多人的帮助与支持，在此对所有帮助过我的老师与同学表示由衷的感谢！
-
-首先感谢指导老师马瑞芳老师的辛勤指导，对本论文及系统提出了许多意见并给出了改进方案，指明了道路。她每周都能够在白忙之中抽出一早晨时间，来给我们做进度规划，帮助我们分析问题，解决问题，督促我们抓紧时间，这对于我们能够按照预订计划完成工作有很大的帮助，马老师孜孜不倦的工作精神以及耐心的工作态度是我们毕设组同学如期完成论文以及系统的重要保障，在此，我对马老师致以崇高的敬意以及衷心的感谢！
-
-下面要感谢学院给我们提供了专门的机房机位，这极大的方便了我们进行毕业设计。尤其是机房的管理员老师，每当机房出现网络问题时，管理员老师总是第一时间赶来处理问题，为我们节省时间。再次，对管理员老师表示衷心的感谢。
-
-还有就是要感谢BBS上帮我解决问题的那些同学们。虽然我不知道你们叫什么名字，那个学院，甚至你们是男生还是女生。但是，每当我遇到问题求助时，你们总是能够耐心的帮我解决问题。在毕设过程中，你们给予了我莫大的帮助，对你的无私帮助，我表示最衷心的感谢！
-
-最后，衷心感谢在百忙之中抽出时间评阅本论文的专家教授们。
-
-
-\begin{thebibliography}{99}
-\bibitem{cxyzwxy}俞甲子,石凡,藩爱民，程序员的自我休养--链接、装载和库, 电子工业出版社, 2009.4
-\bibitem{apue}W.Richard Stevens,Stepphen A. Rago 著 尤晋元 张亚英 戚正伟 译， UNIX环境高级编程(第二版)，人民邮电出版社，2008.12
-\bibitem{unp}W.Richard Stevens,Bill Fenner, Andrew M.Rudoff, \emph{UNIX Network Programming Volume 1:The Socket Networking API, Thrid Edition} 人民邮电出版社， 2009.11
-\bibitem{usp} Kay A.Robbins, Steven Robbins 著 陈涓 赵振平 译， UNIX系统编程， 机械工业出版社，2005.5
-\bibitem{pwpthread}David R. Butenhof, \emph{Programming with POSIX Threads}, Addison-Wesley, 2005年6月
-\bibitem{sun}Sun Microsystems Inc.,多线程编程指南, 文件号码819–7051–10, 2006年10月
-\bibitem{pp}Bil Lewis Daniel,J. Berg, \emph{PThreads Primer, A Guide to Multithreaded Programming}, SunSoft Press
-\bibitem{http}R. Fielding,UC Irvine,J. Gettys等 Hypertext Transfer Protocol -- HTTP/1.1(RFC2616) Network Working Group
-\bibitem{wiki}维基百科，http://zh.wikipedia.org/zh-cn/\%E8\%B6\%85\%E6\%96\%87\%E6\%9C\%AC\%E4\%BC\%A0\%E8\%BE\%93\%E5\%8D\%8F\%E8\%AE\%AE
-\bibitem{baike}百度百科，http://baike.baidu.com
-\bibitem{hudong}互动百科，http://www.hudong.com/wiki/epoll
-\bibitem{lighttpd}Lighttpd 1.4.20 源代码
-\end{thebibliography}
-
-
+\lfour
 \chapter{附录一： The C10k Problem}
 
 It's time for web servers to handle ten thousand clients simultaneously, don't you think? After all, the web is a big place now.
@@ -2042,4 +2032,15 @@ fcntl(fd, F_SETFL, flags);
 		\item Doug Royer指出，当他在Sun日期服务器上工作的时候，他获得了100000个连接在Solaris2.6上。其他的关于如何估计在Linux需要多少RAM和将会遇到什么瓶颈的文章。
 	\end{itemize}
 	
+\chapter{致谢}
+
+本论文及系统的完成得益于许多人的帮助与支持，在此对所有帮助过我的老师与同学表示由衷的感谢！
+
+首先感谢指导老师马瑞芳老师的辛勤指导，对本论文及系统提出了许多意见并给出了改进方案，指明了道路。她每周都能够在白忙之中抽出一早晨时间，来给我们做进度规划，帮助我们分析问题，解决问题，督促我们抓紧时间，这对于我们能够按照预订计划完成工作有很大的帮助，马老师孜孜不倦的工作精神以及耐心的工作态度是我们毕设组同学如期完成论文以及系统的重要保障，在此，我对马老师致以崇高的敬意以及衷心的感谢！
+
+下面要感谢学院给我们提供了专门的机房机位，这极大的方便了我们进行毕业设计。尤其是机房的管理员老师，每当机房出现网络问题时，管理员老师总是第一时间赶来处理问题，为我们节省时间。再次，对管理员老师表示衷心的感谢。
+
+还有就是要感谢BBS上帮我解决问题的那些同学们。虽然我不知道你们叫什么名字，那个学院，甚至你们是男生还是女生。但是，每当我遇到问题求助时，你们总是能够耐心的帮我解决问题。在毕设过程中，你们给予了我莫大的帮助，对你的无私帮助，我表示最衷心的感谢！
+
+最后，衷心感谢在百忙之中抽出时间评阅本论文的专家教授们。
 \end{document}

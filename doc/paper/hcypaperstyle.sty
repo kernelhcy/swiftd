@@ -117,17 +117,21 @@
 \renewcommand {\bibname}{参考文献}%report和book是bibname，article是refname。
 
 %图，表标题的间距。
+\usepackage{caption}
 \setlength{\abovecaptionskip}{10pt}
 \setlength{\belowcaptionskip}{0pt}
 
 \renewcommand {\figurename}{\five 图}
-\renewcommand {\thefigure}{\arabic{section}-\arabic{figure}}
+\renewcommand {\thefigure}{\arabic{chapter}-\arabic{figure}}
 
 \renewcommand {\tablename}{\five 表}
-\renewcommand {\thetable}{\arabic{section}-\arabic{table}}
+\renewcommand {\thetable}{\arabic{chapter}-\arabic{table}}
 \usepackage{booktabs}
 \renewcommand {\heavyrulewidth}{1.5pt}	%表格外线宽
 \renewcommand {\lightrulewidth}{1pt}	%表格内线宽
+
+\captionsetup{labelsep=space}
+
 %用如下形式插入三线表
 %\begin{table}[htbp]
 %\setlength{\abovecaptionskip}{0pt} %设置标题上下的宽度。图片也一样 

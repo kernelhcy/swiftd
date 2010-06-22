@@ -9,8 +9,9 @@ digraph state
   edge [ color=lightblue]
   handlerequest -> handlerequest [ label="subrequest" ];
   edge [style=dashed, color=red];
-  error -> close -> connect;
-  error -> connect;
+  error -> close [ label="server close" ];
+  close -> connect;
+  error -> connect [ label="client close" ];
   handlerequest -> error;
   read -> error;
   readpost -> error;
