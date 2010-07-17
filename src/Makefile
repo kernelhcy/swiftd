@@ -10,8 +10,11 @@ OBJSPATH=../objects
 CC=gcc
 
 
-swiftd: ${OBJS} ${OBJSPATH}/mod_dir_index.o dir_index.so
+swiftd: objects ${OBJS} ${OBJSPATH}/mod_dir_index.o dir_index.so
 	${CC}  ${FLAGS} ${OBJS} -o swiftd -lpthread -ldl
+
+objects:
+	mkdir ${OBJSPATH} -p
 
 ${OBJSPATH}/buffer.o: buffer.c
 	${CC} -c ${FLAGS} buffer.c -o ${OBJSPATH}/buffer.o
