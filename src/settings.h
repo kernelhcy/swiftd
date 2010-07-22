@@ -36,5 +36,15 @@ typedef enum
 	HANDLER_WAIT_FOR_FD,
 } handler_t;
 
+/*
+ * 用于标记handler接受的第二个参数ctx的类型。
+ */
+typedef enum 
+{
+	CONNECTION, 	//connection结构体
+	SOCKET,  		//server_socket结构体
+	UNKNOWN 		//未知
+}ctx_t;
+
 
 #endif

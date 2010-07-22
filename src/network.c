@@ -135,6 +135,7 @@ int network_init(server *srv)
 	}
 	srv -> sockets -> ptr[srv -> sockets -> used] = (server_socket*)malloc(sizeof(server_socket));
 	srv -> sockets -> ptr[srv -> sockets -> used] -> fde_ndx = srv -> sockets -> used;
+	srv -> sockets -> ptr[srv -> sockets -> used] -> type = SOCKET;
 	srv -> sockets -> ptr[srv -> sockets -> used] = srv_sock;
 	++srv -> sockets -> used;
 

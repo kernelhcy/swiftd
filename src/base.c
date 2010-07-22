@@ -24,14 +24,23 @@ void *job_entry(void *ctx)
 			log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "Unknown handler_t.");
 			break;
 	}
-	
+	/*
 	if (joblist_find_del((server *)jc -> srv, (connection *)jc -> ctx))
 	{
 		//ctx所指向的地址在joblist中，说明ctx是一个connection的指针。
 		//调用状态机。
 		connection_state_machine((server *)jc -> srv, (connection *)jc -> ctx);
 	}
-	
+	*/
+	/*
+	 * 通过判断ctx对应的结构体的第一个成员变量的值来判断结构体的类型。
+	 */
+	if(*((ctx_t *)(jc -> ctx)) == CONNECTION)
+	{
+		log_error_write((server*)jc -> srv, __FILE__, __LINE__, "s", "This ctx is connection.");
+		connection_state_machine((server *)jc -> srv, (connection *)jc -> ctx);
+	}
+
 	log_error_write((server *)jc -> srv, __FILE__, __LINE__, "s", "A job done.");
 
 	//释放

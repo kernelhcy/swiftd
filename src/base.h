@@ -206,6 +206,17 @@ typedef enum
  */
 typedef struct 
 {
+	/*
+	 * connection结构体和后面的server_socket结构体都会当做handler函数
+	 * 的第二个参数ctx。
+	 * 在调用线程处理IO事件的时候，连接socket对应的fd必须调用状态机函数
+	 * 改变连接的状态。因此，必须通过ctx参数判断这个ctx是连接socket对应
+	 * 的函数监听socket对应的。
+	 * 这个变量用于这个判断。
+	 * 后面server_socket结构体也同样包含这个成员变量。
+	 */
+	ctx_t type; 						//用于标记结构体的类型。CONNECTION
+
 	connection_state_t state; 			//连接的状态
 	
 	/*
@@ -300,6 +311,7 @@ typedef struct
  */
 typedef struct 
 {
+	ctx_t type; 				//标记结构体的类型。SOCKET
 	sock_addr addr;
 	int fd;
 	int fde_ndx;

@@ -57,6 +57,8 @@ static void connection_init(server *srv, connection *con)
 		return;
 	}
 	
+	con -> type = CONNECTION;
+
 	con -> request_count = 0;		
 	con -> fd = -1;							
 
