@@ -201,6 +201,19 @@ typedef enum
 	CON_STATE_CLOSE 			//close 连接关闭
 } connection_state_t;
 
+/*
+ * 用于判断hander的参数ctx对应的结构体的类型。
+ * ctx参数会保存connectin结构体和server_socket结构体的指针。
+ * 这两个结构体的第一个成员变量都是ctx_t类型的。这就相当于
+ * 这两个结构体继承自ctx_s结构体。
+ * 通过将ctx转换称ctx_s类型指针，可以判断ctx对应的结构体
+ * 的类型。
+ */
+typedef struct
+{
+	ctx_t type;
+}ctx_s;
+
 /**
  * 定义网络连接
  */
@@ -214,6 +227,8 @@ typedef struct
 	 * 的函数监听socket对应的。
 	 * 这个变量用于这个判断。
 	 * 后面server_socket结构体也同样包含这个成员变量。
+	 *
+	 * 通过将ctx转换成ctx_s类型指针来获得这个成员的值。
 	 */
 	ctx_t type; 						//用于标记结构体的类型。CONNECTION
 

@@ -1074,9 +1074,9 @@ int connection_state_machine(server *srv, connection *con)
 		}
 		
 		old_state = con -> state;
-	//	log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
-	//					, connection_get_state_name(con -> state), "fd:", con -> fd
-	//					, "connection ndx:", con -> ndx);
+		log_error_write(srv, __FILE__, __LINE__, "sssdsd", "connection state:"
+						, connection_get_state_name(con -> state), "fd:", con -> fd
+						, "connection ndx:", con -> ndx);
 			
 		switch(con -> state)
 		{

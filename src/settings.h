@@ -41,9 +41,9 @@ typedef enum
  */
 typedef enum 
 {
-	CONNECTION, 	//connection结构体
-	SOCKET,  		//server_socket结构体
-	UNKNOWN 		//未知
+	CONNECTION = 11111111, 		//connection结构体
+	SOCKET = 22222222,  		//server_socket结构体
+	UNKNOWN = 3333333 	 		//未知
 }ctx_t;
 
 
