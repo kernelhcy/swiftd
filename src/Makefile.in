@@ -160,7 +160,7 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-swiftd_CFLAGS = -g -Wall
+swiftd_CFLAGS = -g
 swiftd_LDFLAGS = -lpthread -ldl
 swiftd_SOURCES = array.c\
 	array.h\
