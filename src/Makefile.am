@@ -1,0 +1,46 @@
+bin_PROGRAMS=swiftd
+swiftd_CFLAGS= -g -Wall
+swiftd_LDFLAGS = -lpthread -ldl
+swiftd_SOURCES=array.c\
+	array.h\
+	base.c\
+	base.h\
+	buffer.c\
+	buffer.h\
+	chunk.c\
+	chunk.h\
+	config.h\
+	configure.c\
+	configure.h\
+	connection.c\
+	connection.h\
+	data_array.c\
+	data_integer.c\
+	data_string.c\
+	error_page.c\
+	error_page.h\
+	fde_epoll.c\
+	fde_select.c\
+	fdevent.c\
+	fdevent.h\
+	joblist.c\
+	joblist.h\
+	keyvalue.c\
+	keyvalue.h\
+	log.c\
+	log.h\
+	main.c\
+	main.h\
+	network.c\
+	network.h\
+	network_write.c\
+	network_write.h\
+	plugin.c\
+	plugin.h\
+	request.c\
+	request.h\
+	response.c\
+	response.h\
+	settings.h\
+	threadpool.c\
+	threadpool.h
