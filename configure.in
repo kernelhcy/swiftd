@@ -13,7 +13,8 @@ AM_PROG_CC_C_O
 
 # Checks for libraries.
 # FIXME: Replace `main' with a function in `-ldl':
-AC_CHECK_LIB(pthread, dl)
+AC_CHECK_LIB([pthread], [pthread_create])
+AC_CHECK_LIB([dl], [dlopen])
 
 # Checks for header files.
 AC_CHECK_HEADERS(arpa/inet.h fcntl.h limits.h netdb.h netinet/in.h stddef.h stdlib.h string.h strings.h sys/ioctl.h sys/socket.h sys/time.h syslog.h unistd.h)

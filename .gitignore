@@ -1,3 +1,4 @@
 src/*.o
+src/.deps/
 src/swiftd
 autom4te.cache/

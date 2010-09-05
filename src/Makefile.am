@@ -1,5 +1,5 @@
 bin_PROGRAMS=swiftd
-swiftd_CFLAGS= -g
+swiftd_CFLAGS= -g -Wall -O3
 swiftd_LDFLAGS = -lpthread -ldl
 swiftd_SOURCES=array.c\
 	array.h\
