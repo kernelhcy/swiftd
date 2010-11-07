@@ -1,34 +1,19 @@
 #ifndef __SWIFTD_MEM_H_
 #define __SWIFTD_MEM_H_
-
+#include <stdlib.h>
 /*
  * A Slab Memory Allocator
  */
 
 /*
- * The mem_cache struct
+ * The declaretion mem_cache struct
  *
  * This struct contains the information of this memory cache
  * and represent an instance of the memory cache.
  *
  * Every operator on the memory cache will use this struct.
- *
- * NOTE:
- * 	DO NOT modify the member of this struct unless you know
- * 	what you are doing!
  */
-struct mem_cache
-{
-	char * name;
-	size_t size;
-	int align;
-	void (*ctor)(void *);
-	void (*dtor)(void *);
-
-	size_t total_objs; 	//number of all the objects in this cache
-	size_t total_memory; 	//total memory used by this cache
-	int id; 		//id of the memory cache.
-};
+struct mm_cache;
 
 /*
  * Create a memory cache.
@@ -44,7 +29,7 @@ struct mem_cache
  * @ctor: the constructor of the object
  * @dtor: the destructor of the object
  */
-struct mem_cache * mem_cache_create(const char *name, size_t size, int align
+struct mm_cache * mm_cache_create(const char *name, size_t size, int align
 			, void (*ctor)(void *)
 			, void (*dtor)(void *));
 
@@ -55,7 +40,7 @@ struct mem_cache * mem_cache_create(const char *name, size_t size, int align
  *
  * @mc: the pointer of the struct of the memory cache.
  */
-void mem_cache_destroy(struct mem_cache *mc);
+void mm_cache_destroy(struct mm_cache *mc);
 
 /*
  * Alloc a object from mc.
@@ -63,7 +48,7 @@ void mem_cache_destroy(struct mem_cache *mc);
  *
  * If an error occured, return NULL.
  */
-void * mem_cache_alloc(struct mem_cache *mc);
+void * mm_cache_alloc(struct mm_cache *mc);
 
 /*
  * Free a object to the memeory cache.
@@ -71,7 +56,7 @@ void * mem_cache_alloc(struct mem_cache *mc);
  * @mc: the pointer of the memory cache.
  * @p: the pointer of the object.
  */
-void mem_cache_free(struct mem_cache *mc, void *p);
+void mm_cache_free(struct mm_cache *mc, void *p);
 
 /*
  * Shrink the memory of ALL memory caches.
@@ -84,6 +69,13 @@ void mem_cache_free(struct mem_cache *mc, void *p);
  * 	DO NOT call this function unless you has no enough memory to use.
  * 	The memory caches will free the unnecessary memory by themselves.
  */
-void mem_cache_shrink();
+void mm_cache_shrink();
+
+/*
+ * Show the details of the mm cache.
+ *
+ * Just used for debug!
+ */
+void mm_show();
 
 #endif
