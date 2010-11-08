@@ -10,7 +10,7 @@
  */
 struct mm_cache
 {
-	char * name;
+	char name[256]; 	//I think this is enough.
 	size_t size;
 	int align;
 	void (*ctor)(void *);
@@ -27,9 +27,22 @@ struct mm_slab
 {
 	int a;
 };
-struct mm_slabctl
+
+/*
+ * The object control struct
+ *
+ * This struct contain the freelist linkage.It's a double linked list and just
+ * link the free objects' objctrl.
+ *
+ * I put this struct at the end of the object. So for each object, the
+ * actually memory used is sizeof(object)+sizeof(mm_objctl) Bytes.
+ * But the mm_objctl only has 32bits, or 4bytes, we will not
+ * waste so much memory for management.
+ */
+struct mm_objctl
 {
-	int a;
+	int pre:16; 	//the previous free object's index
+	int next:16; 	//the next free object's index
 };
 
 //the head of the mm_cache double linked list.
@@ -44,7 +57,18 @@ struct mm_cache * mm_cache_create(const char *name, size_t size, int align
 		printf("Malloc ERROR! %s %d", __FILE__, __LINE__);
 		return NULL;
 	}
-	mc -> name = name;
+	
+	//copy the name. Only 255 chars. We need a '\0' at the end of mc ->
+	//name.
+	int i = 0;
+	while(i < 255 && name != '\0')
+	{
+		mc -> name[i] = *name;
+		++name;
+		++i;
+	}
+	mc -> name[i] = '\0';
+
 	mc -> size = size;
 	mc -> align = align;
 	mc -> ctor = ctor;
@@ -65,6 +89,11 @@ struct mm_cache * mm_cache_create(const char *name, size_t size, int align
 		head = mc;
 	}
 
+	printf("mm_objctl size: %d\n", sizeof(struct mm_objctl));
+	struct mm_objctl oc1;
+	struct mm_objctl oc2;
+	printf("oc1 addr %u oc2 addr %u\n", (unsigned int)&oc1
+			, (unsigned int)&oc2);
 	return mc;
 }
 
